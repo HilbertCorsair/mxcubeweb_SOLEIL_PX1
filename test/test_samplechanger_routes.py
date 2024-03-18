@@ -49,6 +49,7 @@ def test_get_sc_contents_view(client):
     data = json.loads(resp.data)
     resp = client.get("/mxcube/api/v0.1/sample_changer/capacity")
     capacity = json.loads(resp.data)["capacity"]
+    assert capacity is not None
 
     assert isinstance(data["children"], list)
     assert len(data["children"]) == capacity["num_baskets"]  # pucks
@@ -76,7 +77,6 @@ def test_get_global_state(client):
     """
     resp = client.get("/mxcube/api/v0.1/sample_changer/get_global_state")
     data = json.loads(resp.data)
-
     assert isinstance(data["commands_state"], dict)
     assert isinstance(data["message"], unicode)
     assert isinstance(data["state"], dict)

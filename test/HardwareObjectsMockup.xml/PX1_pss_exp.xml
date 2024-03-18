@@ -1,0 +1,7 @@
+<device class = "PX2_SOLEILPss">
+    <username>expPss</username>
+    <tangoname>i10-c-c00/pss/db_data-parser</tangoname>
+    <channel type="tango" polling="events" name="State">State</channel>
+    <hutch>experimental</hutch>
+    <interval>500</interval>
+</device>

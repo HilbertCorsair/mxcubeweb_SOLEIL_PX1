@@ -1,0 +1,10 @@
+<device class ="TangoShutter">
+    <tangoname>i10-c-c03/ex/obx.1</tangoname>
+    <type>tango</type>
+    <channel type="tango" polling="500" name="State">State</channel>
+    <channel type="tango" name="Open">Open</channel>
+    <channel type="tango" name="Close">Close</channel>
+    <actuator_name>safety_shutter</actuator_name>
+    <username>EX</username>
+    <values>{"open": "OPEN", "closed": "CLOSED", "DISABLE" : "DISABLE"}</values>
+</device>

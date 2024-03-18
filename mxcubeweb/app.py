@@ -2,7 +2,6 @@
 Module that contains application wide settings and state as well as functions
 for accessing and manipulating those.
 """
-
 import os
 import sys
 import logging
@@ -33,11 +32,10 @@ from mxcubeweb.core.components.beamline import Beamline
 from mxcubeweb.core.components.sampleview import SampleView
 from mxcubeweb.core.components.queue import Queue
 from mxcubeweb.core.components.workflow import Workflow
-from mxcubeweb.core.models.configmodels import UIComponentModel
+from mxcubeweb.core.components.gphl_workflow import GphlWorkflow
 
 
 removeLoggingHandlers()
-
 
 class MXCUBECore:
     # The HardwareRepository object
@@ -308,6 +306,7 @@ class MXCUBEApplication:
         MXCUBEApplication.beamline = Beamline(MXCUBEApplication, {})
         MXCUBEApplication.sample_view = SampleView(MXCUBEApplication, {})
         MXCUBEApplication.workflow = Workflow(MXCUBEApplication, {})
+        MXCUBEApplication.gphl_workflow = GphlWorkflow(MXCUBEApplication, {})
 
         MXCUBEApplication.init_signal_handlers()
         atexit.register(MXCUBEApplication.app_atexit)
@@ -449,48 +448,49 @@ class MXCUBEApplication:
     def get_ui_properties():
         # Add type information to each component retrieved from the beamline adapter
         # (either via config or via mxcubecore.beamline)
+        for (
+            _item_name,
+            item_data,
+        ) in MXCUBEApplication.CONFIG.app.ui_properties.items():
+            for component_data in item_data.components:
+                try:
+                    mxcore = MXCUBEApplication.mxcubecore
+                    adapter = mxcore.get_adapter(component_data.attribute)
+                    adapter_cls_name = type(adapter).__name__
+                    value_type = adapter.adapter_type
+                except AttributeError as err :
+                    
+                    msg = (
+                        f"{component_data.attribute} not accessible"
+                        " via Beamline object. "
+                    )
+                    msg += (
+                        "Verify that"
+                        f" beamline.{component_data.attribute} is"
+                        " valid and/or "
+                    )
+                    msg += f"{component_data.attribute} accessible via get_role "
+                    msg += "check ui.yaml configuration file. "
+                    msg += "(attribute will NOT be avilable in UI)"
+                    msg += "\nError is %s" % err
+                    logging.getLogger("HWR").warning(msg)
+                    adapter_cls_name = ""
+                    value_type = ""
+                else:
+                    adapter_cls_name = adapter_cls_name.replace("Adapter", "")
 
-        for _id, section in MXCUBEApplication.CONFIG.app.ui_properties:
-            for component in section.components:
-                # Check that the component, if it's a UIComponentModel, corresponds
-                # to a HardwareObjecs that is available and that it can be
-                # adapted.
-                if isinstance(component, UIComponentModel):
-                    try:
-                        mxcore = MXCUBEApplication.mxcubecore
-                        adapter = mxcore.get_adapter(component.attribute)
-                        adapter_cls_name = type(adapter).__name__
-                        value_type = adapter.adapter_type
-                    except AttributeError:
-                        msg = (
-                            f"{component.attribute} not accessible via Beamline"
-                            " object. "
-                        )
-                        msg += (
-                            f"Verify that beamline.{component.attribute} is valid"
-                            " and/or "
-                        )
-                        msg += f"{component.attribute} accessible via get_role "
-                        msg += "check ui.yaml configuration file. "
-                        msg += "(attribute will NOT be avilable in UI)"
-                        logging.getLogger("HWR").warning(msg)
-                        adapter_cls_name = ""
-                        value_type = ""
-                    else:
-                        adapter_cls_name = adapter_cls_name.replace("Adapter", "")
+                if not component_data.object_type:
+                    component_data.object_type = adapter_cls_name
 
-                    if not component.object_type:
-                        component.object_type = adapter_cls_name
-
-                    if not component.value_type:
-                        component.value_type = value_type
+                if not component_data.value_type:
+                    component_data.value_type = value_type
 
         return {
             key: value.dict()
             for (
                 key,
                 value,
-            ) in MXCUBEApplication.CONFIG.app.ui_properties
+            ) in MXCUBEApplication.CONFIG.app.ui_properties.items()
         }
 
     @staticmethod

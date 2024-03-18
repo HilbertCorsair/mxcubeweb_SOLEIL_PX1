@@ -1,17 +1,10 @@
-<object class="EnergyMockup">
-  <username>energy</username>
-  <mad>
-    <defaultenergy>
-      <energy>12.65950</energy>
-      <directory>pk</directory>
-    </defaultenergy>
-    <defaultenergy>
-      <energy>12.65950</energy>
-      <directory>ip</directory>
-    </defaultenergy>
-    <defaultenergy>
-      <energy>12.70800</energy>
-      <directory>rm</directory>
-    </defaultenergy>
-  </mad>
-</object>
+<equipment class="EnergyMockup">
+    <tangoname>i10-c-c00/ex/beamlineenergy</tangoname>
+    <channel type="tango" polling="500" name="energy">energy</channel>
+    <channel type="tango" polling="500" name="state">State</channel>
+    <tunable>True</tunable>
+    <default_energy>12.650</default_energy>
+    <min_energy>5.8</min_energy>
+    <max_energy>18.5</max_energy>
+</equipment>
+

@@ -1,6 +1,11 @@
-<object class="BeamMockup">
+<object class="PX1BeamInfo">
     <username>beam</username>
+    <!--<tangoname>i10-c-cx1/ex/beamsize</tangoname>-->
     <object hwrid="/aperture" role="aperture" />
     <object hwrid="/slits" role="slits" />
+    <object hwrid="/zoom" role="zoom" />
+    <channel type="tango" name="beamsizex" polling="events">sizeX</channel>
+    <channel type="tango" name="beamsizey" polling="events">sizeZ</channel>
     <defaultBeamDivergence>(12.0, 5.0)</defaultBeamDivergence>
 </object>
+

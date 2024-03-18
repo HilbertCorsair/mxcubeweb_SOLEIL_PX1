@@ -1,7 +1,7 @@
 <object class="MultiCollectMockup">
   <object href="/minidiff" role="diffractometer"/>
   <object href="/mxlocal" role="beamline_configuration"/>
-  <object href="/sc" role="sample_changer"/>
+  <object href="/cryotong" role="sample_changer"/>
   <object href="/energy" role="energy"/>
   <object href="/transmission" role="transmission"/>
   <object href="/detector" role="detector"/>
