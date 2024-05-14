@@ -1,0 +1,5 @@
+<object class="RedisMpegVideo">
+  <username>Camera redis</username>
+  <host>http://localhost:6379</host>
+  <cam_type>redis</cam_type>
+</object>

@@ -7,7 +7,7 @@
   <regulation>disabled</regulation>
 
   <object role="sample_changer" hwrid="/cryotong"/>
-  <object role="video" hwrid="/videohub"/>
+    <!--<object role="video" hwrid="/videohub"/>-->
 
   <debug_collision>/nfs/ruche/share-dev/px1dev/MXCuBE/tools/debug_collision</debug_collision>
 

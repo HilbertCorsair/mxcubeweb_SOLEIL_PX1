@@ -127,7 +127,7 @@ class SampleView(ComponentBase):
         HWR.beamline.sample_view.connect("shapesChanged", self._emit_shapes_updated)
 
         zoom_motor = HWR.beamline.diffractometer.get_object_by_role("zoom")
-
+        print("---------------------SAMPLE VIEW initialised-----------------\n")
         if zoom_motor:
             zoom_motor.connect("stateChanged", self._zoom_changed)
 

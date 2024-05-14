@@ -1,0 +1,7 @@
+<device class="SmargonAxis">
+  <username>Chi</username>
+  <motor_name>chi</motor_name>
+  <backlash>1</backlash>
+  <limits>0,50</limits>
+  <object href="/smargon" role="smargon"/>
+</device>

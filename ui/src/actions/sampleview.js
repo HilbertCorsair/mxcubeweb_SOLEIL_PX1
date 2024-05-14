@@ -163,7 +163,7 @@ export function setVideoSize(width, height) {
     const { sampleview } = getState();
 
     if (sampleview.sourceIsScalable) {
-      fetch('/mxcube/api/v0.1/sampleview/camera', {
+      fetch('/mxcube/api/v0.1/sampleview/bear', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -627,7 +627,7 @@ export function changeAperture(size) {
 
 export function getSampleImageSize() {
   return (dispatch) => {
-    fetch('/mxcube/api/v0.1/sampleview/camera', {
+    fetch('/mxcube/api/v0.1/sampleview/bear', {
       method: 'GET',
       credentials: 'include',
       headers: {

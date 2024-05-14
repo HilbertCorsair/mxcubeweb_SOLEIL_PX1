@@ -1,0 +1,9 @@
+<device class = "PX1CamX">
+  <username>CamX</username>
+
+  <tangoname>i10-c-cx1/dt/camx-analyzer</tangoname>
+  <vg>i10-c-cx1/dt/camx-vg</vg> 
+
+  <channel type="tango" name="image">ROIImage</channel>
+
+</device>

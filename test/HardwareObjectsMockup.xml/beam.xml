@@ -1,6 +1,6 @@
-<object class="PX1BeamInfo">
+<object class="BeamMockup">
     <username>beam</username>
-    <!--<tangoname>i10-c-cx1/ex/beamsize</tangoname>-->
+    <tangoname>i10-c-cx1/ex/beamsize</tangoname>
     <object hwrid="/aperture" role="aperture" />
     <object hwrid="/slits" role="slits" />
     <object hwrid="/zoom" role="zoom" />

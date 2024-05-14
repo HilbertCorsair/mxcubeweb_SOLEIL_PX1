@@ -1,0 +1,24 @@
+<device class="_RedisClient">
+
+    <object role="oav_camera" hwrid="/sample_view"></object>
+    <!--<object role="camx_camera" hwrid="/camx"></object>-->
+    <!--<object role="session" hwrid="/session"></object>-->
+
+
+    <recording_enabled>False</recording_enabled>
+
+    <video_ip>172.19.11.119</video_ip>
+    <video_url>http://{camip}/mjpg/{{camno}}/video.mjpg</video_url>
+
+    <oav_only>False</oav_only>
+
+    <video_no_cams>3</video_no_cams>
+
+    <video_dewar>1</video_dewar>
+    <video_robot>2</video_robot>
+    <video_top>3</video_top>
+    <video_head>4</video_head>
+
+    <interval>50</interval>
+
+</device>
