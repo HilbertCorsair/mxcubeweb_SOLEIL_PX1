@@ -49,7 +49,7 @@ class HttpStreamer:
         if self._clients == 0:
             # first client connected,
             # start listening to frames from sample camera
-            HWR.beamline.sample_view.camera.connect(
+            HWR.beamline.sample_view.bear.connect(
                 "imageReceived", self._new_frame_received
             )
 
@@ -60,7 +60,7 @@ class HttpStreamer:
         if self._clients == 0:
             # last client disconnected,
             # disconnect from the sample camera
-            HWR.beamline.sample_view.camera.disconnect(
+            HWR.beamline.sample_view.bear.disconnect(
                 "imageReceived", self._new_frame_received
             )
 
@@ -248,7 +248,7 @@ class SampleView(ComponentBase):
         self._click_limit = int(HWR.beamline.click_centring_num_clicks or 3)
 
     def set_image_size(self, width, height):
-        HWR.beamline.sample_view.camera.restart_streaming((width, height))
+        HWR.beamline.sample_view.bear.restart_streaming((width, height))
         return self.app.beamline.get_viewport_info()
 
     def move_to_centred_position(self, point_id):

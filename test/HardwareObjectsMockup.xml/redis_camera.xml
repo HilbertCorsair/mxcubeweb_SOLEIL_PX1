@@ -2,4 +2,9 @@
   <username>Camera redis</username>
   <host>http://localhost:6379</host>
   <cam_type>redis</cam_type>
+  <port>4242</port>
+  <width>1024</width>
+  <height>1360</height>
+  <format>MPEG1</format>
+
 </object>

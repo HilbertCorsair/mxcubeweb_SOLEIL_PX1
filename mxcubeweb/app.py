@@ -117,6 +117,7 @@ class MXCUBECore:
     @staticmethod
     def _get_object_from_id(_id):
         if _id in MXCUBECore.adapter_dict:
+            print(f"-- Getting id : {_id} from adapter_dict. ")
             return MXCUBECore.adapter_dict[_id]["adapter"]
 
     @staticmethod
@@ -153,6 +154,7 @@ class MXCUBECore:
             # hardware repository set id to username if its deinfed
             # use the name otherwise (file name without extension)
             ho = MXCUBECore.hwr.get_hardware_object(ho_name)
+            print(f"Loading {ho_name}")
 
             if not ho:
                 continue
@@ -331,6 +333,9 @@ class MXCUBEApplication:
         :return: None
         """
         try:
+            #__import__('pdb').set_trace()
+            #import pdb
+            #pdb.set_trace()
             HWR.beamline.sample_view.bear.start_streaming()#(_format=_format, port=port)
         except Exception as ex:
             msg = f"Could not initialize video, error in app.py init_sample_video line 334 was: {ex}"
@@ -362,6 +367,7 @@ class MXCUBEApplication:
             MXCUBEApplication.beamline.init_signals()
             MXCUBEApplication.beamline.diffractometer_init_signals()
         except Exception:
+            print("Diffractometer signals init failed in mxcubeweb/app.py line 365")
             sys.excepthook(*sys.exc_info())
 
     @staticmethod
@@ -460,6 +466,7 @@ class MXCUBEApplication:
                 # adapted.
                 if isinstance(component, UIComponentModel):
                     try:
+
                         mxcore = MXCUBEApplication.mxcubecore
                         adapter = mxcore.get_adapter(component.attribute)
                         adapter_cls_name = type(adapter).__name__
@@ -564,4 +571,3 @@ class MXCUBEApplication:
     @staticmethod
     def app_atexit():
         MXCUBEApplication.save_settings()
-

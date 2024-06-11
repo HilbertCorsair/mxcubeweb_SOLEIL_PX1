@@ -1,0 +1,8 @@
+<device class="Smargon">
+  <tangoname>i10-c-cx1/ex/sgonaxis</tangoname>
+  <polling>events</polling>
+
+  <velocity_slow>10</velocity_slow>
+  <velocity_default>100</velocity_default>
+
+</device>

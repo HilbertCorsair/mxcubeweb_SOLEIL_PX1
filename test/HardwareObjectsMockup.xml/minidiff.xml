@@ -1,42 +1,39 @@
 <?xml version="1.0"?>
-<object class="DiffractometerMockup">
-  <username>diffractometer</username>
-  <object role="focus" hwrid="./udiff_phix"></object>
-  <object role="zoom" hwrid="./udiff_zoom"></object>
-  <object role="phi" hwrid="./udiff_omega"></object>
-  <object role="phix" hwrid="./udiff_phix"></object>
-  <object role="phiy" hwrid="./udiff_phiy"></object>
-  <object role="phiz" hwrid="./udiff_phiz"></object>
-  <object role="sampx" hwrid="./udiff_sampx"></object>
-  <object role="sampy" hwrid="./udiff_sampy"></object>
-  <object role="kappa" hwrid="./udiff_kappa"></object>
-  <object role="kappa_phi" hwrid="./udiff_kappaphi"></object>
-  <object role="beam" hwrid="./beam"></object>
+<equipment class="PX1MiniDiff">
+  <username>Minidiff</username>
 
-  <object role="backlight" href="./udiff_backlight"/>
-  <object role="backlightswitch" href="./udiff_backlightswitch"/>
-  <object role="frontlight" href="./udiff_frontlight"/>
-  <object role="frontlightswitch" href="./udiff_frontlightswitch"/>
+  <channel type="tango" tangoname="i10-c-cx1/ex/sgonaxis" polling="events" name="smargon_state">State</channel>
 
-  <object role="beamstop_distance" hwrid="./beamstop_alignment_x"></object>
+  <sample_centring>True</sample_centring>
 
-  <object role="beamstop" href="/beamstop"/>
-  <object role="aperture" href="/aperture"/>
-  <object role="capillary" href="/capillary"/>
+  <object role="smargon" hwrid="/smargon"></object>
 
-  <zoomcentre>{"x":340,"y":250}</zoomcentre>
-  <omega_reference>{"motor_name": "phiz", "position":-0.2224, "camera_axis":"x"}</omega_reference>
+  <object role="zoom" hwrid="/zoom"></object>
+  <object role="phi" hwrid="/omega"></object>
+  <object role="phiy" hwrid="/phiy"></object> 
+  <object role="phiz" hwrid="/sampy"></object>
+  <object role="sampx" hwrid="/sampx"></object>
+  <object role="sampy" hwrid="/sampy"></object>
+  <object role="kappa" hwrid="/kappa"></object>
+  <object role="kappa_phi" hwrid="/kappa_phi"></object>
 
-  <!-- MD2 -->
-  <!-- <gridDirection>{"fast": (1, 0), "slow": (0, -1)}</gridDirection>  -->
+  <!--<object role="light" href="/light"/>
+  <object role="lightarm" href="/lightarm"/> -->
 
-  <!-- use sample_changer or plate to test different sample mounting modes -->
-  <sample_mount_mode>sample_changer</sample_mount_mode>
-  <!-- MD3 -->
-  <grid_direction>{"fast": (0, 1), "slow": (1, 0), "omega_ref": 0}</grid_direction>
+  <object role="beam_info" hwrid="/beam-info"></object>
 
+  <!-- object role="camera" hwrid="/ge1350c"></object -->
+  <!-- object role="camera" hwrid="/videohub"></object> -->
+
+  <object role="samplechanger" hwrid="/cryotong"></object>
+  <object role="px1configuration" hwrid="/px1configuration"></object>
+  <object role="px1environment" hwrid="/environment"></object>
+
+
+  <!-- DO THESE VALUES MAKE ANY SENSE AT PX1?? -->
+  <zoom_centre>{"x":340,"y":250}</zoom_centre>
+  <omegaReference>{"motor_name": "phiz", "position":-0.2224, "camera_axis":"x"}</omegaReference>
   <phaseList>["Transfer","Centring","BeamLocation", "DataCollection"]</phaseList>
   <headType>MiniKappa</headType>
-  <exports>["abort", "status", "my_fancy_function", "my_other_funny_function"]</exports>
-  <chip_definition_file>chip_definition.json</chip_definition_file>
-</object>
+
+</equipment>

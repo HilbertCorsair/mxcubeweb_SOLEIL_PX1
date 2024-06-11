@@ -143,9 +143,12 @@ class Beamline(ComponentBase):
 
     def beamline_get_all_attributes(self):
         ho = BeamlineAdapter(HWR.beamline)
-        data = ho.dict()
+        try:
+            data = ho.dict()
+        except :
+            data = {}
+            print (f"Unfortunatly an excepion occured in beamline.py on the web side in beamline_get_all_attributes() ")
         actions = list()
-
         try:
             cmds = HWR.beamline.beamline_actions.get_commands()
         except Exception:
@@ -173,21 +176,23 @@ class Beamline(ComponentBase):
             )
 
         actions.extend(self.beamline_get_actions())
+        try:
+            data.update({"availableMethods": ho.get_available_methods()})
 
-        data.update({"availableMethods": ho.get_available_methods()})
+            data.update(
+                {
+                    "path": HWR.beamline.session.get_base_image_directory(),
+                    "actionsList": actions,
+                }
+            )
 
-        data.update(
-            {
-                "path": HWR.beamline.session.get_base_image_directory(),
-                "actionsList": actions,
-            }
-        )
+            data.update(
+                {"energyScanElements": ho.get_available_elements().get("elements", [])}
+            )
 
-        data.update(
-            {"energyScanElements": ho.get_available_elements().get("elements", [])}
-        )
-
-        data.update(self.diffractometer_get_info())
+            data.update(self.diffractometer_get_info())
+        except Exception as e:
+            print(f"Bad news from beamline_get_all_attributes -> data dict couldn't be updated : \n{e} ")
 
         return data
 

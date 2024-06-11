@@ -52,8 +52,7 @@ class _BeamlineAdapter:
 
     def gphl_json_wf_update_ui_parameters(self, update_dict):
         self.app.server.emit(
-            "gphlWorkflowUpdateUiParametersDialog", update_dict, namespace="/hwr"
-        )
+            "gphlWorkflowUpdateUiParametersDialog", update_dict, namespace="/hwr")
 
     def get_object(self, name):
         return self.get_attr_from_path(name)
@@ -67,8 +66,12 @@ class _BeamlineAdapter:
         attributes = {}
 
         for attr_name in self.app.mxcubecore.adapter_dict:
-            _d = self.app.mxcubecore.get_adapter(attr_name).dict()
-            attributes.update({attr_name: _d})
+            try:
+                print(f"\n-{attr_name}-\n")
+                _d = self.app.mxcubecore.get_adapter(attr_name).dict()
+                attributes.update({attr_name: _d})
+            except Exception as e :
+                print(f"Sory but there is an exception in dict() in beamline adapter.py for {attr_name}: {e} ")
 
         return {"hardwareObjects": attributes}
 
