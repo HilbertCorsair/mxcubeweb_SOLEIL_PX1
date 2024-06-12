@@ -132,7 +132,7 @@ class SampleViewContainer extends Component {
                   phase={this.props.sampleViewState.currentPhase}
                   phaseList={this.props.sampleViewState.phaseList}
                   changePhase={this.props.sampleViewActions.changeCurrentPhase}
-                  state="UNIDENTIFIED"
+                  state={diffractometerHo.state}
                 />
               </div>
 

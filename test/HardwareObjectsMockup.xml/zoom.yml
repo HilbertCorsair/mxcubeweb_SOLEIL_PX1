@@ -1,0 +1,109 @@
+device:
+  '@class': TangoMotorWPositions
+  delta: '5'
+  focus: PhiTableXAxisPosition
+  motor_name: Zoom
+  positions:
+    position:
+    - arrowStep: '50'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '658'
+        pixelsPerMmZ: '658'
+      focus_offset: '0.0'
+      lightLevel: '15'
+      offset: '0'
+      username: Zoom 1
+    - arrowStep: '25'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '1269'
+        pixelsPerMmZ: '1269'
+      focus_offset: '0.0'
+      lightLevel: '25'
+      offset: '313'
+      username: Zoom 2
+    - arrowStep: '15'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '1894'
+        pixelsPerMmZ: '1894'
+      focus_offset: '0.0'
+      lightLevel: '30'
+      offset: '493'
+      username: Zoom 3
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '2632'
+        pixelsPerMmZ: '2632'
+      focus_offset: '0.0'
+      lightLevel: '40'
+      offset: '647'
+      username: Zoom 4
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '3335'
+        pixelsPerMmZ: '3335'
+      focus_offset: '0.0'
+      lightLevel: '55'
+      offset: '756'
+      username: Zoom 5
+    - calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '4000'
+        pixelsPerMmZ: '4000'
+      focus_offset: '0.0'
+      lightLevel: '66'
+      offset: '840'
+      username: Zoom 6
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '4565'
+        pixelsPerMmZ: '4565'
+      focus_offset: '0.0'
+      lightLevel: '75'
+      offset: '916'
+      username: Zoom 7
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '5250'
+        pixelsPerMmZ: '5250'
+      focus_offset: '0.0'
+      lightLevel: '78'
+      offset: '970'
+      username: Zoom 8
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '5940'
+        pixelsPerMmZ: '5940'
+      focus_offset: '0.0'
+      lightLevel: '82'
+      offset: '1030'
+      username: Zoom 9
+    - arrowStep: '10'
+      calibrationData:
+        beamPositionX: '680'
+        beamPositionY: '512'
+        pixelsPerMmY: '6715'
+        pixelsPerMmZ: '6715'
+      focus_offset: '0.0'
+      lightLevel: '86'
+      offset: '1088'
+      username: Zoom 10
+  tangoname: i10-c-cx1/ex/zoom.1-mt_tz
+  threshold: '0.1'
+  username: Zoom

@@ -142,6 +142,9 @@ class MXCUBECore:
 
     @staticmethod
     def get_adapter(_id):
+        import pdb
+        pdb.set_trace()
+
         return MXCUBECore._get_object_from_id(_id)
 
     @staticmethod

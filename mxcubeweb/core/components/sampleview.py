@@ -127,11 +127,19 @@ class SampleView(ComponentBase):
         HWR.beamline.sample_view.connect("shapesChanged", self._emit_shapes_updated)
 
         zoom_motor = HWR.beamline.diffractometer.get_object_by_role("zoom")
-        print("---------------------SAMPLE VIEW initialised-----------------\n")
+        print("---------------------SAMPLE VIEW UI initialised (mxcubeweb/core/compoments/sampleview.py)-----------------\n")
         if zoom_motor:
-            zoom_motor.connect("stateChanged", self._zoom_changed)
+            try:
+                print ("Zoom Motor!")
+                zoom_motor.connect("stateChanged", self._zoom_changed)
+            except Exception as e:
+                print(f"Error in mxcubeweb/core/compoments/sampleview.py; \n{e}\n")
 
     def _zoom_changed(self, *args, **kwargs):
+        #import pdb
+        #pdb.set_trace()
+
+
         ppm = HWR.beamline.diffractometer.get_pixels_per_mm()
         self.app.server.emit(
             "update_pixels_per_mm",
