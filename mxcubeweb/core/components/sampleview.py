@@ -136,10 +136,6 @@ class SampleView(ComponentBase):
                 print(f"Error in mxcubeweb/core/compoments/sampleview.py; \n{e}\n")
 
     def _zoom_changed(self, *args, **kwargs):
-        #import pdb
-        #pdb.set_trace()
-
-
         ppm = HWR.beamline.diffractometer.get_pixels_per_mm()
         self.app.server.emit(
             "update_pixels_per_mm",

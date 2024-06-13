@@ -142,9 +142,6 @@ class MXCUBECore:
 
     @staticmethod
     def get_adapter(_id):
-        import pdb
-        pdb.set_trace()
-
         return MXCUBECore._get_object_from_id(_id)
 
     @staticmethod
@@ -336,9 +333,6 @@ class MXCUBEApplication:
         :return: None
         """
         try:
-            #__import__('pdb').set_trace()
-            #import pdb
-            #pdb.set_trace()
             HWR.beamline.sample_view.bear.start_streaming()#(_format=_format, port=port)
         except Exception as ex:
             msg = f"Could not initialize video, error in app.py init_sample_video line 334 was: {ex}"
