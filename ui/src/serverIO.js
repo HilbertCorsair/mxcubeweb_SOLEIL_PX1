@@ -17,7 +17,6 @@ import {
   updateBeamlineHardwareObjectAction,
   updateBeamlineHardwareObjectValueAction,
   updateBeamlineHardwareObjectAttributeAction,
-  setMachInfo,
 } from './actions/beamline';
 import {
   setActionState,
@@ -56,6 +55,11 @@ import {
   setSCGlobalState,
   updateSCContents,
 } from './actions/sampleChanger';
+
+import {
+  setHarvesterState,
+  updateHarvesterContents,
+} from './actions/harvester';
 
 import { setEnergyScanResult } from './actions/taskResults';
 
@@ -131,16 +135,15 @@ class ServerIO {
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   listen() {
+    this.refreshInterval = setInterval(sendRefreshSession, 9000);
+    this.connect();
+
     if (this.initialized) {
       return;
     }
 
     this.initialized = true;
     this.dispatch = store.dispatch;
-
-    this.refreshInterval = setInterval(sendRefreshSession, 9000);
-
-    this.connect();
 
     this.loggingSocket.on('log_record', (record) => {
       if (record.severity !== 'DEBUG') {
@@ -186,10 +189,6 @@ class ServerIO {
 
     this.hwrSocket.on('beam_changed', (record) => {
       this.dispatch(setBeamInfo(record.data));
-    });
-
-    this.hwrSocket.on('mach_info_changed', (info) => {
-      this.dispatch(setMachInfo(info));
     });
 
     this.hwrSocket.on('hardware_object_changed', (data) => {
@@ -266,17 +265,17 @@ class ServerIO {
       this.dispatch(addDiffractionPlanAction(record.tasks));
     });
 
-    this.hwrSocket.on('queue', (record, callback) => {
-      if (callback) {
-        callback();
-      }
-
+    this.hwrSocket.on('queue', (record) => {
       if (record.Signal === 'DisableSample') {
         this.dispatch(setSampleAttribute([record.sampleID], 'checked', false));
       } else if (record.Signal === 'update') {
-        const state = store.getState();
-        if (!state.login.user.inControl) {
+        if (record.message === 'all') {
           this.dispatch(fetchQueue());
+        } else if (record.message === 'observers') {
+          const state = store.getState();
+          if (!state.login.user.inControl) {
+            this.dispatch(fetchQueue());
+          }
         }
       } else {
         this.dispatch(setStatus(record.Signal));
@@ -434,7 +433,11 @@ class ServerIO {
     });
 
     this.hwrSocket.on('workflowParametersDialog', (data) => {
-      this.dispatch(showWorkflowParametersDialog(data));
+      if (data) {
+        this.dispatch(showWorkflowParametersDialog(data, true));
+      } else {
+        this.dispatch(showWorkflowParametersDialog(null, false));
+      }
     });
 
     this.hwrSocket.on('gphlWorkflowParametersDialog', (data) => {
@@ -488,6 +491,14 @@ class ServerIO {
     this.hwrSocket.on('plot_end', (data) => {
       this.dispatch(plotData(data.id, data.data, true));
       this.dispatch(plotEnd(data));
+    });
+
+    this.hwrSocket.on('harvester_state', (state) => {
+      this.dispatch(setHarvesterState(state));
+    });
+
+    this.hwrSocket.on('harvester_contents_update', () => {
+      this.dispatch(updateHarvesterContents());
     });
   }
 }

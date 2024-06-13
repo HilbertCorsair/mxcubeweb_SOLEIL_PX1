@@ -7,12 +7,11 @@ from mxcubeweb.core.models.adaptermodels import (
 
 
 class BeamAdapter(ActuatorAdapterBase):
-    def __init__(self, ho, *args, **kwargs):
-        super(BeamAdapter, self).__init__(ho, *args, **kwargs)
+    def __init__(self, ho, *args):
+        super(BeamAdapter, self).__init__(ho, *args)
 
     def limits(self):
-        """ """
-        return (-1, -1)
+        return -1, -1
 
     def _get_aperture(self) -> tuple:
         """
@@ -21,7 +20,6 @@ class BeamAdapter(ActuatorAdapterBase):
         :return: Tuple, (list of apertures, current aperture)
         :rtype: tuple
         """
-        aperture_list, current_aperture = [], None
         beam_ho = self._ho
 
         aperture_list = beam_ho.get_available_size()["values"]

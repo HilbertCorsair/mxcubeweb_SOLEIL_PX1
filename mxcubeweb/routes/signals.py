@@ -18,6 +18,7 @@ from mxcubeweb.core.components.queue import (
     COLLECTED,
     WARNING,
 )
+from mxcubecore.HardwareObjects.Harvester import HarvesterState
 
 from mxcubecore.model import queue_model_objects as qmo
 from mxcubecore import queue_entry as qe
@@ -105,6 +106,16 @@ def diffractometer_phase_changed(*args):
         "Diffractometer phase changed to %s" % args
     )
     server.emit("diff_phase_changed", data, namespace="/hwr")
+
+
+def harvester_state_changed(*args):
+    new_state = args[0]
+    state_str = HarvesterState.STATE_DESC.get(new_state, "Unknown").upper()
+    server.emit("harvester_state", state_str, namespace="/hwr")
+
+
+def harvester_contents_update():
+    server.emit("harvester_contents_update")
 
 
 def sc_state_changed(*args):
@@ -200,7 +211,7 @@ def set_current_sample(sample_id):
 
 
 def sc_contents_update():
-    server.emit("sc_contents_update")
+    server.emit("sc_contents_update", {}, namespace="/hwr")
 
 
 def sc_maintenance_update(*args):
@@ -655,6 +666,7 @@ def beam_changed(*args, **kwargs):
 
 def beamline_action_start(name):
     msg = {"name": name, "state": RUNNING}
+
     try:
         server.emit("beamline_action", msg, namespace="/hwr")
     except Exception:
@@ -684,15 +696,6 @@ def beamline_action_failed(name):
         )
     else:
         logging.getLogger("user_level_log").error("Action %s failed !", name)
-
-
-def mach_info_changed(values):
-    try:
-        server.emit("mach_info_changed", values, namespace="/hwr")
-    except Exception:
-        logging.getLogger("HWR").error(
-            "error sending mach_info_changed signal: &s" % values
-        )
 
 
 def new_plot(plot_info):

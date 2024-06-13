@@ -339,26 +339,39 @@ export default class ContextMenu extends React.Component {
 
     params = getLastUsedParameters(type, params);
 
-    this.props.showForm(
-      modalName,
-      [sampleID],
-      {
-        parameters: {
-          ...params,
-          ...extraParams,
-          prefix: sampleData.defaultPrefix,
-          name,
-          subdir: `${this.props.groupFolder}${sampleData.defaultSubDir}`,
-          cell_count: shape.gridData
-            ? shape.gridData.numCols * shape.gridData.numRows
-            : 'none',
-          numRows: shape.gridData ? shape.gridData.numRows : 0,
-          numCols: shape.gridData ? shape.gridData.numCols : 0,
+    if (sampleData) {
+      const [cell_count, numRows, numCols] = shape.gridData
+        ? [
+            shape.gridData.numCols * shape.gridData.numRows,
+            shape.gridData.numRows,
+            shape.gridData.numCols,
+          ]
+        : ['none', 0, 0];
+
+      this.props.showForm(
+        modalName,
+        [sampleID],
+        {
+          parameters: {
+            ...params,
+            ...extraParams,
+            prefix: sampleData.defaultPrefix,
+            name,
+            subdir: `${this.props.groupFolder}${sampleData.defaultSubDir}`,
+            cell_count,
+            numRows,
+            numCols,
+          },
+          type,
         },
-        type,
-      },
-      sid,
-    );
+        sid,
+      );
+    } else {
+      this.props.showErrorPanel(
+        true,
+        'There is no sample mounted, cannot collect data.',
+      );
+    }
     this.hideContextMenu();
     this.props.sampleViewActions.showContextMenu(false);
   }
@@ -394,7 +407,7 @@ export default class ContextMenu extends React.Component {
     // associate the newly saved shape to an existing task with -1 shape.
     // Fixes issues when the task is added before a shape
     const { tasks } = this.props.sampleData;
-    if (tasks.length > 0) {
+    if (tasks?.length > 0) {
       tasks.forEach((task) => {
         const { parameters } = task;
         if (parameters.shape === -1) {

@@ -5,7 +5,7 @@ import { reduxForm, Form, formValueSelector } from 'redux-form';
 import { DraggableModal } from '../DraggableModal';
 import { Modal, Button, Row, ButtonToolbar } from 'react-bootstrap';
 import validate from './validate';
-import { StaticField, InputField, toFixed, SelectField } from './fields';
+import { StaticField, InputField, SelectField } from './fields';
 
 function Workflow(props) {
   const isGphlWorkflow = props.wfpath === 'Gphl';
@@ -99,7 +99,7 @@ function Workflow(props) {
           <ButtonToolbar className="float-end">
             <Button
               variant="success"
-              disabled={props.invalid}
+              disabled={props.origin === 'samplelist' || props.invalid}
               onClick={props.handleSubmit((params) => addToQueue(true, params))}
             >
               Run Now
@@ -151,6 +151,7 @@ const WorkflowFormConnect = connect((state) => {
 
   return {
     path: `${state.login.rootPath}/${subdir}`,
+    origin: state.taskForm.origin,
     filename: fname,
     wfname: state.taskForm.taskData.parameters.wfname,
     wfpath: state.taskForm.taskData.parameters.wfpath,
@@ -161,9 +162,6 @@ const WorkflowFormConnect = connect((state) => {
     initialValues: {
       ...state.taskForm.taskData.parameters,
       beam_size: state.sampleview.currentAperture,
-      resolution: toFixed(state, 'resolution'),
-      energy: toFixed(state, 'energy'),
-      transmission: toFixed(state, 'transmission'),
     },
   };
 })(WorkflowForm);

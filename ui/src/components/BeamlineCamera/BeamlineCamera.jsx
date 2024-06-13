@@ -1,127 +1,130 @@
 import React, { useState } from 'react';
-import { Badge, Button, OverlayTrigger, Popover } from 'react-bootstrap';
-import './style.css';
+import { Button, Dropdown, Card, Stack } from 'react-bootstrap';
+import Draggable from 'react-draggable';
+
+import { MdClose } from 'react-icons/md';
+
+import styles from './beamlineCamera.module.css';
 import pip from './picture_in_picture.svg';
 
-function BeamlineCamera({
-  labelText,
-  url,
-  width,
-  height,
-  optionsOverlay,
-  format,
-}) {
-  const [showLabelOverlay, setShowLabelOverlay] = useState(false);
-  const [showValueOverlay, setShowValueOverlay] = useState(false);
-
-  const onImageClick = (ev) => {
-    setShowValueOverlay(false);
-    window.open(
-      url,
-      'webcam',
-      `toolbar=0,location=0,menubar=0,addressbar=0,height=${height},width=${width}`,
-      'popup',
-    );
-  };
-
-  const renderLabel = () => {
-    if (!optionsOverlay) {
-      return (
-        <Badge bg="secondary" style={{ display: 'block', marginBottom: '3px' }}>
-          {labelText}
-        </Badge>
-      );
-    }
-
-    return (
-      <OverlayTrigger
-        show={showLabelOverlay}
-        rootClose
-        trigger="click"
-        placement="bottom"
-        overlay={optionsOverlay}
-      >
-        <div onClick={() => setShowLabelOverlay(!showLabelOverlay)}>
-          <Badge
-            bg="secondary"
-            style={{ display: 'block', marginBottom: '3px' }}
-          >
-            {labelText}
-            <i className="fas fa-cog ms-2" />
-          </Badge>
-        </div>
-      </OverlayTrigger>
-    );
-  };
-
-  const msgLabelStyle = {
-    display: 'block',
-    fontSize: '100%',
-    borderRadius: '0px',
-    color: '#000',
-  };
-
-  const video = (
-    <div>
-      {format !== 'mp4' ? (
-        <img // eslint-disable-line jsx-a11y/no-noninteractive-element-interactions
-          onClick={onImageClick}
-          src={url}
-          alt={labelText}
-          width={width}
-          height={height}
-        />
-      ) : (
-        <video
-          src={url}
-          alt={labelText}
-          onClick={onImageClick}
-          width={width}
-          height={height}
-        />
-      )}
-      <Button
-        variant="outline-secondary"
-        onClick={onImageClick}
-        size="sm"
-        style={{ position: 'absolute', left: '90%', bottom: '10px' }}
-      >
-        <img src={pip} alt="PIP Icon" />
-      </Button>
-    </div>
-  );
-
-  return (
-    <div className="inout-switch">
-      {renderLabel()}
-      <OverlayTrigger
-        show={showValueOverlay}
-        rootClose
-        trigger="click"
-        placement="bottom"
-        overlay={
-          <Popover style={{ padding: '0.5em' }} id={`${labelText} popover`}>
-            {video}
-          </Popover>
-        }
-      >
-        <div onClick={() => setShowValueOverlay(!showValueOverlay)}>
-          <Badge bg="success" style={msgLabelStyle}>
-            <i className="fas fa-video" />
-          </Badge>
-        </div>
-      </OverlayTrigger>
-    </div>
+function handleImageClick(url, width, height) {
+  window.open(
+    url,
+    'webcam',
+    `toolbar=0,location=0,menubar=0,addressbar=0,height=${height},width=${width}`,
+    'popup',
   );
 }
 
-BeamlineCamera.defaultProps = {
-  labelText: '',
-  width: 0,
-  height: 0,
-  url: '',
-  optionsOverlay: false,
-  format: '',
-};
+export default function BeamlineCamera(props) {
+  const { cameraSetup } = props;
 
-export default BeamlineCamera;
+  const [showVideoModal, setShowVideoModal] = useState({});
+
+  function handleShowVideoCard(key, value) {
+    setShowVideoModal({ ...showVideoModal, [key]: value });
+  }
+
+  function renderVideo() {
+    const DraggableElements = [];
+    cameraSetup.components.forEach((camera, vIndex) => {
+      DraggableElements.push(
+        showVideoModal[vIndex] ? (
+          <div
+            key={`draggable-video_${camera.label}`}
+            className="draggableHandle"
+          >
+            <Draggable defaultPosition={{ x: 200, y: 100 + 50 * vIndex }}>
+              <Card className={styles.draggableHandle}>
+                <Card.Header>
+                  <Stack direction="horizontal" gap={3}>
+                    <div className={styles.headerTitle}>{camera.label}</div>
+                    <div className="p-2 ms-auto">
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() =>
+                          handleImageClick(
+                            camera.url,
+                            camera.width,
+                            camera.height,
+                          )
+                        }
+                        size="sm"
+                      >
+                        <img src={pip} alt="PIP Icon" />
+                      </Button>
+                    </div>
+                    <div className="vr" />
+                    <div>
+                      <MdClose
+                        color="red"
+                        onClick={() => handleShowVideoCard(vIndex, false)}
+                        size="1.5em"
+                        className={styles.closeBtn}
+                      />
+                    </div>
+                  </Stack>
+                </Card.Header>
+                <Card.Body>
+                  {camera.format !== 'mp4' ? (
+                    <img
+                      src={camera.url}
+                      alt={camera.label}
+                      width={camera.width}
+                      height={camera.height}
+                    />
+                  ) : (
+                    <video
+                      src={camera.url}
+                      alt={camera.label}
+                      width={camera.width}
+                      height={camera.height}
+                    />
+                  )}
+                </Card.Body>
+              </Card>
+            </Draggable>
+          </div>
+        ) : null,
+      );
+    });
+    return DraggableElements;
+  }
+
+  if (!cameraSetup || cameraSetup.components.length <= 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <Dropdown
+        title="Beamline Cameras"
+        id="beamline-cameras-dropdown"
+        variant="outline-secondary"
+        autoClose="outside"
+        key="beamline-cameras-dropdown"
+      >
+        <Dropdown.Toggle
+          variant="outline-secondary"
+          size="sm"
+          className="mb-1"
+          style={{ width: '150px' }}
+        >
+          Beamline Cameras
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          {cameraSetup.components.map((camera, cIndex) => [
+            <Dropdown.Item
+              key={`ddVideo_${camera.label}`}
+              onClick={() => handleShowVideoCard(cIndex, true)}
+            >
+              {camera.label} <i className="fas fa-video" />
+            </Dropdown.Item>,
+            cameraSetup.components.length > cIndex + 1 && <Dropdown.Divider />,
+          ])}
+        </Dropdown.Menu>
+      </Dropdown>
+      {renderVideo()}
+    </>
+  );
+}

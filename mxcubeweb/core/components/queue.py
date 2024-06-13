@@ -1117,6 +1117,30 @@ class Queue(ComponentBase):
                 sample_model
             )
 
+        run_number_dir_parts = (
+            params.get("subdir", "").strip("/").split("/")[-1].split("_")
+        )
+
+        # When duplicating an item the "run number" directory of the original
+        # item is already part of the data subfolder, so we need to strip ita
+        # to avoid nesting.
+
+        # Sub directory is a run number directory if it starts
+        # with run folowed by a number and a tag spereated by a
+        # underscore (_) for instance, run_01_datacollection
+        # The run number directory is passed as the last folder of the
+        # data sub direecotry when and item is duplicated. We strip
+        # the run number folder in this case to remove duplication
+        if (
+            len(run_number_dir_parts) == 3
+            and run_number_dir_parts[0] == "run"
+            and run_number_dir_parts[1].isnumeric()
+            and run_number_dir_parts[2] == self.get_folder_tag(params)
+        ):
+            params["subdir"] = "/".join(
+                params.get("subdir", "").strip("/").split("/")[0:-1]
+            )
+
         full_path, process_path = HWR.beamline.session.get_full_path(
             params.get("subdir", ""), self.get_folder_tag(params)
         )
@@ -2150,29 +2174,7 @@ class Queue(ComponentBase):
             logging.getLogger("MX3.HWR").info("[QUEUE] Queue started")
 
     def queue_stop(self):
-        from mxcubeweb.routes import signals
-
-        if HWR.beamline.queue_manager._root_task is not None:
-            HWR.beamline.queue_manager.stop()
-        else:
-            qe = HWR.beamline.queue_manager.get_current_entry()
-            # check if a node/task is executing and stop that one
-            if qe:
-                try:
-                    qe.stop()
-                except Exception:
-                    logging.getLogger("MX3.HWR").exception(
-                        "[QUEUE] Could not stop queue"
-                    )
-                HWR.beamline.queue_manager.set_pause(False)
-                # the next two is to avoid repeating the task
-                # TODO: if you now run the queue it will be enabled and run
-                qe.get_data_model().set_executed(True)
-                qe.get_data_model().set_enabled(False)
-                qe._execution_failed = True
-
-                HWR.beamline.queue_manager._is_stopped = True
-                signals.queue_execution_stopped()
+        HWR.beamline.queue_manager.stop()
 
     def queue_pause(self):
         """

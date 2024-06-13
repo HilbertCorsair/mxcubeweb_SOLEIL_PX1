@@ -112,13 +112,13 @@ def build_server_and_config(test=False, argv=None):
         db.ping()
     except redis.RedisError:
         print("No Redis server is running, exiting")
-        return (None, None)
+        return None, None
 
     try:
         # This refactoring (with other bits) allows you to pass a 'path1:path2' lookup path
         # as the hwr_directory. I need it for sensible managing of a multi-beamline test set-up
-        # without continuously editing teh main config files.
-        # Note that the machinery was all there in the core alrady. rhfogh.
+        # without continuously editing the main config files.
+        # Note that the machinery was all there in the core already. rhfogh.
         HWR.init_hardware_repository(cmdline_options.hwr_directory)
         config_path = HWR.get_hardware_repository().find_in_repository("mxcube-web")
 
@@ -127,7 +127,7 @@ def build_server_and_config(test=False, argv=None):
         if test:
             cfg.flask.USER_DB_PATH = "/tmp/mxcube-test-user.db"
 
-        server.init(cmdline_options, cfg, mxcube)
+        server.init(cmdline_options, cfg)
         mxcube.init(
             server,
             cmdline_options.allow_remote,
@@ -143,7 +143,7 @@ def build_server_and_config(test=False, argv=None):
         traceback.print_exc()
         raise
 
-    return (server, cfg)
+    return server, cfg
 
 
 def main():

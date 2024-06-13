@@ -10,7 +10,6 @@ from flask import (
     copy_current_request_context,
 )
 
-from flask_socketio import join_room, leave_room
 from flask_login import current_user
 
 DISCONNECT_HANDLED = True
@@ -66,11 +65,6 @@ def init_route(app, server, url_prefix):  # noqa: C901
         if app.usermanager.is_operator():
             return make_response("", 200)
 
-        # Not inhouse user so not allowed to take control by force,
-        # return error code
-        if not current_user.isstaff:
-            return make_response("", 409)
-
         toggle_operator(current_user.username, "You were given control")
 
         return make_response("", 200)
@@ -111,17 +105,6 @@ def init_route(app, server, url_prefix):  # noqa: C901
         newop.requests_control = False
         app.usermanager.update_user(oldop)
         app.usermanager.update_user(newop)
-
-        join_room(
-            "observers",
-            sid=oldop.socketio_session_id,
-            namespace="/ui_state",
-        )
-        leave_room(
-            "observers",
-            sid=newop.socketio_session_id,
-            namespace="/ui_state",
-        )
 
         app.usermanager.emit_observers_changed(message)
 

@@ -1,14 +1,9 @@
 <?xml version="1.0"?>
-<equipment class="PX1MiniDiff">
+<<<<<<< HEAD
+<object class="PX1MiniDiff">
   <username>Minidiff</username>
-
   <channel type="tango" tangoname="i10-c-cx1/ex/sgonaxis" polling="events" name="smargon_state">State</channel>
-
   <sample_centring>True</sample_centring>
-
-  <object role="smargon" hwrid="/smargon"></object>
-
-  <object role="zoom" hwrid="/zoom"></object>
   <object role="phi" hwrid="/omega"></object>
   <object role="phiy" hwrid="/phiy"></object> 
   <object role="phiz" hwrid="/sampy"></object>
@@ -36,4 +31,4 @@
   <phaseList>["Transfer","Centring","BeamLocation", "DataCollection"]</phaseList>
   <headType>MiniKappa</headType>
 
-</equipment>
+</object>

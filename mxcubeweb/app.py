@@ -34,6 +34,7 @@ from mxcubeweb.core.components.sampleview import SampleView
 from mxcubeweb.core.components.queue import Queue
 from mxcubeweb.core.components.workflow import Workflow
 from mxcubeweb.core.models.configmodels import UIComponentModel
+from mxcubeweb.core.components.harvester import Harvester
 
 
 removeLoggingHandlers()
@@ -132,12 +133,12 @@ class MXCUBECore:
             MXCUBECore.adapter_dict[_id] = {
                 "id": str(_id),
                 "adapter_cls": adapter_cls.__name__,
-                "ho": ho.name()[1:],
+                "ho": ho.name,
                 "adapter": adapter_instance,
             }
         else:
             logging.getLogger("MX3.HWR").warning(
-                f"Skipping {ho.name()}, id: {_id} already exists"
+                f"Skipping {ho.name}, id: {_id} already exists"
             )
 
     @staticmethod
@@ -146,12 +147,11 @@ class MXCUBECore:
 
     @staticmethod
     def adapt_hardware_objects(app):
-        adapter_config = app.CONFIG.app.adapter_properties
         hwobject_list = [item for item in MXCUBECore.hwr.hardware_objects]
 
         for ho_name in hwobject_list:
             # Go through all hardware objects exposed by mxcubecore
-            # hardware repository set id to username if its deinfed
+            # hardware repository set id to username if its defined
             # use the name otherwise (file name without extension)
             ho = MXCUBECore.hwr.get_hardware_object(ho_name)
             print(f"Loading {ho_name}")
@@ -167,7 +167,7 @@ class MXCUBECore:
 
             if adapter_cls:
                 try:
-                    adapter_instance = adapter_cls(ho, _id, app, **dict(adapter_config))
+                    adapter_instance = adapter_cls(ho, _id, app)
                     logging.getLogger("MX3.HWR").info("Added adapter for %s" % _id)
                 except Exception:
                     logging.getLogger("MX3.HWR").exception(
@@ -313,6 +313,7 @@ class MXCUBEApplication:
         MXCUBEApplication.beamline = Beamline(MXCUBEApplication, {})
         MXCUBEApplication.sample_view = SampleView(MXCUBEApplication, {})
         MXCUBEApplication.workflow = Workflow(MXCUBEApplication, {})
+        MXCUBEApplication.harvester = Harvester(MXCUBEApplication, {})
 
         MXCUBEApplication.init_signal_handlers()
         atexit.register(MXCUBEApplication.app_atexit)
@@ -365,6 +366,11 @@ class MXCUBEApplication:
             MXCUBEApplication.beamline.diffractometer_init_signals()
         except Exception:
             print("Diffractometer signals init failed in mxcubeweb/app.py line 365")
+            sys.excepthook(*sys.exc_info())
+
+        try:
+            MXCUBEApplication.harvester.init_signals()
+        except Exception:
             sys.excepthook(*sys.exc_info())
 
     @staticmethod
@@ -457,40 +463,40 @@ class MXCUBEApplication:
         # (either via config or via mxcubecore.beamline)
 
         for _id, section in MXCUBEApplication.CONFIG.app.ui_properties:
-            for component in section.components:
-                # Check that the component, if it's a UIComponentModel, corresponds
-                # to a HardwareObjecs that is available and that it can be
-                # adapted.
-                if isinstance(component, UIComponentModel):
-                    try:
+            if section:
+                for component in section.components:
+                    # Check that the component, if it's a UIComponentModel, corresponds
+                    # to a HardwareObjects that is available and that it can be
+                    # adapted.
+                    if isinstance(component, UIComponentModel):
+                        try:
+                            mxcore = MXCUBEApplication.mxcubecore
+                            adapter = mxcore.get_adapter(component.attribute)
+                            adapter_cls_name = type(adapter).__name__
+                            value_type = adapter.adapter_type
+                        except AttributeError:
+                            msg = (
+                                f"{component.attribute} not accessible via Beamline"
+                                " object. "
+                            )
+                            msg += (
+                                f"Verify that beamline.{component.attribute} is valid"
+                                " and/or "
+                            )
+                            msg += f"{component.attribute} accessible via get_role "
+                            msg += "check ui.yaml configuration file. "
+                            msg += "(attribute will NOT be available in UI)"
+                            logging.getLogger("HWR").warning(msg)
+                            adapter_cls_name = ""
+                            value_type = ""
+                        else:
+                            adapter_cls_name = adapter_cls_name.replace("Adapter", "")
 
-                        mxcore = MXCUBEApplication.mxcubecore
-                        adapter = mxcore.get_adapter(component.attribute)
-                        adapter_cls_name = type(adapter).__name__
-                        value_type = adapter.adapter_type
-                    except AttributeError:
-                        msg = (
-                            f"{component.attribute} not accessible via Beamline"
-                            " object. "
-                        )
-                        msg += (
-                            f"Verify that beamline.{component.attribute} is valid"
-                            " and/or "
-                        )
-                        msg += f"{component.attribute} accessible via get_role "
-                        msg += "check ui.yaml configuration file. "
-                        msg += "(attribute will NOT be avilable in UI)"
-                        logging.getLogger("HWR").warning(msg)
-                        adapter_cls_name = ""
-                        value_type = ""
-                    else:
-                        adapter_cls_name = adapter_cls_name.replace("Adapter", "")
+                        if not component.object_type:
+                            component.object_type = adapter_cls_name
 
-                    if not component.object_type:
-                        component.object_type = adapter_cls_name
-
-                    if not component.value_type:
-                        component.value_type = value_type
+                        if not component.value_type:
+                            component.value_type = value_type
 
         return {
             key: value.dict()
@@ -498,6 +504,7 @@ class MXCUBEApplication:
                 key,
                 value,
             ) in MXCUBEApplication.CONFIG.app.ui_properties
+            if value
         }
 
     @staticmethod

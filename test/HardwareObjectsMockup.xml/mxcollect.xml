@@ -1,4 +1,5 @@
 <object class="MultiCollectMockup">
+<!-- <<<<<< HEAD : code from previous version 
   <object href="/minidiff" role="diffractometer"/>
   <object href="/mxlocal" role="beamline_configuration"/>
   <object href="/cryotong" role="sample_changer"/>
@@ -7,6 +8,8 @@
   <object href="/detector" role="detector"/>
   <object href="/resolution" role="resolution"/>
   <object href="/lims" role="dbserver"/>
+=======
+  >>>>>>> xml_yaml_conversion -->
   <num_snapshots>0</num_snapshots>
 
   <auto_processing>

@@ -316,7 +316,12 @@ export default class DrawGridPlugin {
       result = gd.result[this.resultType];
     }
 
-    if (result !== undefined && result !== null && gd.id !== null) {
+    if (
+      result !== undefined &&
+      result !== null &&
+      gd.id !== null &&
+      Object.values(result).length > 0
+    ) {
       for (let nh = 0; nh < row; nh++) {
         for (let nw = 0; nw < col; nw++) {
           const index = nw + nh * col + 1;
@@ -362,12 +367,12 @@ export default class DrawGridPlugin {
     const width = cellTW * gridData.numCols;
 
     let color = gridData.selected
-      ? 'rgba(255, 255, 255, 1)'
-      : 'rgba(255, 255, 255, 0.5)';
-    color = gridData.result.length > 0 ? 'rgba(255, 255, 255, 1)' : color;
+      ? 'rgba(136, 255, 91, 1)'
+      : 'rgba(228, 255, 9, 0.5)';
+    color = gridData.result.length > 0 ? 'rgba(228, 255, 9, 1)' : color;
     const lineColor = gridData.selected
-      ? 'rgba(255, 255, 255, 0.5)'
-      : 'rgba(255, 255, 255, 0)';
+      ? 'rgba(136, 255, 91, 0.5)'
+      : 'rgba(228, 255, 9, 0)';
     const outlineStrokeArray = gridData.selected ? [] : [5, 5];
     const innerStrokeArray = gridData.selected ? [5, 5] : [0, 0];
 
@@ -593,19 +598,32 @@ export default class DrawGridPlugin {
     }
   }
 
-  getClickedCell(shapeGroup, clickPoint) {
-    let cell = null;
+  getClickedCellIndex(gd, shapeGroup, e) {
+    // To be investigated closer, actual position of mesh appears
+    // shifted by OFFSET pixels.
+    const OFFSET = 20;
 
-    shapeGroup.forEachObject((obj) => {
-      if (
-        obj.get('type') === 'ellipse' &&
-        obj.containsPoint(clickPoint, null, true)
-      ) {
-        cell = obj;
-      }
-    });
+    const cellSizeX = this.getCellWidth(gd);
+    const cellSizeY = this.getCellHeight(gd);
+    const cellIdxX = Math.floor(
+      (e.offsetX - shapeGroup.oCoords.tl.x) / cellSizeX,
+    );
+    const cellIdxY = Math.floor(
+      (e.offsetY - shapeGroup.oCoords.tl.y - OFFSET) / cellSizeY,
+    );
 
-    return cell;
+    return [cellIdxX, cellIdxY];
+  }
+
+  getClickedCell(gd, shapeGroup, e) {
+    const cellSizeX = this.getCellWidth(gd) / this.scale;
+    const cellSizeY = this.getCellHeight(gd) / this.scale;
+    const cellIdx = this.getClickedCellIndex(gd, shapeGroup, e);
+
+    return [
+      gd.screenCoord[0] + cellSizeX / 2 + cellIdx[0] * cellSizeX,
+      gd.screenCoord[1] + cellSizeY / 2 + cellIdx[1] * cellSizeY,
+    ];
   }
 
   /**

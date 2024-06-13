@@ -40,7 +40,6 @@ export default class SampleImage extends React.Component {
     this.setGridOverlayOpacity = this.setGridOverlayOpacity.bind(this);
     this.getGridOverlayOpacity = this.getGridOverlayOpacity.bind(this);
     this.saveGrid = this.saveGrid.bind(this);
-    this.getGridCellCenter = this.getGridCellCenter.bind(this);
     this.configureGrid = this.configureGrid.bind(this);
     this.updateGridResults = this.updateGridResults.bind(this);
     this.selectedGrid = this.selectedGrid.bind(this);
@@ -120,13 +119,6 @@ export default class SampleImage extends React.Component {
   componentDidUpdate(prevProps) {
     // Initialize JSMpeg for decoding the MPEG1 stream
     if (prevProps.videoFormat !== 'MPEG1') {
-      this.initJSMpeg();
-    }
-
-    if (
-      this.props.width !== prevProps.width ||
-      this.props.videoHash !== prevProps.videoHash
-    ) {
       this.initJSMpeg();
     }
 
@@ -299,20 +291,6 @@ export default class SampleImage extends React.Component {
     return overlay;
   }
 
-  getGridCellCenter(gridGroup, clickPoint) {
-    const cell = this.drawGridPlugin.getClickedCell(gridGroup, clickPoint);
-    let cellCenter = [];
-
-    if (cell) {
-      cellCenter = [
-        (cell.aCoords.tl.x + cell.width / 2) / this.props.imageRatio,
-        (cell.aCoords.tl.y + cell.height / 2) / this.props.imageRatio,
-      ];
-    }
-
-    return cellCenter;
-  }
-
   selectedGrid() {
     let grid = null;
 
@@ -429,8 +407,6 @@ export default class SampleImage extends React.Component {
           .filter((shape) => this.props.twoDPoints[shape.id] !== undefined)
           .map((shape) => shape.id);
 
-        const pointList = [...threeDpointList, ...twoDPointList];
-
         const gridList = shapes
           .filter((shape) => this.props.grids[shape.id] !== undefined)
           .map((shape) => shape.id);
@@ -439,25 +415,34 @@ export default class SampleImage extends React.Component {
           .filter((shape) => this.props.lines[shape.id] !== undefined)
           .map((shape) => shape.id);
 
-        if (pointList.length === 2) {
+        if (threeDpointList.length === 2) {
           ctxMenuObj = { type: 'HELICAL', id: this.props.selectedShapes };
         } else if (
-          pointList.length === 1 &&
-          this.props.points[pointList[0]].state === 'SAVED'
+          threeDpointList.length === 1 &&
+          this.props.points[threeDpointList[0]].state === 'SAVED'
         ) {
-          ctxMenuObj = { type: 'SAVED', id: pointList[0] };
+          ctxMenuObj = { type: 'SAVED', id: threeDpointList[0] };
         } else if (
-          pointList.length === 1 &&
-          this.props.points[pointList[0]].state === 'TMP'
+          twoDPointList.length === 1 &&
+          this.props.twoDPoints[twoDPointList[0]].state === 'SAVED'
         ) {
-          ctxMenuObj = { type: 'TMP', id: pointList[0] };
-        } else if (pointList.length > 2) {
-          ctxMenuObj = { type: 'GROUP', id: pointList };
+          ctxMenuObj = { type: 'SAVED', id: twoDPointList[0] };
+        } else if (
+          threeDpointList.length === 1 &&
+          this.props.points[threeDpointList[0]].state === 'TMP'
+        ) {
+          ctxMenuObj = { type: 'TMP', id: threeDpointList[0] };
+        } else if (threeDpointList.length > 2) {
+          ctxMenuObj = { type: 'GROUP', id: threeDpointList };
         } else if (gridList.length === 1) {
-          const gridData = this.props.grids[gridList[0]];
-          const cellCenter = this.getGridCellCenter(
+          const gridData = this.drawGridPlugin.setPixelsPerMM(
+            this.props.pixelsPerMm,
+            this.props.grids[gridList[0]],
+          );
+          const cellCenter = this.drawGridPlugin.getClickedCell(
+            gridData,
             group.getObjects()[0],
-            clickPoint,
+            e,
           );
           ctxMenuObj = {
             type: 'GridGroupSaved',
@@ -549,8 +534,6 @@ export default class SampleImage extends React.Component {
       measureDistance,
       imageRatio,
       contextMenuVisible,
-      beamSize,
-      pixelsPerMm,
     } = this.props;
 
     if (contextMenuVisible) {
@@ -569,22 +552,18 @@ export default class SampleImage extends React.Component {
       );
     } else if (this.props.drawGrid) {
       this.drawGridPlugin.startDrawing(option, this.canvas, imageRatio);
-    } else if (option.e.metaKey || option.e.ctrlKey) {
-      const cellSizeX = beamSize.x * pixelsPerMm[0] * imageRatio;
-      const cellSizeY = beamSize.y * pixelsPerMm[1] * imageRatio;
-
-      const cellIdxX = Number.parseInt(
-        Math.floor((option.pointer.x - option.target.oCoords.tl.x) / cellSizeX),
-        10,
-      );
-      const cellIdxY = Number.parseInt(
-        Math.floor(
-          (option.pointer.y - option.target.oCoords.tl.y - 20) / cellSizeY,
-        ),
-        10,
+    } else if (option.target && !(option.e.shiftKey || option.e.ctrlKey)) {
+      const shapeData = this.drawGridPlugin.setPixelsPerMM(
+        this.props.pixelsPerMm,
+        this.props.shapes[objectFound.id],
       );
 
-      const shapeData = this.props.shapes[objectFound.id];
+      const [cellIdxX, cellIdxY] = this.drawGridPlugin.getClickedCellIndex(
+        shapeData,
+        option.target,
+        option.pointer,
+      );
+
       const imgNum = this.drawGridPlugin.countCells(
         shapeData.cellCountFun,
         cellIdxY,
@@ -594,7 +573,7 @@ export default class SampleImage extends React.Component {
       );
 
       const { resultDataPath } = shapeData;
-      if (resultDataPath.length > 0) {
+      if (resultDataPath !== undefined) {
         this.props.sendDisplayImage(`${resultDataPath}&img_num=${imgNum}`);
       }
     }
@@ -605,7 +584,7 @@ export default class SampleImage extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     const { sampleViewActions, motorSteps, hardwareObjects } = this.props;
-    const { sendMotorPosition, sendZoomPos } = sampleViewActions;
+    const { sendMotorPosition } = sampleViewActions;
     const keyPressed = this._keyPressed;
 
     const phi = hardwareObjects['diffractometer.phi'];
@@ -643,12 +622,19 @@ export default class SampleImage extends React.Component {
       }
     } else if (keyPressed === 'z' && zoom.state === MOTOR_STATE.READY) {
       // in this case zooming
-      if (e.deltaY > 0 && zoom.value < 10) {
+      const index = zoom.commands.indexOf(zoom.value);
+      if (e.deltaY > 0 && index < zoom.commands.length) {
         // zoom in
-        sendZoomPos(zoom.value + 1);
-      } else if (e.deltaY < 0 && zoom.value > 1) {
+        this.props.setAttribute(
+          'diffractometer.zoom',
+          zoom.commands[index + 1],
+        );
+      } else if (e.deltaY < 0 && index > 0) {
         // zoom out
-        sendZoomPos(zoom.value - 1);
+        this.props.setAttribute(
+          'diffractometer.zoom',
+          zoom.commands[index - 1],
+        );
       }
     }
   }
@@ -739,8 +725,10 @@ export default class SampleImage extends React.Component {
     Object.values(this.props.shapes).forEach((s) => {
       if (s.selected) {
         const shapeData = this.props.shapes[s.id];
-        shapeData.selected = false;
-        updatedShapes.push(shapeData);
+        if (shapeData) {
+          shapeData.selected = false;
+          updatedShapes.push(shapeData);
+        }
       }
     });
 
@@ -824,7 +812,7 @@ export default class SampleImage extends React.Component {
   }
 
   initJSMpeg() {
-    if (this.player === null && this.props.videoFormat === 'MPEG1') {
+    if (this.props.videoFormat === 'MPEG1') {
       const canvas = document.querySelector('#sample-img');
 
       let source =
@@ -832,11 +820,15 @@ export default class SampleImage extends React.Component {
 
       source = `${source}/${this.props.videoHash}`;
 
+      if (this.player) {
+        this.player.stop();
+      }
+
       if (canvas) {
         this.player = new jsmpeg.JSMpeg.Player(source, {
           canvas,
           decodeFirstFrame: false,
-          preserveDrawingBuffer: true,
+          preserveDrawingBuffer: false,
           protocols: [],
         });
         this.player.play();

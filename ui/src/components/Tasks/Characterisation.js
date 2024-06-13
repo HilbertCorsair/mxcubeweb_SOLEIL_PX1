@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { reduxForm, formValueSelector } from 'redux-form';
 import { Modal, Button, Form, Row, Col, ButtonToolbar } from 'react-bootstrap';
 import { DraggableModal } from '../DraggableModal';
+import asyncValidate from './asyncValidate';
 import validate from './validate';
 import warn from './warning';
 
@@ -466,6 +467,7 @@ class Characterisation extends React.Component {
 
 const CharacterisationForm = reduxForm({
   form: 'characterisation',
+  asyncValidate,
   validate,
   warn,
 })(Characterisation);
@@ -492,6 +494,11 @@ export default connect((state) => {
   const { type } = state.taskForm.taskData;
   const { limits } = state.taskForm.defaultParameters[type.toLowerCase()];
   const { parameters } = state.taskForm.taskData;
+
+  // Set number of images to 1 for 2D points
+  if (position.includes('2D')) {
+    parameters.num_images = 1;
+  }
 
   if (Number.parseFloat(parameters.osc_range) === 0) {
     parameters.osc_range =

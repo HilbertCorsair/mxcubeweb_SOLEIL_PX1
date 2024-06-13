@@ -37,6 +37,13 @@
   padding: 4px;
 }
 
+.collapsible-arrow-c {
+  float: right;
+  margin-right: 10px;
+  margin-left: auto;
+  margin-top: 4px;
+}
+
 .samples-grid-table-context-menu-icon {
   position: relative;
   bottom: 2px;
@@ -298,6 +305,10 @@ button[disabled] {
   position: relative;
   top: -5px;
   opacity: 25%;
+}
+
+.copy-link-ha {
+  margin-top: -14px;
 }
 .copy-link:hover {
   opacity: 100%;

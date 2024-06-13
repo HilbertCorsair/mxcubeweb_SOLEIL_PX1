@@ -1,14 +1,7 @@
 import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import {
-  Row,
-  Col,
-  Container,
-  OverlayTrigger,
-  Popover,
-  Button,
-} from 'react-bootstrap';
+import { Row, Col, Container } from 'react-bootstrap';
 import SampleImage from '../components/SampleView/SampleImage';
 import MotorControls from '../components/SampleView/MotorControls';
 import PhaseInput from '../components/SampleView/PhaseInput';
@@ -62,15 +55,23 @@ class SampleViewContainer extends Component {
   }
 
   render() {
-    const { uiproperties } = this.props;
+    const { uiproperties, hardwareObjects } = this.props;
 
     if (!('sample_view' in uiproperties)) {
       return null;
     }
 
+    const motorUiProperties = uiproperties.sample_view.components.filter(
+      ({ value_type }) => value_type === 'MOTOR',
+    );
+
+    const motorhardwareObjects = Object.values(hardwareObjects).filter(
+      ({ type }) => type === 'MOTOR',
+    );
+
     const { sourceScale, imageRatio, motorSteps } = this.props.sampleViewState;
     const { setStepSize } = this.props.sampleViewActions;
-    const { sampleID } = this.props.current;
+    const { currentSampleID } = this.props;
     const [points, lines, grids, twoDPoints] = [{}, {}, {}, {}];
     const selectedGrids = [];
 
@@ -148,8 +149,8 @@ class SampleViewContainer extends Component {
               {this.props.mode === 'SSX-CHIP' ? (
                 <SSXChipControl
                   showForm={this.props.showForm}
-                  sampleID={sampleID}
-                  sampleData={this.props.sampleList[sampleID]}
+                  currentSampleID={currentSampleID}
+                  sampleData={this.props.sampleList[currentSampleID]}
                   defaultParameters={this.props.defaultParameters}
                   groupFolder={this.props.groupFolder}
                   hardwareObjects={this.props.hardwareObjects}
@@ -162,85 +163,34 @@ class SampleViewContainer extends Component {
                 />
               ) : null}
               {this.props.sampleChangerContents.name === 'PlateManipulator' ? (
-                <div className="mb-4">
-                  <OverlayTrigger
-                    trigger="click"
-                    rootClose
-                    placement="auto-end"
-                    overlay={
-                      <Popover id="platePopover" style={{ maxWidth: '800px' }}>
-                        <Popover.Header>
-                          {this.props.global_state.plate_info.plate_label}
-                        </Popover.Header>
-                        <Popover.Body style={{ padding: '0px' }}>
-                          <PlateManipulator
-                            contents={this.props.sampleChangerContents}
-                            loadedSample={this.props.loadedSample}
-                            select={this.props.select}
-                            load={this.props.loadSample}
-                            send_command={this.props.send_command}
-                            refresh={this.props.refresh}
-                            plates={this.props.plateGrid}
-                            plateIndex={this.props.plateIndex}
-                            selectedRow={this.props.selectedRow}
-                            selectedCol={this.props.selectedCol}
-                            selectedDrop={this.props.selectedDrop}
-                            setPlate={this.props.setPlate}
-                            selectWell={this.props.selectWell}
-                            selectDrop={this.props.selectDrop}
-                            crystalList={this.props.crystalList}
-                            syncSamplesCrims={this.props.syncSamplesCrims}
-                            showErrorPanel={this.props.showErrorPanel}
-                            global_state={this.props.global_state}
-                            state={this.props.sampleChangerState}
-                            inPopover
-                          />
-                        </Popover.Body>
-                      </Popover>
-                    }
-                  >
-                    <Button
-                      variant="outline-secondary"
-                      style={{
-                        marginTop: '1em',
-                        minWidth: '155px',
-                        width: 'fit-conent',
-                        whiteSpace: 'nowrap',
-                      }}
-                      size="sm"
-                    >
-                      <i className="fa fa-th" /> Plate Navigation
-                      <i className="fa fa-caret-right" />
-                    </Button>
-                  </OverlayTrigger>
-                  <Button
-                    style={{
-                      marginTop: '1em',
-                      minWidth: '155px',
-                      width: 'fit-conent',
-                      whiteSpace: 'nowrap',
-                    }}
-                    variant="outline-secondary"
-                    size="sm"
-                    title={
-                      this.props.hasCrystal
-                        ? 'Move to Crystal position'
-                        : 'No Crystal Found / Crims not Sync'
-                    }
-                    onClick={() =>
-                      this.props.send_command('moveToCrystalPosition')
-                    }
-                    disabled={!this.props.hasCrystal}
-                  >
-                    <i className="fas fa-gem" /> Move to Crystal
-                  </Button>
-                </div>
+                <PlateManipulator
+                  contents={this.props.sampleChangerContents}
+                  loadedSample={this.props.loadedSample}
+                  select={this.props.select}
+                  load={this.props.loadSample}
+                  sendCommand={this.props.sendCommand}
+                  refresh={this.props.refresh}
+                  plates={this.props.plateGrid}
+                  plateIndex={this.props.plateIndex}
+                  selectedRow={this.props.selectedRow}
+                  selectedCol={this.props.selectedCol}
+                  selectedDrop={this.props.selectedDrop}
+                  setPlate={this.props.setPlate}
+                  selectWell={this.props.selectWell}
+                  selectDrop={this.props.selectDrop}
+                  crystalList={this.props.crystalList}
+                  syncSamplesCrims={this.props.syncSamplesCrims}
+                  showErrorPanel={this.props.showErrorPanel}
+                  global_state={this.props.global_state}
+                  state={this.props.sampleChangerState}
+                  inPopover
+                />
               ) : null}
               <MotorControls
                 save={this.props.setAttribute}
                 saveStep={setStepSize}
-                uiproperties={uiproperties.sample_view}
-                hardwareObjects={this.props.hardwareObjects}
+                uiproperties={motorUiProperties}
+                hardwareObjects={motorhardwareObjects}
                 motorsDisabled={
                   this.props.motorInputDisable ||
                   this.props.queueState === QUEUE_RUNNING
@@ -252,7 +202,7 @@ class SampleViewContainer extends Component {
               />
             </DefaultErrorBoundary>
           </Col>
-          <Col sm={7}>
+          <Col sm={6}>
             <DefaultErrorBoundary>
               <ContextMenu
                 {...this.props.contextMenu}
@@ -261,8 +211,8 @@ class SampleViewContainer extends Component {
                 updateTask={this.props.updateTask}
                 availableMethods={this.props.availableMethods}
                 showForm={this.props.showForm}
-                sampleID={sampleID}
-                sampleData={this.props.sampleList[sampleID]}
+                sampleID={currentSampleID}
+                sampleData={this.props.sampleList[currentSampleID]}
                 defaultParameters={this.props.defaultParameters}
                 imageRatio={imageRatio * sourceScale}
                 workflows={this.props.workflows}
@@ -272,6 +222,7 @@ class SampleViewContainer extends Component {
                 taskForm={this.props.taskForm}
                 enable2DPoints={this.props.enable2DPoints}
                 enableNativeMesh={this.props.enableNativeMesh}
+                showErrorPanel={this.props.showErrorPanel}
               />
               <SampleImage
                 getControlAvailability={this.getControlAvailability}
@@ -291,7 +242,7 @@ class SampleViewContainer extends Component {
                 selectedGrids={selectedGrids}
                 cellCounting={this.props.cellCounting}
                 cellSpacing={this.props.cellSpacing}
-                current={this.props.current}
+                currentSampleID={this.props.currentSampleID}
                 sampleList={this.props.sampleList}
                 proposal={this.props.proposal}
                 busy={this.props.queueState === QUEUE_RUNNING}
@@ -302,7 +253,7 @@ class SampleViewContainer extends Component {
               />
             </DefaultErrorBoundary>
           </Col>
-          <Col sm={4} style={{ display: 'flex' }}>
+          <Col sm={5} style={{ display: 'flex' }}>
             <DefaultErrorBoundary>
               <SampleQueueContainer />
             </DefaultErrorBoundary>
@@ -316,7 +267,7 @@ class SampleViewContainer extends Component {
 function mapStateToProps(state) {
   return {
     sampleList: state.sampleGrid.sampleList,
-    current: state.queue.current,
+    currentSampleID: state.queue.currentSampleID,
     groupFolder: state.queue.groupFolder,
     queueState: state.queue.queueStatus,
     sampleViewState: state.sampleview,

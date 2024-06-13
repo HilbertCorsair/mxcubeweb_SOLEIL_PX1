@@ -12,7 +12,7 @@ sample_view:
       role: kappa
       step: 0.1
       precision: 1
-      suffix: "°"
+      suffix: °
     - label: Kappa Phi
       attribute: diffractometer.kappa_phi
       role: kappa_phi
@@ -92,15 +92,15 @@ sample_view_video_controls:
     - id: frontlight
       show: true
     - id: video_size
-      show: false
+      show: true
 
 beamline_setup:
   id: beamline_setup
   components:
     - label: Beamstop
-      attribute: beamstop
+      attribute: diffractometer.beamstop
     - label: Capillary
-      attribute: capillary
+      attribute: diffractometer.capillary
     - label: Fast Shutter
       attribute: fast_shutter
     - label: Safety shutter

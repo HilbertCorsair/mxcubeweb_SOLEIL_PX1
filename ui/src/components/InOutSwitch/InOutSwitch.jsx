@@ -11,6 +11,7 @@ import styles from './inOutStyle.module.css';
 export default function InOutSwitch(props) {
   const {
     value,
+    state,
     onSave,
     pkey,
     offText,
@@ -89,6 +90,7 @@ export default function InOutSwitch(props) {
       break;
     }
     case offValue:
+    case 'DISABLED':
     case 'CLOSED': {
       msgBgStyle = 'danger';
       btn = (
@@ -102,7 +104,6 @@ export default function InOutSwitch(props) {
       );
       break;
     }
-    case 'DISABLED':
     case 'UNUSABLE': {
       msgBgStyle = 'warning';
       btn = (
@@ -136,7 +137,7 @@ export default function InOutSwitch(props) {
         trigger="click"
         placement={overlayPlacement || 'bottom'}
         overlay={
-          <Popover style={{ padding: '0.5em' }} id={`${labelText} popover`}>
+          <Popover style={{ padding: '0.5em' }} id={`${labelText}_popover`}>
             {btn}
           </Popover>
         }
@@ -151,7 +152,7 @@ export default function InOutSwitch(props) {
           <Button variant="outline-secondary" className={styles.switchBtn}>
             {labelText}{' '}
             <Badge className={styles.switchBdg} bg={msgBgStyle}>
-              {value}
+              {state}
             </Badge>
           </Button>
         )}

@@ -88,7 +88,7 @@ function BeamlineSetupContainer(props) {
           if (uiprop !== undefined && uiprop.value_type === 'NSTATE') {
             if (uiprop.label === 'Beamstop') {
               acts.push(
-                <Nav.Item key={key}>
+                <Nav.Item key={key} className="ms-3">
                   <InOutSwitch
                     openText={beamline.hardwareObjects[key].commands[0]}
                     offText={beamline.hardwareObjects[key].commands[1]}
@@ -118,32 +118,23 @@ function BeamlineSetupContainer(props) {
                 </Nav.Item>,
               );
             }
+          } else if (
+            uiprop !== undefined &&
+            uiprop.value_type !== 'NSTATE' &&
+            uiprop.value_type !== 'MOTOR' &&
+            uiprop.value_type !== 'ACTUATOR' &&
+            uiprop.value_type !== 'ENERGY'
+          ) {
+            acts.push(
+              <Nav.Item key={key} className="ms-3">
+                <DeviceState
+                  labelText={uiprop.label}
+                  data={beamline.hardwareObjects[key].state}
+                />
+              </Nav.Item>,
+            );
           }
         }
-      }
-    }
-    return acts;
-  }
-
-  function renderCameraComponent() {
-    const acts = [];
-
-    if ('camera_setup' in uiproperties) {
-      for (const [
-        key,
-        camera,
-      ] of uiproperties.camera_setup.components.entries()) {
-        acts.push(
-          <Nav.Item key={key} className="ms-3">
-            <BeamlineCamera
-              labelText={camera.label}
-              format={camera.attribute}
-              url={camera.url}
-              width={camera.width}
-              height={camera.height}
-            />
-          </Nav.Item>,
-        );
       }
     }
     return acts;
@@ -207,18 +198,20 @@ function BeamlineSetupContainer(props) {
   const uiprops = uiproperties.beamline_setup.components;
   const uiprop_list = filter(
     uiprops,
-    (o) => o.value_type === 'MOTOR' || o.value_type === 'ACTUATOR',
+    (o) =>
+      o.value_type === 'MOTOR' ||
+      o.value_type === 'ACTUATOR' ||
+      o.value_type === 'ENERGY',
   );
 
   return (
     <Navbar className="beamline-status" id="bmstatus" expand="lg">
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="d-flex  me-auto my-2 my-lg-0">
-          <Nav.Item className=" d-flex justify-content-start">
-            <span className="blstatus-item" style={{ marginRight: '1em' }}>
-              <BeamlineActions actionsList={beamline.beamlineActionsList} />
-            </span>
+        <Nav className="d-flex  me-auto">
+          <Nav.Item className="justify-content-start">
+            <BeamlineCamera cameraSetup={uiproperties.camera_setup} />
+            <BeamlineActions actionsList={beamline.beamlineActionsList} />
           </Nav.Item>
         </Nav>
         <Nav className="me-auto my-2 my-lg-0">
@@ -255,7 +248,6 @@ function BeamlineSetupContainer(props) {
             </Table>
           </Nav.Item>
         </Nav>
-        <Nav className="me-3">{renderCameraComponent()}</Nav>
         <Nav className="">
           <Nav.Item>
             <InOutSwitch
@@ -268,26 +260,8 @@ function BeamlineSetupContainer(props) {
               onSave={sendCommand}
             />
           </Nav.Item>
-        </Nav>
-        <Nav className="me-3">{renderActuatorComponent()}</Nav>
-        <Nav className="me-3">
-          <Nav.Item>
-            <DeviceState
-              labelText="Detector"
-              data={beamline.hardwareObjects.detector.state}
-            />
-          </Nav.Item>
-        </Nav>
-        <Nav className="me-3">
-          <Nav.Item>
-            <DeviceState
-              labelText="Diffractometer"
-              data={beamline.hardwareObjects.diffractometer.state}
-            />
-          </Nav.Item>
-        </Nav>
-        <Nav className="me-3">
-          <Nav.Item>
+          {renderActuatorComponent()}
+          <Nav.Item className="ms-3">
             <span className="blstatus-item">
               {beamline.hardwareObjects.machine_info && (
                 <MachInfo info={beamline.hardwareObjects.machine_info.value} />
