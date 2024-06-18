@@ -1,4 +1,4 @@
-<equipment class = "PX1Cryotong">
+<object class = "PX1Cryotong">
 
   <username>CryoTong</username>
 
@@ -11,7 +11,7 @@
   <no_of_baskets>3</no_of_baskets>
   <samples_per_basket>16</samples_per_basket>
 
-  <object role="environment" href="/environment" /> 
+  <!-- <object role="environment" href="/environment" />  -->
  
   <!-- beware some channels are connected to PyCats server, not to cryotong server -->
   <command type="tango" tangoname="i10-c-cx1/ex/cats" name="_cmdScanSample">barcode</command>
@@ -71,5 +71,5 @@
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnPowered">Powered</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnMessage">Message</channel>
 
-</equipment>
+</object>
 

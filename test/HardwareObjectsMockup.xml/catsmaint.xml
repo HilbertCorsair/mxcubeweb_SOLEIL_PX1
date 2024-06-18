@@ -1,4 +1,4 @@
-<equipment class = "CatsMaint">
+<object class = "CatsMaint">
   <username>CatsMaint</username>
   <tangoname>i10-c-cx1/ex/catscryotong</tangoname>
   <cats>i10-c-cx1/ex/cats</cats>
@@ -71,5 +71,5 @@
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnGonioCollision">di_VI91</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnDewarCollision">di_VI92</channel>
 
-</equipment>
+</object>
 

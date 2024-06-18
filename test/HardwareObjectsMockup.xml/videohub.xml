@@ -1,4 +1,4 @@
-<device class="_RedisClient">
+<object class="_RedisClient">
 
     <object role="oav_camera" hwrid="/sample_view"></object>
     <!--<object role="camx_camera" hwrid="/camx"></object>-->
@@ -21,4 +21,4 @@
 
     <interval>50</interval>
 
-</device>
+</object>

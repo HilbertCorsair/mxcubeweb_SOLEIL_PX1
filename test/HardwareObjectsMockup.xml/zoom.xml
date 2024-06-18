@@ -1,4 +1,4 @@
-<device class="TangoMotorWPositions">
+<object class="TangoMotorWPositions">
   <username>Zoom</username>
   <motor_name>Zoom</motor_name>
 
@@ -151,4 +151,4 @@
 
    </positions>
 
-</device>
+</object>

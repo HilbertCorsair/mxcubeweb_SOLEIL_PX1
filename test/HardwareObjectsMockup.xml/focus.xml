@@ -1,4 +1,4 @@
-<device class="TangoDCMotor">
+<object class="TangoDCMotor">
   <username>FocusOVA</username>
 
   <GUIstep>0.01</GUIstep>
@@ -8,4 +8,4 @@
 
   <channel type="tango" polling="1000" name="position">position</channel>
   <channel type="tango" polling="1000" name="state">State</channel>
-</device>
+</object>

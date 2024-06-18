@@ -1,4 +1,4 @@
-<equipment class = "SampleChangerMockup">
+<object class = "SampleChangerMockup">
     <username>Cats</username>
     <cats_model>cats</cats_model>
     <tangoname>i10-c-cx1/ex/catscryotong</tangoname> 
@@ -16,5 +16,5 @@
     <read_datamatrix>False</read_datamatrix>
     <unipuck_tool>Unipuck</unipuck_tool>
 
-</equipment>
+</object>
 

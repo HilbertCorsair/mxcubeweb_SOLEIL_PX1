@@ -35,11 +35,12 @@ _objects:
   - resolution: resolution.xml
   - safety_shutter: safety_shutter2.xml
   - fast_shutter: fast_shutter.xml
-  - hutch_interlock: hutchtrigger.xml
-  - environment: environment.xml
-  - sample_changer: cryotong.xml
-  - sample_changer_maintenance: catsmaint.xml
-
+  #  - hutch_interlock: hutchtrigger.xml
+  #  - environment: environment.xml
+  #  - sample_changer: cryotong.xml
+  #  - sample_changer_maintenance: catsmaint.xml
+  - sample_changer: sc_mockup.xml
+  - sample_changer_maintenance: sc_maint_mockup.xml
   # The 2 lines up have to be used for the flex HCD and the two line below for the plate manip
   # - sample_changer: plate_manipulator.xml
   # - sample_changer_maintenance: plate_manipulator_maint.xml

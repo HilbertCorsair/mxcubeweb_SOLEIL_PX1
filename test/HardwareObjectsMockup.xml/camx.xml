@@ -1,4 +1,4 @@
-<device class = "PX1CamX">
+<object class = "PX1CamX">
   <username>CamX</username>
 
   <tangoname>i10-c-cx1/dt/camx-analyzer</tangoname>
@@ -6,4 +6,4 @@
 
   <channel type="tango" name="image">ROIImage</channel>
 
-</device>
+</object>
