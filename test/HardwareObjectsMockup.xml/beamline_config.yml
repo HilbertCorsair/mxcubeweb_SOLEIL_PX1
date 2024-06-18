@@ -13,13 +13,13 @@ _initialise_class:
 # would need those added (e.g. the centring methods)
 #
 _objects:
-  # The !!o0map and the lines starting with '- ' give you an *orderd* dictionary
+  # The !!omap and the lines starting with '- ' give you an *ordered* dictionary
   # And thus a reproducible loading order
   !!omap
   # The values are the file paths to the configuration file for the
   # object, relative to the configuration file path(s)
   #
-  # NB - the order is *NOT* arbitrary, as signal connnections are set
+  # NB - the order is *NOT* arbitrary, as signal connections are set
   # on one object that require the other to be already loaded.
   #
   # Hardware:
@@ -44,6 +44,9 @@ _objects:
   # The 2 lines up have to be used for the flex HCD and the two line below for the plate manip
   # - sample_changer: plate_manipulator.xml
   # - sample_changer_maintenance: plate_manipulator_maint.xml
+
+  # - harvester: harvester.xml
+  # - harvester_maintenance: harvester_maintenance.xml
 
   - diffractometer: minidiff.xml
   - lims: lims.xml
@@ -101,6 +104,7 @@ default_acquisition_parameters:
     take_dark_current: true
     skip_existing_images: true
     take_snapshots: true
+    sub_wedge_size: 10
     # NB 'compression' not added as apparently never used
 
   helical:

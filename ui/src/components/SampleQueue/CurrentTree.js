@@ -126,7 +126,7 @@ export default class CurrentTree extends React.Component {
     this.props.showForm(
       'Interleaved',
       [this.props.mounted],
-      { parameters: { taskIndexList, wedges } },
+      { type: 'DataCollection', parameters: { taskIndexList, wedges } },
       -1,
     );
   }
@@ -180,6 +180,9 @@ export default class CurrentTree extends React.Component {
                     shapes={this.props.shapes}
                     showDialog={this.props.showDialog}
                     showContextMenu={this.showContextMenu}
+                    showWorkflowParametersDialog={
+                      this.props.showWorkflowParametersDialog
+                    }
                   />
                 );
 

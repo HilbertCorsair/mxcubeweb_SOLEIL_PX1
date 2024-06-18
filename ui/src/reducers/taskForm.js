@@ -25,17 +25,7 @@ function taskFormReducer(state = INITIAL_STATE, action = {}) {
         sampleIds: action.sampleIDs,
         taskData: { ...action.taskData },
         pointID: action.pointID,
-      };
-    }
-    case 'UPDATE_TASK': {
-      return {
-        ...state,
-        defaultParameters: {
-          ...state.defaultParameters,
-          [action.taskData.type.toLowerCase()]: {
-            ...action.taskData.parameters,
-          },
-        },
+        origin: action.origin,
       };
     }
     case 'HIDE_FORM': {

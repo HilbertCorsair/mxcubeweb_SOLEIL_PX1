@@ -258,9 +258,13 @@ class Lims(ComponentBase):
             session["proposal_list"] = [proposal]
             login_res["proposalList"] = [proposal]
 
-        logging.getLogger("MX3.HWR").info(
-            "[LIMS] Logged in, proposal data: %s" % login_res
-        )
+            logging.getLogger("MX3.HWR").info(
+                "[LIMS] Logged in, valid proposal: %s%s"
+                % (
+                    login_res["Proposal"]["code"],
+                    login_res["Proposal"]["number"],
+                )
+            )
 
         return login_res
 
@@ -328,8 +332,12 @@ class Lims(ComponentBase):
                 "sessionId"
             )
 
-            HWR.beamline.session.proposal_id = proposal_info.get("Session")[0].get(
+            HWR.beamline.session.proposal_id = todays_session.get("session").get(
                 "proposalId"
+            )
+
+            HWR.beamline.session.set_session_start_date(
+                todays_session.get("session").get("startDate")
             )
 
             session["proposal"] = proposal_info
@@ -409,7 +417,10 @@ class Lims(ComponentBase):
             sample_info["defaultSubDir"] = self.get_default_subdir(sample_info)
 
             if not VALID_SAMPLE_NAME_REGEXP.match(sample_info["sampleName"]):
-                raise AttributeError("sample name contains an incorrect character")
+                raise AttributeError(
+                    "sample name for sample %s contains an incorrect character"
+                    % sample_info
+                )
 
             try:
                 basket = int(sample_info["containerSampleChangerLocation"])

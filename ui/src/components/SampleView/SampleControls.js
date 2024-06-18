@@ -39,7 +39,7 @@ export default class SampleControls extends React.Component {
 
   toggleDrawGrid() {
     // Cancel click centering before draw grid is started
-    if (this.props.current.sampleID === '') {
+    if (this.props.currentSampleID === '') {
       this.props.showErrorPanel(true, 'There is no sample mounted');
     } else {
       if (this.props.clickCentring) {
@@ -66,7 +66,7 @@ export default class SampleControls extends React.Component {
   takeSnapShot(evt) {
     /* eslint-disable unicorn/consistent-function-scoping */
     function imageEpolog(props) {
-      const { sampleID } = props.current;
+      const { sampleID } = props.currentSampleID;
 
       if (sampleID in props.sampleList) {
         return props.sampleList[sampleID].sampleName;
@@ -112,8 +112,8 @@ export default class SampleControls extends React.Component {
     const items = this.props.videoSizes.map((size) => {
       const sizeGClass =
         this.props.width === String(size[0])
-          ? 'fa-dot-circle-o'
-          : 'fa-circle-o';
+          ? 'fas fa-circle'
+          : 'far fa-circle';
 
       return (
         <Dropdown.Item
@@ -123,38 +123,23 @@ export default class SampleControls extends React.Component {
             this.props.sampleViewActions.setVideoSize(size[0], size[1])
           }
         >
-          <span className={`fa ${sizeGClass}`} /> {`${size[0]} x ${size[1]}`}
+          <span className={sizeGClass} /> {`${size[0]} x ${size[1]}`}
         </Dropdown.Item>
       );
     });
 
-    const autoScaleGClass = this.props.autoScale
-      ? ' fa-check-square-o'
-      : 'fa-square-o';
-
     items.push(
-      <Dropdown.Item
-        eventKey="3"
-        key="auto scale"
-        onClick={() => {
-          const { clientWidth } = document.querySelector('#outsideWrapper');
-          this.props.sampleViewActions.toggleAutoScale(clientWidth);
-        }}
-      >
-        <span className={`fa ${autoScaleGClass}`} /> Auto Scale
-      </Dropdown.Item>,
       <Dropdown.Item
         eventKey="3"
         key="reset"
         onClick={() => {
-          window.initJSMpeg();
           this.props.sampleViewActions.setVideoSize(
             this.props.width,
             this.props.height,
           );
         }}
       >
-        <span className="fas fa-redo" /> Reset
+        <span className="far fa-redo" /> Reset
       </Dropdown.Item>,
     );
 
@@ -266,8 +251,8 @@ export default class SampleControls extends React.Component {
                 <input
                   className={styles.zoomSlider}
                   type="range"
-                  min={zoom_motor.limits[0]}
-                  max={zoom_motor.limits[1]}
+                  min={0}
+                  max={zoom_motor.commands.length - 1}
                   value={zoom_motor.commands.indexOf(zoom_motor.value)}
                   disabled={zoom_motor.state !== MOTOR_STATE.READY}
                   onMouseUp={(e) => {

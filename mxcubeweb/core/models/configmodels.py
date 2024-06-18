@@ -9,19 +9,17 @@ class FlaskConfigModel(BaseModel):
         b"o`\xb5\xa5\xc2\x8c\xb2\x8c-?\xe0,/i#c",
         description="Flask secret key",
     )
-    SESSION_TYPE: str = Field("redis", description="Flask session type")
-    SESSION_KEY_PREFIX: str = Field("mxcube:session:", description="Session prefix")
     DEBUG: bool = Field(False, description="")
     ALLOWED_CORS_ORIGINS: List[str] = Field(["*"], description="")
     SECURITY_PASSWORD_SALT: str = Field("ASALT", description="")
     SECURITY_TRACKABLE: bool = Field(True, description="")
     USER_DB_PATH: str = Field("/tmp/mxcube-user.db", description="")
     PERMANENT_SESSION_LIFETIME: datetime.timedelta
-    CERT_KEY: str = Field("", description="Full path to signed certficate key file")
+    CERT_KEY: str = Field("", description="Full path to signed certificate key file")
     CERT_PEM: str = Field("", description="Full path to signed certificate pem file")
 
     # SIGNED for signed certificate on file
-    # ADHOC for flask to generate a certifcate,
+    # ADHOC for flask to generate a certificate,
     # NONE for no SSL
     CERT: str = Field(
         "NONE",
@@ -36,20 +34,17 @@ class UIComponentModel(BaseModel):
     step: Optional[float]
     precision: Optional[int]
     suffix: Optional[str]
-    format: Optional[str]
-    url: Optional[str]
     description: Optional[str]
-    width: Optional[int]
-    height: Optional[int]
-
-    # Set internaly not to be set through configuration
+    # Set internally not to be set through configuration
     value_type: Optional[str]
     object_type: Optional[str]
+    format: Optional[str]
 
 
 class _UICameraConfigModel(BaseModel):
     label: str
     url: str
+    format: Optional[str]
     description: Optional[str]
     width: Optional[int]
     height: Optional[int]
@@ -76,8 +71,8 @@ class UISampleViewVideoControlsModel(UIPropertiesModel):
 class UIPropertiesListModel(BaseModel):
     sample_view: UIPropertiesModel
     beamline_setup: UIPropertiesModel
-    camera_setup: UICameraConfigModel
-    sample_view_video_controls: UISampleViewVideoControlsModel
+    camera_setup: Optional[UICameraConfigModel]
+    sample_view_video_controls: Optional[UISampleViewVideoControlsModel]
 
 
 class UserManagerUserConfigModel(BaseModel):
@@ -105,7 +100,7 @@ class ModeEnum(str, Enum):
 class MXCUBEAppConfigModel(BaseModel):
     VIDEO_FORMAT: str = Field("MPEG1", description="Video format MPEG1 or MJPEG")
 
-    # URL from which the client retreives the video stream (often different from
+    # URL from which the client retrieves the video stream (often different from
     # local host when running behind proxy)
     VIDEO_STREAM_URL: str = Field(
         "",
@@ -113,18 +108,19 @@ class MXCUBEAppConfigModel(BaseModel):
     )
 
     # Port from which the video_stream process (https://github.com/mxcube/video-streamer)
-    # sreams video. The process runs in seperate process (on localhost)
-    VIDEO_STREAM_PORT: str = Field("", description="Video stream PORT")
+    # streams video. The process runs in separate process (on localhost)
+    VIDEO_STREAM_PORT: int = Field(8000, description="Video stream PORT")
     USE_EXTERNAL_STREAMER: bool = Field(
         False,
         description=(
             "True to use video stream produced by external software, false otherwise"
         ),
     )
-    mode: ModeEnum = Field(ModeEnum.OSC, description="MXCuBE mode SSX or OSC")
+    mode: ModeEnum = Field(
+        ModeEnum.OSC, description="MXCuBE mode OSC, SSX-CHIP or SSX-INJECTOR"
+    )
     usermanager: UserManagerConfigModel
     ui_properties: Dict[str, UIPropertiesModel] = {}
-    adapter_properties: List = []
 
 
 class AppConfigModel(BaseModel):

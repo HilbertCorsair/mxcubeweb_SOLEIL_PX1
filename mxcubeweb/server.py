@@ -12,7 +12,6 @@ from flask import Flask, request
 from flask_socketio import SocketIO
 
 import flask_security
-import flask_login
 
 from spectree import SpecTree
 
@@ -35,7 +34,7 @@ class Server:
 
     def __init__(self):
         raise NotImplementedError(
-            "Server is to be used as a pure static class, dont instanciate"
+            "Server is to be used as a pure static class, don't instantiate."
         )
 
     @staticmethod
@@ -47,7 +46,7 @@ class Server:
     @staticmethod
     def kill_processes():
         # Killing the processes causes pytest to fail because
-        # of non zero exit code, so we dont kill the processes
+        # of non-zero exit code, so we don't kill the processes
         # when running the tests
         if not Server.flask.testing:
             with open("/tmp/mxcube.pid", "r") as f:
@@ -62,7 +61,7 @@ class Server:
                 os.kill(int(pid), signal.SIGKILL)
 
     @staticmethod
-    def init(cmdline_options, cfg, mxcube):
+    def init(cmdline_options, cfg):
         template_dir = os.path.join(os.path.dirname(__file__), "templates")
 
         Server.flask = Flask(
@@ -111,8 +110,7 @@ class Server:
             Server.ws_restrict = staticmethod(networkutils.ws_valid_login_only)
             Server.route = staticmethod(Server.flask.route)
 
-    def _register_route(init_blueprint_fn, app, url_prefix, tag=None):
-        tag = url_prefix if tag is None else tag
+    def _register_route(init_blueprint_fn, app, url_prefix):
         bp = init_blueprint_fn(app, Server, url_prefix)
 
         Server.flask.register_blueprint(bp)
@@ -159,6 +157,7 @@ class Server:
         from mxcubeweb.routes.workflow import (
             init_route as init_workflow_route,
         )
+        from mxcubeweb.routes.harvester import init_route as init_harvester_route
 
         url_root_prefix = "/mxcube/api/v0.1"
 
@@ -205,6 +204,12 @@ class Server:
         Server._register_route(
             init_workflow_route, mxcube, f"{url_root_prefix}/workflow"
         )
+
+        Server._register_route(
+            init_harvester_route, mxcube, f"{url_root_prefix}/harvester"
+        )
+
+        Server.security = flask_security.Security(Server.flask, Server.user_datastore)
 
     @staticmethod
     def emit(*args, **kwargs):

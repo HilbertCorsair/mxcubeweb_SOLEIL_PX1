@@ -79,8 +79,10 @@ def test_beamline_get_attribute(client):
     ]
 
     for name, adapter_type in bl_attrs:
-        resp = client.get(f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}")
-        data = json.loads(resp.data)
+        resp = client.post(
+            f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}/data",
+        )
+        data = json.loads(resp.data)["return"]
 
         # Check for minimal set of attributes
         keys = ["name", "state", "value"]
@@ -102,7 +104,7 @@ def test_beamline_set_attribute(client):
     """
     bl_attrs = [
         ("resolution", "motor"),
-        ("energy", "motor"),
+        ("energy", "energy"),
         ("transmission", "motor"),
         ("safety_shutter", "nstate"),
         ("diffractometer.beamstop", "nstate"),
@@ -111,21 +113,20 @@ def test_beamline_set_attribute(client):
     ]
 
     for name, adapter_type in bl_attrs:
-        resp = client.get(f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}")
-        data = json.loads(resp.data)
-
+        resp = client.post(f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}/data")
+        data = json.loads(resp.data)["return"]
         new_value = data.get("value")
-
         resp = client.put(
-            f"/mxcube/api/v0.1/beamline/{adapter_type}/value",
+            f"/mxcube/api/v0.1/beamline/{adapter_type}/value/{name}",
             data=json.dumps({"name": name, "value": new_value}),
             content_type="application/json",
         )
 
-        resp = client.get(f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}")
-        data = json.loads(resp.data)
+        resp = client.post(f"/mxcube/api/v0.1/beamline/{adapter_type}/{name}/data")
+        data = json.loads(resp.data)["return"]
+        value = data.get("value", None)
 
-        assert data.get("value", None) == new_value
+        assert value == new_value
 
 
 def test_get_beam_info(client):

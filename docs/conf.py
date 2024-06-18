@@ -6,7 +6,9 @@ import importlib.metadata
 
 import mxcubeweb
 
-
+MXCUBE_NAME = "MXCuBE"
+MXCUBE_CORE_NAME = f"{MXCUBE_NAME}-Web"
+MXCUBE_WEB_NAME = f"{MXCUBE_NAME}-Web"
 PROJECT_PACKAGE_NAME = "mxcubeweb"  # Distribution package (not import package)
 PROJECT_PACKAGE_METADATA = importlib.metadata.metadata(PROJECT_PACKAGE_NAME)
 
@@ -18,9 +20,7 @@ server.flask.testing = True
 
 # -- General configuration ------------------------------------------------
 
-extensions = [
-    "myst_parser",
-]
+extensions = []
 
 source_suffix = {
     ".rst": "restructuredtext",
@@ -29,7 +29,7 @@ source_suffix = {
 
 root_doc = "contents"
 
-project = "MXCuBE-Web"
+project = MXCUBE_WEB_NAME
 author = PROJECT_PACKAGE_METADATA["Author"]
 copyright = f"{datetime.datetime.today().year}, {author}"
 
@@ -40,6 +40,9 @@ version = PROJECT_PACKAGE_METADATA["Version"]
 release = version
 
 rst_prolog = f"""
+.. |mxcube| replace:: {MXCUBE_NAME}
+.. |mxcubecore| replace:: {MXCUBE_CORE_NAME}
+.. |mxcubeweb| replace:: {MXCUBE_WEB_NAME}
 .. |project| replace:: {project}
 """
 
@@ -50,6 +53,21 @@ html_theme = "furo"
 
 
 # -- Extensions ---------------------------------------------------------------
+
+# -- myst_parser
+# https://myst-parser.readthedocs.io
+
+extensions.append("myst_parser")
+
+myst_enable_extensions = ("substitution",)
+
+myst_substitutions = {
+    "mxcube": MXCUBE_NAME,
+    "mxcubecore": MXCUBE_CORE_NAME,
+    "mxcubeweb": MXCUBE_WEB_NAME,
+    "project": project,
+}
+
 
 # -- sphinx.ext.autodoc
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
@@ -101,6 +119,12 @@ extensions.append("sphinx.ext.viewcode")
 # https://sphinxcontrib-httpdomain.readthedocs.io
 
 extensions.append("sphinxcontrib.autohttp.flask")
+
+
+# -- Options for sphinx_last_updated_by_git
+# https://pypi.org/project/sphinx-last-updated-by-git/
+
+extensions.append("sphinx_last_updated_by_git")
 
 
 # EOF

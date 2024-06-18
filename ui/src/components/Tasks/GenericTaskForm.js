@@ -8,7 +8,6 @@ import validate from './validate';
 import warn from './warning';
 import JSForm from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
-import classNames from 'classnames';
 import './style.css';
 
 import { sendUpdateDependentFields } from '../../actions/queue';
@@ -72,7 +71,7 @@ class GenericTaskForm extends React.Component {
       'chip_type',
     ];
 
-    saveToLastUsedParameters(this.props.taskData.type, params);
+    saveToLastUsedParameters(this.props.taskData.type, parameters);
     this.props.addTask(parameters, stringFields, runNow);
     this.props.hide();
   }
@@ -133,7 +132,7 @@ class GenericTaskForm extends React.Component {
             }
             onClick={this.submitRunNow}
           >
-            Run Nowjson-schema-form-group-div
+            Run Now
           </Button>
           <Button
             variant="primary"
@@ -212,11 +211,7 @@ class GenericTaskForm extends React.Component {
       <div>
         <div className="row">
           {properties.map((prop) => {
-            const { uiSchema } = prop.content.props;
-            const className = classNames(
-              'column',
-              uiSchema['ui:column'] || 'col-6 json-schema-form-group-div',
-            );
+            const className = 'col-6 json-schema-form-group-div';
             return (
               <div key={prop.content.key} className={className}>
                 {prop.content}
@@ -313,8 +308,10 @@ class GenericTaskForm extends React.Component {
                 this.updateFromRemoteValidation(formData);
                 this.jsformData = formData;
               }}
-              ObjectFieldTemplate={this.columnsObjectFieldTemplate}
-              FieldTemplate={this.customFieldTemplate}
+              templates={{
+                ObjectFieldTemplate: this.columnsObjectFieldTemplate,
+                FieldTemplate: this.customFieldTemplate,
+              }}
             />
           </div>
         </Modal.Body>

@@ -15,9 +15,9 @@ from mxcubeweb.core.models.configmodels import (
 
 class ConfigLoader:
     @staticmethod
-    def load(path: str, schema: BaseModel, filetype="yaml"):
-        with open(os.path.join(path)) as f:
-            config = ruamel.yaml.load(f.read(), ruamel.yaml.RoundTripLoader)
+    def load(path: str, schema: BaseModel):
+        with open(os.path.join(path), encoding="utf-8") as f:
+            config = ruamel.yaml.YAML().load(f.read())
             try:
                 model = schema.parse_obj(config)
             except ValidationError:

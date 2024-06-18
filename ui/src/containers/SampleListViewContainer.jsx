@@ -277,7 +277,13 @@ class SampleListViewContainer extends React.Component {
       if (formName === 'AddSample') {
         this.props.showTaskParametersForm('AddSample');
       } else {
-        this.props.showTaskParametersForm(formName, selected, parameters);
+        this.props.showTaskParametersForm(
+          formName,
+          selected,
+          parameters,
+          -1,
+          'samplelist',
+        );
       }
     }
   }
@@ -308,6 +314,7 @@ class SampleListViewContainer extends React.Component {
     } else {
       this.props.syncSamples();
     }
+    this.props.filter({ limsSamples: true });
   }
 
   /**
@@ -511,7 +518,7 @@ class SampleListViewContainer extends React.Component {
     for (const sampleID of sampleIDList) {
       if (this.inQueue(sampleID)) {
         // Do not remove currently mounted sample
-        if (this.props.queue.current.sampleID !== sampleID) {
+        if (this.props.queue.currentSampleID !== sampleID) {
           samplesToRemove.push(sampleID);
         }
       } else {

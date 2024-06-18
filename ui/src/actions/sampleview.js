@@ -174,7 +174,7 @@ export function setVideoSize(width, height) {
       })
         .then((response) => {
           if (response.status >= 400) {
-            throw new Error('Server refused to add line');
+            throw new Error('Server refused to set video size');
           }
           return response.json();
         })
@@ -187,6 +187,7 @@ export function setVideoSize(width, height) {
             beamPosition: json.position,
             sourceScale: json.scale,
           });
+
           window.initJSMpeg();
         });
     }
@@ -451,7 +452,7 @@ export function sendStartClickCentring() {
     const { shapes } = getState();
     dispatch(unselectShapes(shapes));
 
-    if (queue.current.sampleID) {
+    if (queue.currentSampleID) {
       fetch('/mxcube/api/v0.1/sampleview/centring/start3click', {
         method: 'PUT',
         credentials: 'include',

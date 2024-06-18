@@ -6,6 +6,16 @@ describe('login', () => {
     cy.findByText('Could not authenticate').should('be.visible');
   });
 
+  it("can't login with reserved password: wrong", () => {
+    cy.login('idtest0', 'wrong');
+    cy.findByText('Could not authenticate').should('be.visible');
+  });
+
+  it("can't login with reserved password: ispybDown", () => {
+    cy.login('idtest0', 'ispybDown');
+    cy.findByText('Could not authenticate').should('be.visible');
+  });
+
   it('can login with valid credentials', () => {
     cy.login();
     cy.findByRole('link', { name: 'MXCuBE-Web (OSC)' }).should('be.visible');
@@ -20,5 +30,18 @@ describe('app', () => {
 
   it('displays collection page', () => {
     cy.findByRole('button', { name: /Beamline Actions/u }).should('be.visible');
+  });
+});
+
+describe('queue', () => {
+  beforeEach(() => {
+    cy.login();
+    cy.findByRole('link', { name: 'MXCuBE-Web (OSC)' }).should('be.visible');
+    cy.takeControl();
+  });
+
+  it('mount a test sample', () => {
+    cy.mountSample('test', 'test');
+    cy.findByText('Sample: test - test').should('be.visible');
   });
 });

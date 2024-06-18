@@ -14,7 +14,7 @@ export default class MotorControls extends React.Component {
   }
 
   renderMotorInputs(from, to) {
-    return this.props.uiproperties.components
+    return this.props.uiproperties
       .slice(from, to)
       .map(({ attribute, role }) => (
         <Col key={attribute} sm={12}>
@@ -24,21 +24,26 @@ export default class MotorControls extends React.Component {
   }
 
   render() {
-    const sample_vertical_uiprop = find(this.props.uiproperties.components, {
+    const sample_vertical_uiprop = find(this.props.uiproperties, {
       role: 'sample_vertical',
     });
 
-    const sample_horizontal_uiprop = find(this.props.uiproperties.components, {
+    const sample_horizontal_uiprop = find(this.props.uiproperties, {
       role: 'sample_horizontal',
     });
 
-    const sample_vertical =
-      this.props.hardwareObjects[sample_vertical_uiprop.attribute];
-    const sample_horizontal =
-      this.props.hardwareObjects[sample_horizontal_uiprop.attribute];
+    const sample_vertical = find(this.props.hardwareObjects, {
+      name: sample_vertical_uiprop.attribute,
+    });
+
+    const sample_horizontal = find(this.props.hardwareObjects, {
+      name: sample_horizontal_uiprop.attribute,
+    });
+
+    const numel = this.props.uiproperties.length;
 
     if (!sample_vertical || !sample_horizontal) {
-      return <Row className="row">{this.renderMotorInputs(0, 8)}</Row>;
+      return <Row className="row">{this.renderMotorInputs(0, numel)}</Row>;
     }
 
     const { save } = this.props;
@@ -97,7 +102,7 @@ export default class MotorControls extends React.Component {
 
             {this.state.showAll && (
               <div style={{ marginTop: '0.5rem' }}>
-                {this.renderMotorInputs(3, 8)}
+                {this.renderMotorInputs(3, numel)}
               </div>
             )}
           </div>

@@ -20,7 +20,7 @@ class AdapterBase:
     ATTRIBUTES = []
     METHODS = []
 
-    def __init__(self, ho, role, app, **kwargs):
+    def __init__(self, ho, role, app):
         """
         Args:
             (object): Hardware object to mediate for.
@@ -335,13 +335,14 @@ class AdapterBase:
 
 
 class ActuatorAdapterBase(AdapterBase):
-    def __init__(self, ho, *args, **kwargs):
+    def __init__(self, ho, *args):
         """
         Args:
             (object): Hardware object to mediate for.
             (str): The name of the object.
         """
-        super(ActuatorAdapterBase, self).__init__(ho, *args, **kwargs)
+        super(ActuatorAdapterBase, self).__init__(ho, *args)
+
         self._unique = False
 
         try:
@@ -349,7 +350,7 @@ class ActuatorAdapterBase(AdapterBase):
         except AttributeError:
             pass
 
-    # Dont't limit rate this method with utils.LimitRate, all sub-classes
+    # Don't limit rate this method with utils.LimitRate, all subclasses
     # will share this method thus all methods will be effected if limit rated.
     # Rather LimitRate the function calling this one.
     def value_change(self, *args, **kwargs):
@@ -369,7 +370,7 @@ class ActuatorAdapterBase(AdapterBase):
             (str): The actual value, after being set.
         Raises:
             ValueError: When conversion or treatment of value fails.
-            StopItteration: When a value change was interrupted (abort/cancel).
+            StopIteration: When a value change was interrupted (abort/cancel).
         """
         try:
             self._set_value(value)

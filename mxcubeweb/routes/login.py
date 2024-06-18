@@ -43,7 +43,6 @@ def init_route(app, server, url_prefix):
             res = make_response(jsonify({"msg": "Could not authenticate"}), 200)
         else:
             res = make_response(jsonify({"msg": ""}), 200)
-            session.permanent = True
 
         return res
 
@@ -81,6 +80,7 @@ def init_route(app, server, url_prefix):
         try:
             res = app.usermanager.login_info()
             response = jsonify(res)
+            session.permanent = True
         except Exception:
             response = make_response(jsonify({"loggedIn": False}), 200)
 
@@ -99,7 +99,6 @@ def init_route(app, server, url_prefix):
     def refresh_session():
         # Since default value of `SESSION_REFRESH_EACH_REQUEST` config setting is `True`
         # there is no need to do anything to refresh the session.
-        logging.getLogger("MX3.HWR").debug("Session refresh")
         app.usermanager.update_active_users()
         return make_response("", 200)
 
