@@ -67,4 +67,6 @@ def get_adapter_cls_from_hardware_object(ho):
     elif isinstance(ho, AbstractActuator.AbstractActuator):
         return ActuatorAdapter
     else:
+
+        print(f"Couldn't find adapter for {type(ho)} class !!!\n")
         return None

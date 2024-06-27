@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <object class="PX1MiniDiff">
-  <username>Minidiff</username>
+  <username>diffractometer</username> <!--Minidiff-->
 
   <channel type="tango" tangoname="i10-c-cx1/ex/sgonaxis" polling="events" name="smargon_state">State</channel>
 
   <sample_centring>True</sample_centring>
-
   <object role="smargon" hwrid="/smargon"></object>
   <object role="zoom" hwrid="/zoom"></object>
   <object role="phi" hwrid="/omega"></object>
+  <object role="phix" hwrid="/phix"></object>
   <object role="phiy" hwrid="/phiy"></object> 
-  <object role="phiz" hwrid="/sampy"></object>
+  <object role="phiz" hwrid="/phiz"></object>
   <object role="sampx" hwrid="/sampx"></object>
   <object role="sampy" hwrid="/sampy"></object>
   <object role="kappa" hwrid="/kappa"></object>
