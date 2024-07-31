@@ -295,6 +295,14 @@ class AdapterBase:
             (dict): The dictionary.
         """
         try:
+            print(self._name, " -----------------name-----------------x")
+            print(self.state(), " ---------------state--------------------x")
+            print(self.msg(), " -----------------msg---------------x")
+            print(self._type, " -----------------_type------------------x")
+            print(self.available(), " --------------available---------------------x")
+            print(self.read_only(), " ----------------read_only-------------------x")
+            print(self.commands(), " ------------------commands---------------x")
+            print(self.attributes(), " -----------------attributes----------------x")
             data = {
                 "name": self._name,
                 "state": self.state(),

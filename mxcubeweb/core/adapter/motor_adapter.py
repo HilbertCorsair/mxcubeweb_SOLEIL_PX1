@@ -44,6 +44,7 @@ class MotorAdapter(ActuatorAdapterBase):
         Raises:
             ValueError: When value for any reason can't be retrieved.
         """
+
         try:
             value = self._ho.get_value()
         except (TypeError, AttributeError):
@@ -56,7 +57,12 @@ class MotorAdapter(ActuatorAdapterBase):
         Returns:
             (str): The state.
         """
-        return self._ho.get_state().name
+        s = self._ho.get_state()
+
+        if isinstance (s, str):
+            return s
+        else:
+            return self._ho.get_state().name
 
     def stop(self):
         self._ho.abort()

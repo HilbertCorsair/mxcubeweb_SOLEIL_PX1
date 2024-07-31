@@ -105,6 +105,8 @@ class MXCUBECore:
         _hwr = HWR.get_hardware_repository()
 
         MXCUBECore.hwr = _hwr
+
+
         try:
             MXCUBECore.beamline = BeamlineAdapter(HWR.beamline, MXCUBEApplication)
             MXCUBECore.adapt_hardware_objects(app)
@@ -143,7 +145,9 @@ class MXCUBECore:
 
     @staticmethod
     def get_adapter(_id):
+        print(f"Getting adapter --- {_id}")
         return MXCUBECore._get_object_from_id(_id)
+
 
     @staticmethod
     def adapt_hardware_objects(app):
@@ -334,6 +338,8 @@ class MXCUBEApplication:
         :return: None
         """
         try:
+            # HWR.beamline.sample_view.camera.start_streaming ---> for some reason camera gets overwritten with None causing an error.
+
             HWR.beamline.sample_view.bear.start_streaming()#(_format=_format, port=port)
         except Exception as ex:
             msg = f"Could not initialize video, error in app.py init_sample_video line 334 was: {ex}"
@@ -465,6 +471,7 @@ class MXCUBEApplication:
         for _id, section in MXCUBEApplication.CONFIG.app.ui_properties:
             if section:
                 for component in section.components:
+
                     # Check that the component, if it's a UIComponentModel, corresponds
                     # to a HardwareObjects that is available and that it can be
                     # adapted.
@@ -475,6 +482,7 @@ class MXCUBEApplication:
                             adapter_cls_name = type(adapter).__name__
                             value_type = adapter.adapter_type
                         except AttributeError:
+
                             msg = (
                                 f"{component.attribute} not accessible via Beamline"
                                 " object. "

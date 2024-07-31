@@ -3,8 +3,8 @@
   <username>CryoTong</username>
 
   <tangoname>i10-c-cx1/ex/catscryotong</tangoname>    
-  <cats>i10-c-cx1/ex/cats</cats>    
-
+  <cats>i10-c-cx1/ex/cats</cats>
+  <object role = "environment" hwrid = "/environment"></object>
   <useUpdateTimer>False</useUpdateTimer>
 
   <no_of_lids>1</no_of_lids>

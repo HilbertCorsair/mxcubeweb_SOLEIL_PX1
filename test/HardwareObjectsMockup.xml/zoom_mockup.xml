@@ -1,11 +1,9 @@
-<object class="TangoMotorWPositions">
-  <username>Zoom</username>
-  <motor_name>Zoom</motor_name>
-
+<object class="MicrodiffZoomMockup">
+  <username>zoom</username>
+  <actuator_name>zoom</actuator_name>
+  <exporter_address>i10-c-cx/ex/zoom_pos</exporter_address>
+  <values>{"LEVEL1": 1, "LEVEL2": 2, "LEVEL3": 3, "LEVEL4": 4, "LEVEL5": 5, "LEVEL6": 6}</values>
   <tangoname>i10-c-cx1/ex/zoom_pos</tangoname>
-  <channel type="tango" polling="500" name="axisPosition">position</channel>
-  <channel type="tango" polling="500" name="axisState">State</channel>
-  <command type="tango" name="stopAxis">Stop</command>
 
   <focus>PhiTableXAxisPosition</focus>
 
@@ -153,5 +151,8 @@
           </position>
 
    </posi>
+
+
+
 
 </object>

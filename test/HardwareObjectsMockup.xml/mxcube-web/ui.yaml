@@ -87,10 +87,10 @@ sample_view_video_controls:
       show: true
     - id: zoom
       show: true
-    - id: backlight
-      show: true
-    - id: frontlight
-      show: true
+    # - id: backlight
+    #   show: true
+    # - id: frontlight
+    #   show: true
     - id: video_size
       show: true
 
@@ -123,7 +123,7 @@ beamline_setup:
       precision: 1
       suffix: "%"
     - label: Cryo
-      attribute: cryo
+      attribute: cryotong
       precision: 2
       suffix: k
     - label: Wavelength

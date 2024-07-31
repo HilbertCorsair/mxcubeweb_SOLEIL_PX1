@@ -5,7 +5,6 @@
   <channel type="tango" tangoname="i10-c-cx1/ex/sgonaxis" polling="events" name="smargon_state">State</channel>
 
   <sample_centring>True</sample_centring>
-  <object role="smargon" hwrid="/smargon"></object>
   <object role="zoom" hwrid="/zoom"></object>
   <object role="phi" hwrid="/omega"></object>
   <object role="phix" hwrid="/phix"></object>

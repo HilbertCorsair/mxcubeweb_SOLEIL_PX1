@@ -8,6 +8,8 @@ server:
   ALLOWED_CORS_ORIGINS:
     - "http://localhost:8081"
     - "http://localhost:3000"
+    - "http://localhost:8000"
+    - "wss://localhost:8000" 
     - "ws://localhost:8000"
 
 mxcube:
