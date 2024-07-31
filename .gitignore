@@ -63,3 +63,4 @@ npm-debug.log*
 /dump.rdb
 /supervisord.pid
 log
+mxcubeweb.log.2024-06-26
