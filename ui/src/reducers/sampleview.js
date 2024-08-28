@@ -6,7 +6,7 @@ const INITIAL_STATE = {
   distancePoints: [],
   width: 659,
   height: 493,
-  videoFormat: 'MJPEG',
+  videoFormat: 'MPEG1',
   videoHash: '',
   videoURL: '',
   sourceIsScalable: false,

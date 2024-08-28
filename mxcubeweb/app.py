@@ -340,7 +340,7 @@ class MXCUBEApplication:
         try:
             # HWR.beamline.sample_view.camera.start_streaming ---> for some reason camera gets overwritten with None causing an error.
 
-            HWR.beamline.sample_view.bear.start_streaming()#(_format=_format, port=port)
+            HWR.beamline.sample_view.camera.start_streaming()#(_format=_format, port=port)
         except Exception as ex:
             msg = f"Could not initialize video, error in app.py init_sample_video line 334 was: {ex}"
             msg += str(ex) 
