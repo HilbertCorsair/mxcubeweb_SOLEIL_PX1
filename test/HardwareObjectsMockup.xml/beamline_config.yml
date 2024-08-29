@@ -30,7 +30,7 @@ _objects:
   - beam: beam.xml
   - transmission: transmission.xml
   - flux: flux.xml
-  - cryo: cryo.xml
+  - cryo: cryospy.xml
   - energy: energy.xml
   - resolution: resolution.xml
   - safety_shutter: safety_shutter2.xml

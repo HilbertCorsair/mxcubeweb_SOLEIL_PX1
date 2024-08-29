@@ -5,6 +5,5 @@
   <port>8000</port>
   <width>1360</width>
   <height>1024</height>
-  <forma>MPEG1</format>
-
+  <format>MPEG1</format>
 </object>

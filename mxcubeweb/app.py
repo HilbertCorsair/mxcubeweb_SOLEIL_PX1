@@ -120,8 +120,10 @@ class MXCUBECore:
     @staticmethod
     def _get_object_from_id(_id):
         if _id in MXCUBECore.adapter_dict:
-            print(f"-- Getting id : {_id} from adapter_dict. ")
+            print(f"-- Getting id : {_id} from adapter_dict.")
             return MXCUBECore.adapter_dict[_id]["adapter"]
+        else:
+            print(f"{_id} not in adapter dict")
 
     @staticmethod
     def _get_adapter_id(ho):
