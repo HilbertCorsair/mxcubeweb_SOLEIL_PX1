@@ -1,13 +1,12 @@
 <object class = "PX1Cryotong">
 
   <username>CryoTong</username>
-
   <tangoname>i10-c-cx1/ex/catscryotong</tangoname>    
   <cats>i10-c-cx1/ex/cats</cats>
   <object role = "environment" hwrid = "/environment"></object>
   <useUpdateTimer>False</useUpdateTimer>
-
-  <no_of_lids>1</no_of_lids>
+  <cm>CATS</cm>
+  <nb_of_lids>1</nb_of_lids>
   <no_of_baskets>3</no_of_baskets>
   <samples_per_basket>16</samples_per_basket>
 

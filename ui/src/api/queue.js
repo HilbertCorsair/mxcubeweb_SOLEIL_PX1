@@ -29,3 +29,7 @@ export function sendResumeQueue() {
 export function sendStopQueue() {
   return endpoint.put(undefined, '/stop').res();
 }
+
+export function sendWashCommand() {
+  return endpoint.put(undefined, '/wash').res();
+}

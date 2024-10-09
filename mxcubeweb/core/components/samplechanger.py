@@ -198,11 +198,8 @@ class SampleChanger(ComponentBase):
 
         try:
             signals.sc_load(sample["location"])
-
             sid = self.get_current_sample().get("sampleID", False)
             current_queue = self.app.queue.queue_to_dict()
-
-            # self.set_sample_to_be_mounted(sample["sampleID"])
 
             if sample["location"] != "Manual":
                 msg = "Mounting sample: %s (%s)" % (

@@ -1,8 +1,9 @@
-<object class = "CatsMaint">
+<object class = "PX1CatsMaint">
   <username>CatsMaint</username>
   <tangoname>i10-c-cx1/ex/catscryotong</tangoname>
   <cats>i10-c-cx1/ex/cats</cats>
-
+  <cm>CATS</cm>
+  <nb_of_lids>1</nb_of_lids>
 
   <regulation>disabled</regulation>
 
@@ -11,7 +12,6 @@
 
   <debug_collision>/nfs/ruche/share-dev/px1dev/MXCuBE/tools/debug_collision</debug_collision>
 
-  <no_of_lids>1</no_of_lids>
   <tool>UNIPUCK</tool>
   <command type="tango" name="_cmdReset">ResetError</command>
   <command type="tango" name="_cmdClearMemory">ClearMemory</command>

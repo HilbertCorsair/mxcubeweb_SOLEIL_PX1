@@ -13,8 +13,17 @@ import {
   sendResumeQueue,
   sendStartQueue,
   sendStopQueue,
+  sendWashCommand,
 } from '../api/queue';
 
+
+export function washCommand() {
+  return () => {
+    return sendWashCommand()
+      .then(() => console.log('Wash command sent successfully'))
+      .catch(error => console.error('Error sending wash command:', error));
+  };
+}
 export function queueLoading(loading) {
   return { type: 'QUEUE_LOADING', loading };
 }

@@ -4,19 +4,18 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Form, Dropdown } from 'react-bootstrap';
-
 import { AUTO_LOOP_CENTRING, CLICK_CENTRING } from '../constants';
-
 import GroupFolderInput from './GroupFolderInput.jsx';
 import NumSnapshotsDropDown from './NumSnapshotsDropDown.jsx';
-
 import {
   sendSetCentringMethod,
   sendSetGroupFolder,
   sendSetQueueSettings,
   setAutoAddDiffPlan,
   setAutoMountSample,
+  washCommand,
 } from '../actions/queue';
+import QueueControl from '../components/SampleQueue/QueueControl';
 
 class QueueSettings extends React.Component {
   constructor(props) {

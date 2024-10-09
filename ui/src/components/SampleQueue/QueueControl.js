@@ -9,7 +9,7 @@ import {
   QUEUE_STOPPED,
   QUEUE_STARTED,
 } from '../../constants';
-
+import { sendWashCommand } from '../../api/queue.js';
 import QueueSettings from '../../containers/QueueSettings.jsx';
 import loader from '../../img/busy-indicator.gif';
 
@@ -18,6 +18,7 @@ export default class QueueControl extends React.Component {
     super(props);
 
     this.nextSample = this.nextSample.bind(this);
+    this.handleWashClick = this.handleWashClick.bind(this)
 
     this.state = {
       options: {
@@ -134,6 +135,13 @@ export default class QueueControl extends React.Component {
     );
   }
 
+  handleWashClick() {
+
+    sendWashCommand()
+    .then(() => console.log('Wash command sent successfully'))
+    .catch(error => console.error('Error sending wash command:', error));
+  }
+
   // eslint-disable-next-line sonarjs/cognitive-complexity
   render() {
     let nextSample = [];
@@ -192,6 +200,16 @@ export default class QueueControl extends React.Component {
             <span>
               {sampleQueueOptions.map((option) => this.renderOption(option))}
             </span>
+
+            <Button
+              className="btn-info"
+              variant=""
+              size="sm"
+              onClick={this.handleWashClick}
+              >
+               Wash Sample
+            </Button>
+
           </Nav.Item>
           <Nav.Item>
             <img
