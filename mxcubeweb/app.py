@@ -473,7 +473,6 @@ class MXCUBEApplication:
         for _id, section in MXCUBEApplication.CONFIG.app.ui_properties:
             if section:
                 for component in section.components:
-
                     # Check that the component, if it's a UIComponentModel, corresponds
                     # to a HardwareObjects that is available and that it can be
                     # adapted.
@@ -507,7 +506,6 @@ class MXCUBEApplication:
 
                         if not component.value_type:
                             component.value_type = value_type
-
         return {
             key: value.dict()
             for (

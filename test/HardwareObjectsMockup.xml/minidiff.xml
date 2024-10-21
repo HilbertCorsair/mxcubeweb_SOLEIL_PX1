@@ -15,17 +15,17 @@
   <object role="kappa" hwrid="/kappa"></object>
   <object role="kappa_phi" hwrid="/kappa_phi"></object>
 
-  <!--<object role="light" href="/light"/>
-  <object role="lightarm" href="/lightarm"/> -->
+  <object role="light" href="/light"/>
+  <object role="lightarm" href="/lightarm"/>
 
-  <!-- <object role="beam_info" hwrid="/beam-info"></object> -->
+  <object role="beam_info" hwrid="/beam-info"></object>
 
   <!-- object role="camera" hwrid="/ge1350c"></object -->
   <!-- object role="camera" hwrid="/videohub"></object> -->
 
-  <!--<object role="samplechanger" hwrid="/cryotong"></object>--> 
-  <!-- <object role="px1configuration" hwrid="/px1configuration"></object> -->
-  <!-- <object role="px1environment" hwrid="/environment"></object> -->
+  <object role="samplechanger" hwrid="/cryotong"></object>
+  <object role="px1configuration" hwrid="/px1configuration"></object> 
+  <object role="px1environment" hwrid="/environment"></object> 
 
 
   <!-- DO THESE VALUES MAKE ANY SENSE AT PX1?? -->

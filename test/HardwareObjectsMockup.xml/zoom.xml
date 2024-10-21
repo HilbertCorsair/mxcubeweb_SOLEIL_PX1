@@ -14,7 +14,7 @@
 
    <posi>
         <position>
-           <username>Zoom 1</username>
+           <username>zoom1</username>
            <offset>0</offset>
            <focus_offset>0.0</focus_offset>
            <lightLevel>15</lightLevel>
@@ -28,7 +28,7 @@
          </position>
 
          <position>
-            <username>Zoom 2</username>
+            <username>zoom2</username>
             <offset>313</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>25</lightLevel>
@@ -42,7 +42,7 @@
          </position>
 
          <position>
-            <username>Zoom 3</username>
+            <username>zoom3</username>
             <offset>493</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>30</lightLevel>
@@ -56,7 +56,7 @@
          </position>
 
          <position>
-            <username>Zoom 4</username>
+            <username>zoom4</username>
             <offset>647</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>40</lightLevel>
@@ -70,7 +70,7 @@
           </position>
 
           <position>
-            <username>Zoom 5</username>
+            <username>zoom5</username>
             <offset>756</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>55</lightLevel>
@@ -84,7 +84,7 @@
           </position>
 
           <position>
-            <username>Zoom 6</username>
+            <username>zoom6</username>
             <offset>840</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>66</lightLevel>
@@ -97,7 +97,7 @@
           </position>
 
           <position>
-            <username>Zoom 7</username>
+            <username>zoom7</username>
             <offset>916</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>75</lightLevel>
@@ -111,7 +111,7 @@
           </position>
 
           <position>
-            <username>Zoom 8</username>
+            <username>zoom8</username>
             <offset>970</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>78</lightLevel>
@@ -125,7 +125,7 @@
           </position>
 
           <position>
-            <username>Zoom 9</username>
+            <username>zoom9</username>
             <offset>1030</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>82</lightLevel>
@@ -139,7 +139,7 @@
           </position>
 
           <position>
-            <username>Zoom 10</username>
+            <username>zoom10</username>
             <offset>1088</offset>
             <focus_offset>0.0</focus_offset>
             <lightLevel>86</lightLevel>

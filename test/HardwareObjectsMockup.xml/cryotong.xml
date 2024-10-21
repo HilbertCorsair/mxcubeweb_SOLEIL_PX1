@@ -48,7 +48,7 @@
 
   <channel type="tango" name="_chnPathRunning" polling="events">pathRunning</channel>
 
-  <channel type="tango" name="_chnSampleIsDetected" polling="events">sampleIsDetected</channel>
+  <channel type="tango" name="_chnSampleIsDetected" polling="100">sampleIsDetected</channel>
   <channel type="tango" name="_chnCryoInserted" polling="events">cryoInserted</channel>
 
   <channel type="tango" polling="events" name="_chnBasket1State">puckIncassette1</channel>
@@ -61,11 +61,7 @@
 
   <!-- CHANNELS FROM CATS --> 
   
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnSampleIsDetected">di_PRI4_SOM</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnTotalLidState">di_AllLidsClosed</channel>
-
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnLid1State">di_Lid1Open</channel>
-
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnSampleBarcode">Barcode</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnPowered">Powered</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnMessage">Message</channel>

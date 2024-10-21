@@ -12,7 +12,8 @@ export default class OneAxisTranslationControl extends React.Component {
     super(props);
     this.state = { edited: false };
     this.handleKey = this.handleKey.bind(this);
-    this.stepChange = this.stepChange.bind(this);
+    this.stepChange = this.stepChange.bind(this)
+    debugger;
   }
 
   /* eslint-enable react/no-set-state */

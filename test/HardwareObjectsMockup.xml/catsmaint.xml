@@ -64,7 +64,6 @@
   <!-- CHANNELS FROM CATS -->
 
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnLN2Regulation">LN2Regulating</channel>
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnLid1State">di_Lid1Open</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnSampleBarcode">Barcode</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnPowered">Powered</channel>
   <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnMessage">Message</channel>
