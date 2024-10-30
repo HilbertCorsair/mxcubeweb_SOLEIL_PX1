@@ -16,14 +16,35 @@ import {
   sendWashCommand,
 } from '../api/queue';
 
+export const WASH_COMMAND_REQUEST = 'WASH_COMMAND_REQUEST';
+export const WASH_COMMAND_SUCCESS = 'WASH_COMMAND_SUCCESS';
+export const WASH_COMMAND_FAILURE = 'WASH_COMMAND_FAILURE';
+
 
 export function washCommand() {
-  return () => {
+  return dispatch => {
+    // Dispatch request action before making API call
+    dispatch({ type: WASH_COMMAND_REQUEST });
+
     return sendWashCommand()
-      .then(() => console.log('Wash command sent successfully'))
-      .catch(error => console.error('Error sending wash command:', error));
+      .then(() => {
+        console.log('Wash command sent successfully');
+        // Dispatch success action after successful API call
+        dispatch({
+          type: WASH_COMMAND_SUCCESS
+        });
+      })
+      .catch(error => {
+        console.error('Error sending wash command:', error);
+        // Dispatch failure action if API call fails
+        dispatch({
+          type: WASH_COMMAND_FAILURE,
+          error: error.message || 'Failed to send wash command'
+        });
+      });
   };
 }
+
 export function queueLoading(loading) {
   return { type: 'QUEUE_LOADING', loading };
 }
