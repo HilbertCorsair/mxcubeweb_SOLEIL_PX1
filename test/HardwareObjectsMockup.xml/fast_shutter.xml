@@ -1,0 +1,10 @@
+<object class ="TangoShutter">
+    <tangoname>i10-c-cx1/ex/pandashutter.2</tangoname>
+    <channel type="tango" polling="500" name="State">State</channel>
+    <command type="tango" name="Open">shutter_open</command>
+    <command type="tango" name="Close">shutter_close</command>
+    <actuator_name>fast_shutter</actuator_name>
+    <name>fast_shutter</name>
+    <username>fast_shutter</username>
+    <values>{"OPEN":"OPEN", "CLOSED":"CLOSE" }</values>
+</object>

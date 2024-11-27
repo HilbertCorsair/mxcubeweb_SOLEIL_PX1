@@ -1,0 +1,21 @@
+<object class = "Resolution">
+  <actuator_name>resolution</actuator_name>
+
+  <username>Resolution</username>
+
+  <tangoname>i10-c-cx1/dt/detdist.1-control</tangoname>
+  
+  <channel type="tango" polling="500" name="distance">position</channel>
+  <channel type="tango" polling="500" name="resolution">resolution</channel>
+  <channel type="tango" polling="500" name="state">State</channel>
+  <channel type="tango" polling="500" name="minimum_distance">distanceMin</channel>
+  <channel type="tango" polling="500" name="minimum_resolution">resolutionMin</channel>
+
+  <!--<channel type="tango" polling="500" name="minimum_resolution">resolutionMinForCollect</channel>-->
+  <channel type="tango" polling="500" name="maximum_resolution">resolutionMax</channel>
+  <command type="tango" name="stop">Stop</command>
+  <command type="tango" name="calc_limits">get_resolution_range</command>
+  <!--object href="/energy" role="energy" /-->
+
+</object>
+

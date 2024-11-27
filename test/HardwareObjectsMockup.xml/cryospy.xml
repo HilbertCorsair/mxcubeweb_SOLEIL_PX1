@@ -1,0 +1,15 @@
+<device class="TangoCryo">
+  <username>Cryo</username>
+  <channel type="tango" polling="2000" tangoname="i10-c-cx1/ex/cryostream700" name="state">State</channel>
+  <channel type="tango" polling="2000" tangoname="i10-c-cx1/ex/cryostream700" name="status">Status</channel>
+  <channel type="tango" polling="2000" tangoname="i10-c-cx1/ex/cryostream700" name="temperature">sampleTemp</channel>
+  <channel type="tango" polling="2000" tangoname="i10-c-cx1/vi/dewar" name="n2level">LN2_Level</channel>
+
+  <command type="tango" tangoname="i10-c-cx1/ex/cryostream700" name="heat">Ramp</command>
+  <command type="tango" tangoname="i10-c-cx1/ex/cryostream700" name="cool">Cool</command>
+
+  <heat_temperature>300</heat_temperature>
+  <heat_rate>200</heat_rate>
+  <cool_temperature>100</cool_temperature>
+
+</device>

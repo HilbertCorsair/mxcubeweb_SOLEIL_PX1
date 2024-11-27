@@ -1,0 +1,10 @@
+<object class="SOLEILSafetyShutter">
+    <username>safety_shutter</username>
+    <object href="/PX1_obx" role="shutter"></object>
+    <object href="/PX1_pss_exp" role="pss"></object>
+    <actuator_name>safety_shutter</actuator_name>
+    <command type="tango" name="Open">Open</command>
+    <command type="tango" name="Close">Close</command>
+    <user_name>safety_shutter</user_name>
+    <values>{"OPEN": "OPEN", "CLOSED": "CLOSED"}</values>
+</object>
