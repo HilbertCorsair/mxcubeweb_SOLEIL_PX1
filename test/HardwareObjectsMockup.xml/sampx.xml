@@ -1,0 +1,5 @@
+<object class="SmargonAxis">
+  <username>zOffset</username>
+  <motor_name>zOffset</motor_name>
+  <object href="/smargon" role="smargon"/>
+</object>

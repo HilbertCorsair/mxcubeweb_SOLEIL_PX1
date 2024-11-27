@@ -1,0 +1,158 @@
+<object class="MicrodiffZoomMockup">
+  <username>zoom</username>
+  <actuator_name>zoom</actuator_name>
+  <exporter_address>i10-c-cx/ex/zoom_pos</exporter_address>
+  <values>{"LEVEL1": 1, "LEVEL2": 2, "LEVEL3": 3, "LEVEL4": 4, "LEVEL5": 5, "LEVEL6": 6}</values>
+  <tangoname>i10-c-cx1/ex/zoom_pos</tangoname>
+
+  <focus>PhiTableXAxisPosition</focus>
+
+   <delta>5</delta>
+   <threshold>0.1</threshold>
+
+   <posi>
+        <position>
+           <username>Zoom 1</username>
+           <offset>0</offset>
+           <focus_offset>0.0</focus_offset>
+           <lightLevel>15</lightLevel>
+           <arrowStep>50</arrowStep>
+           <calibrationData>
+               <pixelsPerMmY>658</pixelsPerMmY>
+               <pixelsPerMmZ>658</pixelsPerMmZ>
+               <beamPositionX>680</beamPositionX>
+               <beamPositionY>512</beamPositionY>
+           </calibrationData>
+         </position>
+
+         <position>
+            <username>Zoom 2</username>
+            <offset>313</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>25</lightLevel>
+            <arrowStep>25</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>1269</pixelsPerMmY>
+                <pixelsPerMmZ>1269</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+         </position>
+
+         <position>
+            <username>Zoom 3</username>
+            <offset>493</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>30</lightLevel>
+            <arrowStep>15</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>1894</pixelsPerMmY>
+                <pixelsPerMmZ>1894</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+         </position>
+
+         <position>
+            <username>Zoom 4</username>
+            <offset>647</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>40</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>2632</pixelsPerMmY>
+                <pixelsPerMmZ>2632</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 5</username>
+            <offset>756</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>55</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>3335</pixelsPerMmY>
+                <pixelsPerMmZ>3335</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 6</username>
+            <offset>840</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>66</lightLevel>
+            <calibrationData>
+                <pixelsPerMmY>4000</pixelsPerMmY>
+                <pixelsPerMmZ>4000</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 7</username>
+            <offset>916</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>75</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>4565</pixelsPerMmY>
+                <pixelsPerMmZ>4565</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 8</username>
+            <offset>970</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>78</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>5250</pixelsPerMmY>
+                <pixelsPerMmZ>5250</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 9</username>
+            <offset>1030</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>82</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>5940</pixelsPerMmY>
+                <pixelsPerMmZ>5940</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+          <position>
+            <username>Zoom 10</username>
+            <offset>1088</offset>
+            <focus_offset>0.0</focus_offset>
+            <lightLevel>86</lightLevel>
+            <arrowStep>10</arrowStep>
+            <calibrationData>
+                <pixelsPerMmY>6715</pixelsPerMmY>
+                <pixelsPerMmZ>6715</pixelsPerMmZ>
+                <beamPositionX>680</beamPositionX>
+                <beamPositionY>512</beamPositionY>
+            </calibrationData>
+          </position>
+
+   </posi>
+
+
+
+
+</object>
