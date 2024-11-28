@@ -56,7 +56,7 @@ class MotorAdapter(ActuatorAdapterBase):
         Returns:
             (str): The state.
         """
-        return self._ho.get_state().name
+        return self._ho.get_state()
 
     def stop(self):
         self._ho.abort()
