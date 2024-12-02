@@ -7,8 +7,7 @@ import os
 import sys
 import logging
 import traceback
-import atexit
-import json
+
 import time
 
 from pathlib import Path
@@ -253,7 +252,7 @@ class MXCUBEApplication:
     AUTO_ADD_DIFFPLAN = False
 
     # Number of sample snapshots taken before collect
-    NUM_SNAPSHOTS = 4
+    DEFAULT_NUM_SNAPSHOTS = 4
 
     # Remember collection paramters between samples
     # or reset (defualt) between samples.
@@ -322,7 +321,6 @@ class MXCUBEApplication:
         MXCUBEApplication.harvester = Harvester(MXCUBEApplication, {})
 
         MXCUBEApplication.init_signal_handlers()
-        atexit.register(MXCUBEApplication.app_atexit)
 
         # Install server-side UI state storage
         MXCUBEApplication.init_state_storage()
@@ -342,7 +340,7 @@ class MXCUBEApplication:
         try:
             # HWR.beamline.sample_view.camera.start_streaming ---> for some reason camera gets overwritten with None causing an error.
 
-            HWR.beamline.sample_view.camera.start_streaming()#(_format=_format, port=port)
+            HWR.beamline.sample_view.camera.start_streaming(_format=_format, port=port)
         except Exception as ex:
             msg = f"Could not initialize video, error in app.py init_sample_video line 334 was: {ex}"
             msg += str(ex) 
@@ -506,6 +504,7 @@ class MXCUBEApplication:
 
                         if not component.value_type:
                             component.value_type = value_type
+
         return {
             key: value.dict()
             for (
@@ -514,72 +513,3 @@ class MXCUBEApplication:
             ) in MXCUBEApplication.CONFIG.app.ui_properties
             if value
         }
-
-    @staticmethod
-    def save_settings():
-        """
-        Saves all application wide variables to disk, stored-mxcube-session.json
-        """
-        queue = MXCUBEApplication.queue.queue_to_dict(
-            HWR.beamline.queue_model.get_model_root()
-        )
-
-        # For the moment not storing USERS
-
-        data = {
-            "QUEUE": queue,
-            "CURRENTLY_MOUNTED_SAMPLE": MXCUBEApplication.CURRENTLY_MOUNTED_SAMPLE,
-            "SAMPLE_TO_BE_MOUNTED": MXCUBEApplication.SAMPLE_TO_BE_MOUNTED,
-            "CENTRING_METHOD": MXCUBEApplication.CENTRING_METHOD,
-            "NODE_ID_TO_LIMS_ID": MXCUBEApplication.NODE_ID_TO_LIMS_ID,
-            "INITIAL_FILE_LIST": MXCUBEApplication.INITIAL_FILE_LIST,
-            "SC_CONTENTS": MXCUBEApplication.SC_CONTENTS,
-            "SAMPLE_LIST": MXCUBEApplication.SAMPLE_LIST,
-            "TEMP_DISABLED": MXCUBEApplication.TEMP_DISABLED,
-            "ALLOW_REMOTE": MXCUBEApplication.ALLOW_REMOTE,
-            "TIMEOUT_GIVES_CONTROL": MXCUBEApplication.TIMEOUT_GIVES_CONTROL,
-            "VIDEO_FORMAT": MXCUBEApplication.VIDEO_FORMAT,
-            "AUTO_MOUNT_SAMPLE": MXCUBEApplication.AUTO_MOUNT_SAMPLE,
-            "AUTO_ADD_DIFFPLAN": MXCUBEApplication.AUTO_ADD_DIFFPLAN,
-            "NUM_SNAPSHOTS": MXCUBEApplication.NUM_SNAPSHOTS,
-            "UI_STATE": MXCUBEApplication.UI_STATE,
-        }
-
-        fname = Path("/tmp/stored-mxcube-session.json")
-        fname.touch(exist_ok=True)
-
-        with open(fname, "w+") as fp:
-            json.dump(data, fp)
-
-    @staticmethod
-    def load_settings():
-        """
-        Loads application wide variables from "stored-mxcube-session.json"
-        """
-        with open("/tmp/stored-mxcube-session.json", "r") as f:
-            data = json.load(f)
-
-        MXCUBEApplication.queue.load_queue_from_dict(data.get("QUEUE", {}))
-
-        MXCUBEApplication.CENTRING_METHOD = data.get(
-            "CENTRING_METHOD", queue_entry.CENTRING_METHOD.LOOP
-        )
-        MXCUBEApplication.NODE_ID_TO_LIMS_ID = data.get("NODE_ID_TO_LIMS_ID", {})
-        MXCUBEApplication.SC_CONTENTS = data.get(
-            "SC_CONTENTS", {"FROM_CODE": {}, "FROM_LOCATION": {}}
-        )
-        MXCUBEApplication.SAMPLE_LIST = data.get(
-            "SAMPLE_LIST", {"sampleList": {}, "sampleOrder": []}
-        )
-        MXCUBEApplication.ALLOW_REMOTE = data.get("ALLOW_REMOTE", False)
-        MXCUBEApplication.TIMEOUT_GIVES_CONTROL = data.get(
-            "TIMEOUT_GIVES_CONTROL", False
-        )
-        MXCUBEApplication.AUTO_MOUNT_SAMPLE = data.get("AUTO_MOUNT_SAMPLE", False)
-        MXCUBEApplication.AUTO_ADD_DIFFPLAN = data.get("AUTO_ADD_DIFFPLAN", False)
-        MXCUBEApplication.NUM_SNAPSHOTS = data.get("NUM_SNAPSHOTS", False)
-        MXCUBEApplication.UI_STATE = data.get("UI_STATE", {})
-
-    @staticmethod
-    def app_atexit():
-        MXCUBEApplication.save_settings()

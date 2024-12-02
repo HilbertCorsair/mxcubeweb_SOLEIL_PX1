@@ -31,8 +31,8 @@ class NStateAdapter(ActuatorAdapterBase):
 
     def _get_valid_states(self):
         state_names = [v.name for v in self._ho.VALUES]
-        state_names.remove("UNKNOWN")
-
+        if "UNKNOWN" in state_names:
+            state_names.remove("UNKNOWN")
         return state_names
 
     def _get_available_states(self):
@@ -48,6 +48,9 @@ class NStateAdapter(ActuatorAdapterBase):
         self._ho.set_value(self._ho.VALUES[value.value])
 
     def _get_value(self) -> StrValueModel:
+        #Hack to accomodate zoom_motor
+        if self._ho.name() == "/zoom":
+            return StrValueModel( ** {"value":self._ho.get_value()} )
         return StrValueModel(**{"value": self._ho.get_value().name})
 
     def msg(self):
