@@ -7,7 +7,7 @@ import { HW_STATE } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './SampleControls.module.css';
 
-const ZOOM_HWO_ID = 'diffractometer.zoom';
+const ZOOM_HWO_ID = 'diffractometer.beam_info.zoom';
 
 function ZoomControl() {
   const dispatch = useDispatch();
