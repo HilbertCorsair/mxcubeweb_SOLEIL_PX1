@@ -64,7 +64,7 @@ sample_view:
       precision: 3
       suffix: mm
     - label: Zoom
-      attribute: diffractometer.zoom
+      attribute: diffractometer.beam_info.zoom
       role: zoom
       step: 1
       precision: 1
