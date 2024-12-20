@@ -91,15 +91,26 @@ class ServerIO {
   }
 
   connectHwr() {
-    this.hwrSocket = io.connect(`/hwr`);
+    const serverUrl = 'http://195.221.8.78:5173'; // Based on the URLs in your error messages
+    
+    this.hwrSocket = io(`${serverUrl}/hwr`, {
+      transports: ['websocket', 'polling'],
+      path: '/socket.io',
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
     this.hwrSocket.on('connect', () => {
-      console.log('hwrSocket connected!'); // eslint-disable-line no-console
+      console.log('hwrSocket connected!');
       dispatch(showConnectionLostDialog(false));
     });
 
     this.hwrSocket.on('connect_error', (error) => {
-      console.error('hwrSocket connection error:', error.message); // eslint-disable-line no-console
+      console.log('Detailed connection error:', {
+        message: error.message,
+        type: error.type,
+        description: error.description
+      });
     });
 
     this.hwrSocket.on('disconnect', (reason) => {
@@ -424,16 +435,19 @@ class ServerIO {
   }
 
   connectLogging() {
-    this.loggingSocket = io.connect(`/logging`);
+    const serverUrl = 'http://195.221.8.78:5173';
+    
+    this.loggingSocket = io(`${serverUrl}/logging`, {
+      transports: ['websocket', 'polling'],
+      path: '/socket.io',
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
     this.loggingSocket.on('connect', () => {
       console.log('loggingSocket connected!'); // eslint-disable-line no-console
     });
-
-    this.loggingSocket.on('connect_error', (error) => {
-      console.error('loggingSocket connection error:', error.message); // eslint-disable-line no-console
-    });
-
+  
     this.loggingSocket.on('disconnect', (reason) => {
       console.log('loggingSocket disconnected!'); // eslint-disable-line no-console
 
