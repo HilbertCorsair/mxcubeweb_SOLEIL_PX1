@@ -1,23 +1,62 @@
-<object class="MultiCollectMockup">
+<object class="PX1Collect">
+
+  <tangoname>i10-c-cx1/ex/pandacollect</tangoname>
+
+  <channel type="tango" name="state">State</channel>
+
+  <channel type="tango" name="latest_image_num" polling="500">currentImage</channel>
+  <channel type="tango" name="latest_trigger_num" polling="500">currentTrigger</channel>
+  <command type="tango" name="set_header">SetMxSettings</command>
+
+  <ignore_shutters>True</ignore_shutters>
+
   <object href="/minidiff" role="diffractometer"/>
+  <object href="/chip_manager" role="chip_manager"/>
+
+  <object href="/omega" role="omega"/>
+  <object href="/kappa" role="kappa"/>
+  <object href="/kappa_phi" role="phi"/>
+
   <object href="/mxlocal" role="beamline_configuration"/>
   <object href="/cryotong" role="sample_changer"/>
   <object href="/energy" role="energy"/>
-  <object href="/transmission" role="transmission"/>
-  <object href="/detector" role="detector"/>
+  <object href="/attenuators_pslits" role="transmission"/>
+<!--
+  <object href="/pilatus" role="detector"/>
+-->
+  <object href="/eiger" role="detector"/>
+  <object href="/beam-info" role="beam_info"/>
+  <object href="/mach" role="machine_info"/>
   <object href="/resolution" role="resolution"/>
-  <object href="/lims" role="dbserver"/>
-  <num_snapshots>0</num_snapshots>
+  <object href="/dbconnection" role="lims_client"/> 
+  <object href="/Qt4_graphics-manager" role="graphics_manager"/> 
+  <object href="/px1environment" role="environment"/> 
+  <object href="/session" role="session"/> 
+  <object href="/flux" role="flux"/>
+  <object href="/autoprocessing" role="auto_processing"/>
 
-  <auto_processing>
-      <program>
-      <executable>not_existing_executable_1</executable>
-      <event>after</event>
-    </program>
-    <program>
-      <executable>not_existing_executable_2</executable>
-      <event>image</event>
-    </program>
-    </auto_processing>
+  <object href="/fast_shutter" role="fastshut"/> 
+  <object href="/safety_shutter2" role="safshut"/> 
+  <object href="/frontend" role="frontend"/> 
+
+  <object href="/lightarm" role="lightarm"/> 
+
+  <!-- EXTERNAL programs / tools -->
+
+  <merge>cbf</merge>
+  <!--merge>cbf,hdf5</merge-->
+  <!--merge>hdf5</merge -->
+
+  <mergehdf5>/nfs/ruche/share-dev/px1dev/MXCuBE/tools/h5merge.py</mergehdf5>
+  <mergecbf>/nfs/ruche/share-dev/px1dev/Eiger16M/PX1_code/hdf2mergedcbf</mergecbf>
+
+  <imgtojpeg>/nfs/ruche/share-dev/px1dev/Eiger16M/PX1_code/gen_eiger_thumbnails</imgtojpeg>
+
+  <!-- imgtojpeg>/nfs/ruche/share-dev/px1dev/Eiger16M/PX1_code/eiger_thumbnail</imgtojpeg-->
+
+  <chooch_cmd>/nfs/ruche/share-dev/px1dev/MXCuBE/tools/run_chooch.sh</chooch_cmd>
+
+  <chip_collect_angle_max>40</chip_collect_angle_max>
+  <mxcube_createdir_server>http://localhost:9023</mxcube_createdir_server>
 
 </object>
