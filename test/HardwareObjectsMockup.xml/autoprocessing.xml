@@ -1,0 +1,52 @@
+<equipment class = "PX1AutoProcessing">
+  <username>PX1 Auto Processing</username>
+
+  <!-- select one out of: default  xdsme  xdsme_autoproc -->
+  <active_profile>xdsme_autoproc</active_profile>
+
+  <executable>/nfs/ruche/share-dev/picca/bin/autoprocessing-px1-qt4</executable>
+
+
+  <!--   if at least one option is selected for a profile. 
+         the run_autoprocessing checkbox is activated by default -->
+
+  <profiles>
+      <profile>
+          <name>default</name>
+          <options></options>
+      </profile>
+
+      <profile>
+          <name>xdsme</name>
+          <options>xdsme</options>
+      </profile>
+
+      <profile>
+          <name>autoproc</name>
+          <options>autoproc</options>
+      </profile>
+
+      <profile>
+          <name>xdsme_autoproc</name>
+          <options>xdsme,autoproc</options>
+      </profile>
+
+  </profiles>
+
+  <options>
+     <option>
+        <name>xdsme</name>
+        <type>boolean</type>
+     </option>
+     <option>
+        <name>autoproc</name>
+        <type>boolean</type>
+     </option>
+     <option>
+        <name>dials</name>
+        <type>boolean</type>
+     </option>
+  </options>
+
+</equipment>
+

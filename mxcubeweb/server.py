@@ -66,10 +66,14 @@ class Server:
     @staticmethod
     def init(cmdline_options, cfg):
         template_dir = os.path.join(os.path.dirname(__file__), "templates")
+        static_dir = os.path.join(os.path.dirname(__file__), "ui")
+        print(f"Debug - Static directory path: {static_dir}")  # Add this debug line
+        print(f"Debug - Directory exists: {os.path.exists(static_dir)}")  # And this one
+        print(f"Debug - Index.html exists: {os.path.exists(os.path.join(static_dir, 'index.html'))}")
 
         Server.flask = Flask(
             __name__,
-            static_folder=cmdline_options.static_folder,
+            static_folder= static_dir, #os.path.join(os.path.dirname(__file__), "ui"), #cmdline_options.static_folder,
             static_url_path="",
             template_folder=template_dir,
         )
