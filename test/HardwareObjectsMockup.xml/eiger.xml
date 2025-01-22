@@ -5,7 +5,8 @@
   <tangoname>test/arafat/eiger.test-specific</tangoname>
 -->
 
-  <object href="/detectordistance" role="distance_motor" />
+  <object href="/detector_distance" role="distance_motor" />
+  <binning>1</binning>
 
 <!-- LIST OF CHANNELS -->
   <channel type="tango" polling="events" name="state">State</channel>
