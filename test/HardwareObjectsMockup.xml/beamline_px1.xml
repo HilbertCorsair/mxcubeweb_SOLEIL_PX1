@@ -40,7 +40,6 @@
   <!--object href="/parallel_processing" role="parallel_processing"/-->
 
   <!-- Software (abstract) concepts -->
-  <object href="/Qt4_graphics-manager" role="shape_history"/>
   <object href="/ednaparams" role="workflow"/>
   <object href="/data-analysis" role="data_analysis"/>
   <!--<object href="/workflow-mockup" role="workflow"/> -->
