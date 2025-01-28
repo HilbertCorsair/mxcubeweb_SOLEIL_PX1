@@ -28,7 +28,7 @@ _objects:
   - machine_info: machine_info.xml
   - detector: eiger.xml #detector.xml 
   - beam: beam.xml
-  - transmission: transmission.xml
+  - transmission: attenuators_pslits.xml
   - flux: flux.xml
   - cryo: cryospy.xml
   - energy: energy.xml

@@ -60,7 +60,6 @@ class MotorAdapter(ActuatorAdapterBase):
         if not isinstance(self._ho.get_state(), str):
             return self._ho.get_state().name
         else:
-            print (f"Statte is a string for {self} ---> {self.ho.name()} ----> {self.ho.get_state()}")
             return self._ho.get_state()
 
     def stop(self):

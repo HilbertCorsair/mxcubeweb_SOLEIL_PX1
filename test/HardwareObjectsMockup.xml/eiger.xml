@@ -5,7 +5,7 @@
   <tangoname>test/arafat/eiger.test-specific</tangoname>
 -->
 
-  <object href="/detector_distance" role="distance_motor" />
+  <object href="/detector_distance" role="detector_distance" />
   <binning>1</binning>
 
 <!-- LIST OF CHANNELS -->
@@ -38,7 +38,9 @@
   <type>Eiger_X</type>
   <model>16M</model>
   <px>0.075</px>
-  <py>0.075</py>
+  <py>0.075</py> 
+  <width>4150</width>
+  <height>4371</height>
   <exposure_limits>0.00135,100</exposure_limits>
   <minimum_exposure_time>0.00135</minimum_exposure_time>
   <default_exposure_time>0.02</default_exposure_time>
