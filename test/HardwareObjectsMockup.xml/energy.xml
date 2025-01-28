@@ -1,10 +1,14 @@
-<object class="EnergyMockup">
-    <tangoname>i10-c-c00/ex/beamlineenergy</tangoname>
-    <channel type="tango" polling="500" name="energy">energy</channel>
-    <channel type="tango" polling="500" name="state">State</channel>
-    <tunable>True</tunable>
-    <default_energy>12.650</default_energy>
-    <min_energy>5.8</min_energy>
-    <max_energy>18.5</max_energy>
-</object>
+<object class = "PX1Energy">
+    <username>Energy</username>
 
+    <tangoname>i10-c-c00/ex/beamlineenergy</tangoname>
+    <channel type="tango" polling="events" name="energy">energy</channel>
+    <channel type="tango" polling="events" name="state">State</channel>
+    <command type="tango" name="stop">Stop</command>
+
+    <mono_device>i10-c-c02/op/mono1</mono_device>
+    <undulator_device>ans-c10/ei/c-u20_energy</undulator_device>
+
+    <interval>1000</interval>
+    <backlash>False</backlash>
+</object>

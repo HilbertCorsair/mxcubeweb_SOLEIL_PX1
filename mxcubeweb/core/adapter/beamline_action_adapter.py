@@ -43,7 +43,9 @@ class BeamlineActionAdapter(ActuatorAdapterBase):
     def msg(self):
         try:
             msg = self._ho.get_value().name
-        except Exception:
+        except AttributeError:
+            self._ho.get_value()
+        except :
             msg = "---"
             logging.getLogger("MX3.HWR").error(
                 "Failed to get beamline attribute message"

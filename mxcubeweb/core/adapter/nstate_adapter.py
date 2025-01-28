@@ -54,12 +54,15 @@ class NStateAdapter(ActuatorAdapterBase):
     def msg(self):
         try:
             msg = self._ho.get_value().name
-        except Exception:
+        except AttributeError:
+            msg = self._ho.get_value()
+            import re
+            msg = str(re.search(r'\d+', msg))
+        except:
             msg = "---"
             logging.getLogger("MX3.HWR").error(
-                "Failed to get beamline attribute message"
+                "ERROR in nstate adapter : Failed to get beamline attribute message"
             )
-
         return msg
 
     def data(self) -> NStateModel:
