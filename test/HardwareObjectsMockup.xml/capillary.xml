@@ -1,5 +1,6 @@
-<object class="ExporterNStateMockup">
+<object class="PX1Tools">
+  <tangoname>i10-c-cx1/ex/capil.1-pos</tangoname>
   <username>capillary</username>
-  <values>{"IN": "BEAM", "OUT": "OFF"}</values>
-  <use_hwstate>True</use_hwstate>
+  <channel type="tango" polling="500" name="State">State</channel>
+  <values>{"EXTRACT":"OUT", "INSERT":"IN", "MOVING":"BUSY"}</values>
 </object>

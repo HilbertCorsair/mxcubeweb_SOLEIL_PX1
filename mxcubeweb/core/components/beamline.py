@@ -85,24 +85,6 @@ class Beamline(ComponentBase):
         return aperture_list, current_aperture
 
     def get_viewport_info(self):
-        """
-        Get information about current "view port" video dimension, beam position,
-        pixels per mm, returns a dictionary with the format:
-
-            data = {"pixelsPerMm": pixelsPerMm,
-                    "imageWidth": width,
-                    "imageHeight": height,
-                    "format": fmt,
-                    "sourceIsScalable": source_is_scalable,
-                    "scale": scale,
-                    "videoSizes": video_sizes,
-                    "position": position,
-                    "shape": shape,
-                    "size_x": sx, "size_y": sy}
-
-        :returns: Dictionary with view port data, with format described above
-        :rtype: dict
-        """
         fmt, source_is_scalable = "MJPEG", False
 
         if self.app.CONFIG.app.VIDEO_FORMAT == "MPEG1":
@@ -162,26 +144,22 @@ class Beamline(ComponentBase):
                     "messages": [],
                     "type": cmd.type,
                     "data": cmd.value(),
-                }
-            )
+                })
+
+
 
         actions.extend(self.beamline_get_actions())
-
         data.update({"availableMethods": ho.get_available_methods()})
-
         data.update(
             {
                 "path": HWR.beamline.session.get_base_image_directory(),
                 "actionsList": actions,
             }
         )
-
         data.update(
             {"energyScanElements": ho.get_available_elements().get("elements", [])}
         )
-
         data.update(self.diffractometer_get_info())
-
         return data
 
     def beamline_get_actions(self):

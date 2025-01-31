@@ -1,6 +1,7 @@
-<object class ="ActuatorMockup">
+<object class ="PX1Tools">
+    <tangoname>i10-c-cx1/ex/cryostream-ev</tangoname>
     <actuator_name>Cryo</actuator_name>
     <username>Cryo</username>
-    <read_only>True</read_only>
-    <default_value>200</default_value>
+   <channel type="tango" polling="500" name="State">State</channel>
+   <values>{"EXTRACT":"OUT", "INSERT":"IN", "MOVING":"BUSY" }</values>
 </object>
