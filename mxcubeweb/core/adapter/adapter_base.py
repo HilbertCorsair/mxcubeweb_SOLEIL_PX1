@@ -341,7 +341,7 @@ class AdapterBase:
 
     def dict(self):
         return self.data().dict()
-
+      
 
 class ActuatorAdapterBase(AdapterBase):
     def __init__(self, ho, *args):

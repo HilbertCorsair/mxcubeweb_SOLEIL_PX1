@@ -1,15 +1,9 @@
 #
-
-
 """Authentication tests."""
-
-
 import os
 import time
-
 import mxcubecore
 import pytest
-
 import mxcubeweb
 
 URL_BASE = "/mxcube/api/v0.1/login"
@@ -17,14 +11,11 @@ URL_SIGNIN = f"{URL_BASE}/"  # Trailing slash is necessary
 URL_SIGNOUT = f"{URL_BASE}/signout"
 URL_INFO = f"{URL_BASE}/login_info"
 URL_REFRESH = f"{URL_BASE}/refresh_session"
-
 CREDENTIALS_0 = {"proposal": "idtest0", "password": "sUpErSaFe"}
 # Password has to be `wrong` to simulate wrong password in `ISPyBClientMockup`
 CREDENTIALS_0_WRONG = {"proposal": "idtest0", "password": "wrong"}
 CREDENTIALS_1 = {"proposal": "idtest1", "password": "sUpErSaFe"}
-
 SESSION_LIFETIME = 2.0  # seconds
-
 USER_DB_PATH = "/tmp/mxcube-test-user.db"
 
 
@@ -154,8 +145,6 @@ def test_authn_same_proposal(make_client):
 #     client_1 = make_client()
 #     resp = client_1.post(URL_SIGNIN, json=CREDENTIALS_1)
 #     assert resp.status_code == 200
-#     import pdb
-#     pdb.set_trace()
 #     assert resp.json["msg"] == "Could not authenticate"
 
 
