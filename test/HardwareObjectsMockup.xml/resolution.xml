@@ -1,4 +1,4 @@
-<object class = "PX1Resolution">
+<object class = "Resolution">
   <actuator_name>resolution</actuator_name>
   <object href="/eiger" role="detector" />
   <username>Resolution</username>

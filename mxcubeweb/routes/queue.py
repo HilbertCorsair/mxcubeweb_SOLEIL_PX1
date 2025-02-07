@@ -168,7 +168,6 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @server.restrict
     def queue_add_item():
         tasks = request.get_json()
-
         queue = app.queue.queue_add_item(tasks)
         sample_list = app.lims.sample_list_get(current_queue=queue)
 

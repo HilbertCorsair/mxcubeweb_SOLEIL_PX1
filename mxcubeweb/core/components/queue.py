@@ -1312,7 +1312,7 @@ class Queue(ComponentBase):
             task_data,
             sample_model,
         )
-
+        """ 
         try:
             params["strategy_complexity"] = [
                 "SINGLE",
@@ -1321,7 +1321,7 @@ class Queue(ComponentBase):
             ].index(params["strategy_complexity"])
         except ValueError:
             params["strategy_complexity"] = 0
-
+        """
         model.characterisation_parameters.set_from_dict(params)
 
         # MXCuBE Web specific shape attribute
@@ -2353,9 +2353,16 @@ class Queue(ComponentBase):
         # a task can be retreived from one place.
 
         if task_name == "characterisation":
-            acq_parameters.update(
-                HWR.beamline.characterisation.get_default_characterisation_parameters().as_dict()
-            )
+            try: 
+                acq_parameters.update(
+                    HWR.beamline.characterisation.get_default_characterisation_parameters().as_dict()
+                )
+            except AttributeError:
+                acq_parameters.update(
+                    HWR.beamline.characterisation.get_default_characterisation_parameters())
+            except Exception as e :
+                print(f"An error has apeared : \n{e}")
+
 
         schema = self.get_task_schema(data_model) if data_model else {}
 
