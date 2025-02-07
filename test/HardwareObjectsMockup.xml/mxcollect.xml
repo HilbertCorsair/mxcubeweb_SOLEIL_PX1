@@ -33,7 +33,7 @@
   <object href="/session" role="session"/> 
   <object href="/flux" role="flux"/>
   <object href="/autoprocessing" role="auto_processing"/>
-
+  <object href="/sample_view" role="graphics_manager"/>
   <object href="/fast_shutter" role="fastshut"/> 
   <object href="/safety_shutter2" role="safshut"/> 
   <object href="/frontend" role="frontend"/> 

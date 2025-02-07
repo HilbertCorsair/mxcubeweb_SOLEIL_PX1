@@ -2,8 +2,8 @@
     <username>Energy</username>
 
     <tangoname>i10-c-c00/ex/beamlineenergy</tangoname>
-    <channel type="tango" polling="events" name="energy">energy</channel>
-    <channel type="tango" polling="events" name="state">State</channel>
+    <channel type="tango" polling="500" name="energy">energy</channel>
+    <channel type="tango" polling="500" name="state">State</channel>
     <command type="tango" name="stop">Stop</command>
 
     <mono_device>i10-c-c02/op/mono1</mono_device>

@@ -15,11 +15,11 @@
 
 <!-- managed by BeamlineSetup -->
 
-  <object href="/fastshut" role="fast_shutter"/>
+  <object href="/fast_shutter" role="fast_shutter"/>
   <object href="/attenuators_pslits" role="transmission"/>
   <object href="/minidiff" role="diffractometer"/>
   <object href="/beamstop" role="beamstop"/>
-  <object href="/safety_shutter" role="safety_shutter"/>
+  <object href="/safety_shutter2" role="safety_shutter"/>
   <object href="/omega" role="omega_axis"/>
   <object href="/kappa" role="kappa_axis"/>
   <object href="/kappa_phi" role="kappa_phi_axis"/>

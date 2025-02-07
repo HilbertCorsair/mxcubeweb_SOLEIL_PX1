@@ -6,5 +6,5 @@
     <channel type="tango" name="Close">Close</channel>
     <actuator_name>safety_shutter</actuator_name>
     <username>EX</username>
-    <values>{"open": "OPEN", "closed": "CLOSED", "DISABLE" : "DISABLE"}</values>
+    <values>{"open": "OPEN", "closed": "CLOSED", "DISABLE" : "DISABLE", "CLOSE":"CLOSED" }</values>
 </object>
