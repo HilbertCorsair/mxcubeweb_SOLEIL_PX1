@@ -1,15 +1,15 @@
 <object class="ISPyBRestClientMockup">
   <restRoot>
-   https://your.lims.org
+   http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
   </restRoot>
   <site>
-   ESRF
+   SOLEIL
   </site>
   <exi_root>
    https://your.exi.org
   </exi_root>
-  <restUserName></restUserName>
-  <restPass></restPass>
+  <restUserName>abc</restUserName>
+  <restPass>1Spy6@Sun0</restPass>
 
   <object role="session" href="/session"/>
 

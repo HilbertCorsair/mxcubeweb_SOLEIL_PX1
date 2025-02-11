@@ -3,6 +3,7 @@ server:
   SECRET_KEY: "ASECRETKEY"
   SECURITY_PASSWORD_SALT: "ASALT"
   PERMANENT_SESSION_LIFETIME: 60
+  TEST: "TRUE"
 
   DEBUG: False
 
@@ -26,10 +27,9 @@ server:
     - "http://localhost:8080"
     - "http://localhost:8090"
     - "http://195.221.8.78:8090" 
- 
 
 sso:
-  USE_SSO: False
+  USE_SSO: True
   ISSUER: https://iam-dev.synchrotron-soleil.fr/realms/soleil/
   LOGOUT_URI: ""
   TOKEN_INFO_URI: https://iam-dev.synchrotron-soleil.fr/realms/soleil/protocol/openid-connect/auth

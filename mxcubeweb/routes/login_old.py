@@ -4,13 +4,10 @@ from flask import (
     Blueprint,
     jsonify,
     make_response,
-    redirect,
     request,
     session,
-    url_for,
 )
 from flask_login import current_user
-from mxcubecore import HardwareRepository as HWR
 
 from mxcubeweb.core.util import networkutils
 
@@ -43,37 +40,18 @@ def init_route(app, server, url_prefix):
 
         try:
             app.usermanager.login(login_id, password)
-        except Exception:
-            msg = "[LOGIN] User %s could not login" % login_id
-            logging.getLogger("MX3.HWR").exception(msg)
-            res = make_response(
-                jsonify({"msg": "Authentication failed"}),
-                200,
+        except Exception as ex:
+            msg = "[LOGIN] User %s could not login (%s)" % (
+                login_id,
+                str(ex),
             )
+            logging.getLogger("MX3.HWR").exception("")
+            logging.getLogger("MX3.HWR").info(msg)
+            res = make_response(jsonify({"msg": "Could not authenticate"}), 200)
         else:
             res = make_response(jsonify({"msg": ""}), 200)
 
         return res
-
-    @bp.route("/sso_post_logout", methods=["GET"])
-    @server.restrict
-    def ssosignout():
-        app.usermanager.signout()
-        return redirect("/")
-
-    @bp.route("/ssologin", methods=["GET"])
-    def ssosignin():
-        redirect_uri = url_for("login.auth", _external=True)
-        return app.usermanager.oauth_client.keycloak.authorize_redirect(redirect_uri)
-
-    @bp.route("/auth", methods=["GET"])
-    def auth():
-        try:
-            app.usermanager.sso_validate()
-        except Exception:
-            return redirect("/login")
-        else:
-            return redirect("/datacollection")
 
     @bp.route("/signout")
     @server.restrict
@@ -105,12 +83,15 @@ def init_route(app, server, url_prefix):
         200: On success
         200: Error, could not log in, {"loggedIn": False}
         """
-        res = app.usermanager.login_info()
 
-        if res["loggedIn"]:
+        try:
+            res = app.usermanager.login_info()
+            response = jsonify(res)
             session.permanent = True
+        except Exception:
+            response = make_response(jsonify({"loggedIn": False}), 200)
 
-        return jsonify(res)
+        return response
 
     @bp.route("/send_feedback", methods=["POST"])
     @server.restrict
@@ -126,7 +107,6 @@ def init_route(app, server, url_prefix):
         # Since default value of `SESSION_REFRESH_EACH_REQUEST` config setting is `True`
         # there is no need to do anything to refresh the session.
         app.usermanager.update_active_users()
-        app.usermanager.handle_sso_logout()
         return make_response("", 200)
 
     return bp

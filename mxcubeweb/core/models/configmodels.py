@@ -160,3 +160,4 @@ class AppConfigModel(BaseModel):
     server: FlaskConfigModel
     mxcube: MXCUBEAppConfigModel
     sso: SSOConfigModel | None
+

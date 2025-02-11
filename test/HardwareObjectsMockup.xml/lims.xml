@@ -1,13 +1,14 @@
-<object class="ISPyBClientMockup">
+<object class="SOLEILISPyBClient">
   <object hwrid="/lims_rest" role="lims_rest"/>
   <ws_root>
-    https://your.lims.org
+     http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
   </ws_root>
   <base_result_url>
-    https://your.limsresults.org
+    http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
   </base_result_url>
   <ws_username></ws_username>
   <ws_password></ws_password>
+
   <loginType>proposal</loginType>
   <object role="session" href="/session"/>
 </object>
