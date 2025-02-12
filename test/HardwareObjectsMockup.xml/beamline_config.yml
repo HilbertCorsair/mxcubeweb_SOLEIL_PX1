@@ -105,6 +105,8 @@ default_acquisition_parameters:
     skip_existing_images: true
     take_snapshots: true
     sub_wedge_size: 10
+    kappa: 0
+    phi: 0
     # NB 'compression' not added as apparently never used
 
   helical:
@@ -134,7 +136,7 @@ default_acquisition_parameters:
 
 acquisition_limit_values:
   exposure_time:
-    - 0.02
+    - 0.01
     - 1000
   osc_range:
     - -10000
