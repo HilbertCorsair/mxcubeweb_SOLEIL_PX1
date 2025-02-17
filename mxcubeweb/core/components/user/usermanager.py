@@ -222,6 +222,8 @@ class BaseUserManager(ComponentBase):
             username = token_response["userinfo"]["preferred_username"]
             token = token_response["access_token"]
         except Exception as e:
+            print("UserManager.py in web > web > core > components > user  : ERROR in sso_validate")
+
             raise e
         else:
             self.login(username, token, sso_data=token_response)
@@ -268,11 +270,13 @@ class BaseUserManager(ComponentBase):
 
             # Making sure that the session of any in active users are invalidated
             # before calling login
-            self.update_active_users()
+            #self.update_active_users()
+            #import pdb
+            #pdb.set_trace()
 
-            user = self.db_create_user(login_id, password, sso_data)
-            self.app.server.user_datastore.activate_user(user)
-            flask_security.login_user(user, remember=False)
+            #user = self.db_create_user(login_id, password, sso_data)
+            #self.app.server.user_datastore.activate_user(user)
+            #flask_security.login_user(user, remember=False)
 
             # Important to make flask_security user tracking work
             self.app.server.security.datastore.commit()
@@ -286,7 +290,7 @@ class BaseUserManager(ComponentBase):
             """
             self.update_operator(new_login=True)
 
-            msg = "User %s signed in" % user.username
+            msg = "User %s signed in" % login_id
             logging.getLogger("MX3.HWR").info(msg)
 
     # Abstract method to be implemented by concrete implementation
@@ -342,7 +346,6 @@ class BaseUserManager(ComponentBase):
             self.app.server.user_datastore.commit()
             self.app.server.emit("forceSignout", room=socketio_sid, namespace="/hwr")
 
-<<<<<<< HEAD
     def login_info(self) -> dict:
         """Get the login information to be displayed in the application.
 
@@ -454,6 +457,10 @@ class BaseUserManager(ComponentBase):
         sid = flask.session["sid"]
         user_datastore = self.app.server.user_datastore
 
+
+        sid = flask.session["sid"]
+
+
         username = HWR.beamline.lims.get_user_name()
         fullname = HWR.beamline.lims.get_full_user_name()
 
@@ -554,11 +561,6 @@ class UserManager(BaseUserManager):
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
             raise e
-
-        self._debug(
-            "_login. proposal_tuple retrieved. Sessions=%s "
-            % str(len(session_manager.sessions))
-        )
 
         if login_id in self.active_logged_in_users():
             if current_user.is_anonymous:

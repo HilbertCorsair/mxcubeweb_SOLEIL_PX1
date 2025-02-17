@@ -4,13 +4,13 @@
 
   <advancedMethods>['Grid Scan', 'Mesh and Collect']</advancedMethods>
 <!-- Beamline configuration used at PX1 -->
-  <object href="/px1configuration"   role="configuration"/>
-  <object href="/instanceconnection"   role="instance"/>
+  <object href="/px1configuration"   role = "configuration"/>
+  <!--<object href="/instanceconnection"   role = "instance"/> -->
 
 <!-- managed by PX1Beamline PX1 -->
   <object href="/light" role="light"/>
   <object href="/px1environment" role="environment"/>
-  <object href="/mail_notifier" role="mailer"/>
+  <!-- <object href="/mail_notifier" role="mailer"/> -->
   <object href="/autoprocessing"   role="autoprocessing"/>
 
 <!-- managed by BeamlineSetup -->
@@ -28,28 +28,28 @@
   <object href="/energy" role="energy"/>
   <object href="/energyscan" role="energyscan"/>
   <object href="/beam-info" role="beam_info"/>
-  <object href="/dbconnection" role="lims_client"/>
-  <object href="/lims-rest" role="lims_rest_client"/>
+  <!--<object href="/dbconnection" role="lims_client"/>-->
+  <object href="/lims_rest" role="lims_rest_client"/>
   <object href="/cryotong" role="sample_changer"/>
   <object href="/session" role="session"/>
-  <object href="/mach" role="mach_info"/>
+  <object href="/machine_info" role="mach_info"/>
   <object href="/flux" role="flux"/>
 
 <!--OBJECTS NOT PROPERLY USED OR ASSIGNED. EVENTUALLY TO REMOVE.-->
-  <object href="/chip_manager" role="chip_manager"/>
+  <!-- <object href="/chip_manager" role="chip_manager"/> -->
   <!--object href="/parallel_processing" role="parallel_processing"/-->
 
   <!-- Software (abstract) concepts -->
-  <object href="/ednaparams" role="workflow"/>
-  <object href="/data-analysis" role="data_analysis"/>
+  <!-- <object href="/ednaparams" role="workflow"/> -->
+  <!-- <object href="/data-analysis" role="data_analysis"/> -->
   <!--<object href="/workflow-mockup" role="workflow"/> -->
  
   <!-- Procedures and routines -->
-  <object href="/mxcollect" role="collect"/> 
+  <object href="/mxcollect" role= "collect"/> 
 <!--
   <object href="/pilatus" role="detector"/>
 -->
-  <object href="/eiger" role="detector"/>
+  <object href="/eiger" role= "detector"/>
 
   <!-- Is it possible to change the beam wavelentgh.
        Should perhaps be associated with the diffractometer -->

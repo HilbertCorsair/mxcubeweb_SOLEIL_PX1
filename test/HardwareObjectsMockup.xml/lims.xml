@@ -1,13 +1,54 @@
 <object class="SOLEILISPyBClient">
   <object hwrid="/lims_rest" role="lims_rest"/>
-  <ws_root>
-     http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
-  </ws_root>
   <base_result_url>
     http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
   </base_result_url>
+  
   <ws_username></ws_username>
   <ws_password></ws_password>
+
+  <restRoot>
+   http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
+  </restRoot>
+  
+  <site>SOLEIL</site>
+  
+  <exi_root>
+   https://your.exi.org
+  </exi_root>
+  
+  <restUserName>abc</restUserName>
+  <restPass>1Spy6@Sun0</restPass>
+
+  <object role="ldapServer" href="/ldapconnection" />
+
+  <authServerType>ldap</authServerType>
+
+  <ispyb_identifiers_location>/nfs/ruche/share-dev/px1dev/MXCuBE/PX1/ispyb_identifiers</ispyb_identifiers_location>
+
+  <!-- configuration for suntest-->
+  <ws_root>http://195.221.10.20/ispyb/ispyb-ws/ispybWS/</ws_root>
+  <!-- ws_root>http://195.221.10.19:8081/ispyb/ispyb-ws/ispybWS/</ws_root-->
+<!--
+  <ws_root>http://suntest.synchrotron-soleil.fr/ispyb/ispyb-ws/ispybWS/</ws_root>
+-->
+  <ws_username>abc</ws_username>
+  <ws_password>1Spy6@Sun0</ws_password>
+  <!-- ws_password>WebSrvSo1!</ws_password-->
+
+  <!-- configuration for production server>
+  <ws_root>http://195.221.0.141/ispyb/ispyb-ws/ispybWS/</ws_root>
+  <ws_username>ab361</ws_username>
+  <ws_password>1Spy6@Sun0</ws_password>
+  <-->
+
+  <ws_collection>ToolsForCollectionWebService</ws_collection>
+  <ws_shipping>ToolsForShippingWebService</ws_shipping>
+  <ws_tools>ToolsForBLSampleWebService</ws_tools>
+
+  <connectionTimeout>360</connectionTimeout>
+
+  <beamline_name>Proxima1</beamline_name>
 
   <loginType>proposal</loginType>
   <object role="session" href="/session"/>
