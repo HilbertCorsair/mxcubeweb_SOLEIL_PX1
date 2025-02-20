@@ -404,7 +404,6 @@ class BaseUserManager(ComponentBase):
             HWR.beamline.session.proposal_number,
         )
         res["selectedProposalID"] = HWR.beamline.session.proposal_id
-
         return res
 
     def update_user(self, user: User) -> None:
@@ -558,6 +557,7 @@ class UserManager(BaseUserManager):
             session_manager: LimsSessionManager = HWR.beamline.lims.login(
                 login_id, password, is_local_host()
             )
+            print("SUCCESFULL lims login")
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
             raise e
