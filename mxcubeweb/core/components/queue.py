@@ -1073,7 +1073,6 @@ class Queue(ComponentBase):
         full_path, process_path = HWR.beamline.session.get_full_path(
             params.get("subdir", ""), self.get_folder_tag(params)
         )
-
         acq.path_template.directory = full_path
         acq.path_template.process_directory = process_path
 
@@ -1082,6 +1081,10 @@ class Queue(ComponentBase):
 
         # If there is a centered position associated with this data collection, get
         # the necessary data for the position and pass it to the collection.
+
+        if params["type"] == "Characterisation":
+            model.experiment_type = qme.EXPERIMENT_TYPE.EDNA_REF
+
         if params["helical"]:
             model.experiment_type = qme.EXPERIMENT_TYPE.HELICAL
             acq2 = qmo.Acquisition()
