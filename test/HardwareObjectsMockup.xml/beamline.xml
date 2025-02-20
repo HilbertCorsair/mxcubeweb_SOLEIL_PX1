@@ -80,6 +80,7 @@
     <number_of_passes>1</number_of_passes>
     <start_image_number>1</start_image_number>
     <run_number>1</run_number>
+    <kappa>0</kappa>
     <overlap>0</overlap>
     <number_of_images>4</number_of_images>
     <detector_mode>1</detector_mode>

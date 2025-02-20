@@ -92,7 +92,7 @@ default_acquisition_parameters:
   default:
     # Default values, also used for standard acquisition.
     # Values not given in other dictionaries are taken from here
-    exp_time: 0.02 # exposure time
+    exp_time: 0.01 # exposure time
     osc_start: 0.0 # Only used if no current angle can be found
     osc_range: 0.1
     num_passes: 1
@@ -115,11 +115,13 @@ default_acquisition_parameters:
 
   characterisation:
     # Defaults for chareacterisation. Missing values are taken from default
-    exp_time: 0.05 # exposure time
+    exp_time: 0.1 # exposure time
     osc_range: 1
     overlap: -89
     num_images: 4
     shutterless: false
+    kappa: 0
+    phi: 0
 
   mesh:
     # Defaults for 'advanced' acquisition. Missing values are taken from default

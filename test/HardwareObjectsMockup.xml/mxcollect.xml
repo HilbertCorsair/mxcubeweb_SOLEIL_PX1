@@ -2,7 +2,7 @@
 
   <tangoname>i10-c-cx1/ex/pandacollect</tangoname>
 
-  <channel type="tango" name="state">State</channel>
+  <channel type="tango" name="state" polling="2000">State</channel>
 
   <channel type="tango" name="latest_image_num" polling="500">currentImage</channel>
   <channel type="tango" name="latest_trigger_num" polling="500">currentTrigger</channel>
@@ -47,7 +47,7 @@
   <!--merge>hdf5</merge -->
 
   <mergehdf5>/nfs/ruche/share-dev/px1dev/MXCuBE/tools/h5merge.py</mergehdf5>
-  <mergecbf>/nfs/ruche/share-dev/px1dev/Eiger16M/PX1_code/hdf2mergedcbf</mergecbf>
+  <mergecbf>/nfs/ruche/share-dev/px1dev/MXCuBE/WebApp/mxcubecore/mxcubecore/HardwareObjects/mockup/hdf2mergedcbf</mergecbf>
 
   <imgtojpeg>/nfs/ruche/share-dev/px1dev/Eiger16M/PX1_code/gen_eiger_thumbnails</imgtojpeg>
 

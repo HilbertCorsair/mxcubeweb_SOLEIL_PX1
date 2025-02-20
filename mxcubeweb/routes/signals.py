@@ -22,6 +22,11 @@ from mxcubeweb.server import Server as server
 
 
 def last_queue_node():
+
+
+    if not  HWR.beamline.queue_manager._current_queue_entries:
+        return
+
     node = HWR.beamline.queue_manager._current_queue_entries[-1].get_data_model()
 
     # Reference collections are orphans, the node we want is the
@@ -32,7 +37,6 @@ def last_queue_node():
 
     res = mxcube.queue.node_index(node)
     res["node"] = node
-
     return res
 
 
@@ -348,7 +352,6 @@ def queue_execution_stopped(*args):
 
     server.emit("queue", msg, namespace="/hwr")
 
-
 def queue_execution_paused(state):
     if state:
         msg = {
@@ -507,6 +510,8 @@ def collect_ended(owner, success, message):
 
 def collect_started(*args, **kwargs):
     node = last_queue_node()
+    if not node:
+        return
 
     if not mxcube.queue.is_interleaved(node["node"]):
         msg = {
