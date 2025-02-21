@@ -270,13 +270,11 @@ class BaseUserManager(ComponentBase):
 
             # Making sure that the session of any in active users are invalidated
             # before calling login
-            #self.update_active_users()
-            #import pdb
-            #pdb.set_trace()
+            self.update_active_users()
 
-            #user = self.db_create_user(login_id, password, sso_data)
-            #self.app.server.user_datastore.activate_user(user)
-            #flask_security.login_user(user, remember=False)
+            user = self.db_create_user(login_id, password, sso_data)
+            self.app.server.user_datastore.activate_user(user)
+            flask_security.login_user(user, remember=False)
 
             # Important to make flask_security user tracking work
             self.app.server.security.datastore.commit()
@@ -290,7 +288,7 @@ class BaseUserManager(ComponentBase):
             """
             self.update_operator(new_login=True)
 
-            msg = "User %s signed in" % login_id
+            msg = "User %s signed in" % user.username
             logging.getLogger("MX3.HWR").info(msg)
 
     # Abstract method to be implemented by concrete implementation
@@ -458,7 +456,7 @@ class BaseUserManager(ComponentBase):
 
 
         sid = flask.session["sid"]
-
+        user_datastore = self.app.server.user_datastore
 
         username = HWR.beamline.lims.get_user_name()
         fullname = HWR.beamline.lims.get_full_user_name()
@@ -557,11 +555,9 @@ class UserManager(BaseUserManager):
             session_manager: LimsSessionManager = HWR.beamline.lims.login(
                 login_id, password, is_local_host()
             )
-            print("SUCCESFULL lims login")
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
             raise e
-
         if login_id in self.active_logged_in_users():
             if current_user.is_anonymous:
                 self.force_signout_user(login_id)

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<object class="SOLEILSession" role = "session">
+<object class="PX1ISPyBLims" role = "session">
  <object href="/mxlocal" role="config"/>
  <!--<object href="/ldapconnection" role="ldap"/>-->
  <synchrotron_name>SOLEIL</synchrotron_name>
  <endstation_name>PX1</endstation_name>
  <beamline_name>PROXIMA1</beamline_name>
  <email_extension>synchrotron-soleil.fr</email_extension>
-
+ <object role="ldapServer" href="/ldapconnection" />
+ <authServerType>ldap</authServerType>
   <proposals>
     <proposal>
       <code>ifx</code>

@@ -1,4 +1,4 @@
-<object class="SOLEILLdapLogin">
+<object class="LdapAuthenticator">
 
   <ldaphost>195.221.10.1</ldaphost>
   <ldapport>389</ldapport>
