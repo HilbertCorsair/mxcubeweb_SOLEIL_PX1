@@ -7,7 +7,7 @@ import { HW_STATE } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './SampleControls.module.css';
 
-const ZOOM_HWO_ID = 'diffractometer.beam_info.zoom';
+const ZOOM_HWO_ID = 'beam.beam_info.zoom';
 
 function ZoomControl() {
   const dispatch = useDispatch();
@@ -15,7 +15,7 @@ function ZoomControl() {
   const { state, value, commands } = useSelector(
     (state) => state.beamline.hardwareObjects[ZOOM_HWO_ID],
   );
-
+  
   return (
     <OverlayTrigger
       trigger="click"

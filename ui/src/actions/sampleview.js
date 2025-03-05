@@ -169,6 +169,7 @@ export function toggleDrawGrid() {
       dispatch(showErrorPanel(true, 'There is no sample mounted'));
       return;
     }
+    console.log("toggleDrawGrid")
 
     dispatch({ type: 'DRAW_GRID' });
   };
@@ -231,6 +232,7 @@ export function addShape(shapeData = {}, successCb = null) {
     try {
       const json = await sendAddOrUpdateShapes([shapeData]);
       const shape = json.shapes[0];
+      console.log(`shape data: ${shape}`)
       dispatch(addShapeAction(shape));
 
       if (successCb) {

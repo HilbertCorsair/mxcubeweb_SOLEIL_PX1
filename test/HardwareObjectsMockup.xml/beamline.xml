@@ -27,7 +27,7 @@
   <object href="/resolution" role="resolution"/>
   <object href="/energy" role="energy"/>
   <object href="/energyscan" role="energyscan"/>
-  <object href="/beam-info" role="beam_info"/>
+  <object href="/beam_info" role="beam_info"/>
   <object href="/dbconnection" role="lims_client"/>
   <object href="/lims-rest" role="lims_rest_client"/>
   <object href="/cryotong" role="sample_changer"/>

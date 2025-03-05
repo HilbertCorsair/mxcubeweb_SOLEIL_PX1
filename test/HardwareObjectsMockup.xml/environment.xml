@@ -7,4 +7,5 @@
   <command type="tango" name="GoToCentringPhase">GoToCentringPhase</command>
   <command type="tango" name="GoToManualTransfertPhase">GoToManualTransfertPhase</command>
   <command type="tango" name="GoToVisuSamplePhase">GoToVisuSamplePhase</command>
+  <command type="tango" name="GoToDefaultPhase">GoToDefaultPhase</command>
 </object>

@@ -424,9 +424,12 @@ export default class ContextMenu extends React.Component {
   }
 
   saveGrid() {
+    console.log('save grid called from Context menu ')
     const { gridData } = this.props.shape;
+    console.log(`grid data is ${gridData}`)
+    //debugger;
     this.props.sampleViewActions.addShape({ t: 'G', ...gridData });
-    this.props.sampleViewActions.toggleDrawGrid();
+    this.props.sampleViewActions.toggleDrawGrid(); 
   }
 
   createPointAndShowModal(name, extraParams = {}) {

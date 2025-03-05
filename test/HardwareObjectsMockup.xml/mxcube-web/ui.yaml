@@ -62,7 +62,7 @@ sample_view:
       precision: 3
       suffix: mm
     - label: Zoom
-      attribute: diffractometer.beam_info.zoom
+      attribute: beam.beam_info.zoom
       role: zoom
       step: 1
       precision: 1
@@ -87,8 +87,8 @@ sample_view_video_controls:
       show: true
     - id: zoom
       show: true
-    # - id: backlight
-    #   show: true
+    #- id: backlight
+    #  show: true
     # - id: frontlight
     #   show: true
     - id: video_size

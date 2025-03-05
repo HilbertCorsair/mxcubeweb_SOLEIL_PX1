@@ -84,6 +84,7 @@ class SampleViewContainer extends Component {
             break;
           }
           case 'G': {
+            console.log(`Case Grid detected ${shape}`)
             grids[shape.id] = shape;
 
             if (shape.selected) {
@@ -95,6 +96,8 @@ class SampleViewContainer extends Component {
           // No default
         }
       });
+    }else{
+      console.log("This.props.shqpe is UNDEFINED")
     }
 
     return (

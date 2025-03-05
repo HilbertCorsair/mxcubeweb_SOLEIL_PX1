@@ -18,7 +18,7 @@
   <object role="light" href="/light"/>
   <object role="lightarm" href="/lightarm"/>
   <object role="beamstop" href="/beamstop"/>
-  <object role="beam_info" hwrid="/beam-info"></object>
+  <object role="beam_info" hwrid="/beam_info"></object>
   <object role="capillary" href="/capillary"/>
 
   <!-- object role="camera" hwrid="/ge1350c"></object -->

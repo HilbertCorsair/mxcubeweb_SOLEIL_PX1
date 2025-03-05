@@ -39,21 +39,21 @@
 
   <!-- channel type="tango" name="_chnToolOpen" polling="1000">toolOpen</channeli -->  <!-- Use for r/w command -->
 
-  <channel type="tango" name="_chnSoftAuth" polling="events">beamlineMvtAuthorized</channel>
-  <channel type="tango" name="_chnHomeOpened" polling="events">homeOpened</channel>
-  <channel type="tango" name="_chnSafeNeeded" polling="events">safeNeeded</channel>
-  <channel type="tango" name="_chnDryAndSoakNeeded" polling="events">dryAndSoakNeeded</channel>
-  <channel type="tango" name="_chnIncoherentGonioSampleState" polling="events">incoherentGonioSampleState</channel>
-  <channel type="tango" name="_chnCountDown" polling="events">countdown</channel>
+  <channel type="tango" name="_chnSoftAuth" polling="500">beamlineMvtAuthorized</channel>
+  <channel type="tango" name="_chnHomeOpened" polling="500">homeOpened</channel>
+  <channel type="tango" name="_chnSafeNeeded" polling="500">safeNeeded</channel>
+  <channel type="tango" name="_chnDryAndSoakNeeded" polling="500">dryAndSoakNeeded</channel>
+  <channel type="tango" name="_chnIncoherentGonioSampleState" polling="500">incoherentGonioSampleState</channel>
+  <channel type="tango" name="_chnCountDown" polling="500">countdown</channel>
 
-  <channel type="tango" name="_chnPathRunning" polling="events">pathRunning</channel>
+  <channel type="tango" name="_chnPathRunning" polling="500">pathRunning</channel>
 
   <channel type="tango" name="_chnSampleIsDetected" polling="100">sampleIsDetected</channel>
-  <channel type="tango" name="_chnCryoInserted" polling="events">cryoInserted</channel>
+  <channel type="tango" name="_chnCryoInserted" polling="500">cryoInserted</channel>
 
-  <channel type="tango" polling="events" name="_chnBasket1State">puckIncassette1</channel>
-  <channel type="tango" polling="events" name="_chnBasket2State">puckIncassette2</channel>
-  <channel type="tango" polling="events" name="_chnBasket3State">puckIncassette3</channel>
+  <channel type="tango" polling="500" name="_chnBasket1State">puckIncassette1</channel>
+  <channel type="tango" polling="500" name="_chnBasket2State">puckIncassette2</channel>
+  <channel type="tango" polling="500" name="_chnBasket3State">puckIncassette3</channel>
 
   <channel type="tango" polling="1000" name="_chnLidLoadedSample">lidSampleOnDiff</channel>
   <channel type="tango" polling="1000" name="_chnNumLoadedSample">numSampleOnDiff</channel>
@@ -61,10 +61,10 @@
 
   <!-- CHANNELS FROM CATS --> 
   
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnTotalLidState">di_AllLidsClosed</channel>
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnSampleBarcode">Barcode</channel>
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnPowered">Powered</channel>
-  <channel type="tango" polling="events" tangoname="i10-c-cx1/ex/cats" name="_chnMessage">Message</channel>
+  <channel type="tango" polling="500" tangoname="i10-c-cx1/ex/cats" name="_chnTotalLidState">di_AllLidsClosed</channel>
+  <channel type="tango" polling="500" tangoname="i10-c-cx1/ex/cats" name="_chnSampleBarcode">Barcode</channel>
+  <channel type="tango" polling="500" tangoname="i10-c-cx1/ex/cats" name="_chnPowered">Powered</channel>
+  <channel type="tango" polling="500" tangoname="i10-c-cx1/ex/cats" name="_chnMessage">Message</channel>
 
 </object>
 

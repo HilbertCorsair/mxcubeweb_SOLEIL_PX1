@@ -44,20 +44,20 @@ function BaseMotorInput(props) {
     evt.preventDefault();
 
     const newValue = Number.parseFloat(inputValue);
-
+    console.log(`BaseMotorInput moving: ${newValue}`)  
     if (!Number.isNaN(newValue)) {
       onChange(newValue);
       setEdited(false);
     }
   }
 
-  const isReady = state === HW_STATE.READY;
-  const isBusy = state === HW_STATE.BUSY;
+  const isReady = state === "STANDBY";
+  const isBusy = state === "MOVING";
   const isWarning = state === HW_STATE.WARNING;
   const isFault =
-    state === HW_STATE.UNKNOWN ||
-    state === HW_STATE.FAULT ||
-    state === HW_STATE.OFF;
+    state === "UNKNOWN" ||
+    state === "FAULT" ||
+    state === "OFF";
 
   return (
     <form className="d-flex" noValidate onSubmit={handleSubmit}>

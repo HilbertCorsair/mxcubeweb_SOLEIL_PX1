@@ -81,7 +81,7 @@ class Beamline(ComponentBase):
         beam = HWR.beamline.beam
 
         aperture_list = beam.get_available_size()["values"]
-        current_aperture = beam.get_value()[-1]
+        current_aperture = beam._get_aperture_value()
 
         return aperture_list, current_aperture
 

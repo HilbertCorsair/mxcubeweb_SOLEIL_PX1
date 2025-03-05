@@ -22,7 +22,7 @@ function SampleControls(props) {
       {useShowControl('focus') && <FocusControl />}
       {useShowControl('zoom') && <ZoomControl />}
       {useShowControl('backlight') && (
-        <LightControl label="Backlight" hwoId="diffractometer.backlight" />
+        <LightControl label="backlight" hwoId="diffractometer.backlight" />
       )}
       {useShowControl('frontlight') && (
         <LightControl label="Frontlight" hwoId="diffractometer.frontlight" />

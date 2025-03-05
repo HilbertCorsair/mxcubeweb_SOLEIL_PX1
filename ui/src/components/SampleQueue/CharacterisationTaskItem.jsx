@@ -256,6 +256,10 @@ export default class TaskItem extends Component {
     const { state } = this.props;
     let pbarBsStyle = 'info';
 
+
+ 
+    console.log(`2) This is the proggress bar ${this.props.progress}`)
+
     switch (state) {
       case TASK_RUNNING: {
         pbarBsStyle = 'info';

@@ -25,7 +25,7 @@
   <object href="/pilatus" role="detector"/>
 -->
   <object href="/eiger" role="detector"/>
-  <object href="/beam-info" role="beam_info"/>
+  <object href="/beam_info" role="beam_info"/>
   <object href="/machine_info" role="machine_info"/>
   <object href="/resolution" role="resolution"/>
   <object href="/dbconnection" role="lims_client"/> 
