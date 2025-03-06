@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<object class="PX1ISPyBLims" role = "session">
+<object class="SOLEILSession" role = "session">
  <object href="/mxlocal" role="config"/>
  <!--<object href="/ldapconnection" role="ldap"/>-->
  <synchrotron_name>SOLEIL</synchrotron_name>
@@ -16,6 +16,10 @@
     </proposal>
   </proposals>
 
+  <base_result_url>
+    http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
+  </base_result_url>
+  
   <inhouse_users>
     <proposal>
       <code>idtest</code>
