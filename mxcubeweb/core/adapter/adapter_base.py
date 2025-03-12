@@ -263,6 +263,8 @@ class AdapterBase:
         )
 
     def emit_ho_value_changed(self, value: Any):
+        #if self.ho.name() == '/machine_info':
+
         self.app.server.emit(
             "hardware_object_value_changed",
             {"name": self._name, "value": value},
@@ -279,9 +281,12 @@ class AdapterBase:
         if hasattr(state, "name"):
             data["state"] = state.name
         else:
+            pass
+            """ 
             logging.getLogger("MX3.HWR").info(
                 f"emit_ho_changed with {state} for {self._ho.name()}"
             )
+            """
 
         self.app.server.emit("hardware_object_changed", data, namespace="/hwr")
 
@@ -336,7 +341,7 @@ class AdapterBase:
 
     def dict(self):
         return self.data().dict()
-
+      
 
 class ActuatorAdapterBase(AdapterBase):
     def __init__(self, ho, *args):

@@ -48,6 +48,7 @@ export function updateBeamlineHardwareObjectStateAction(data) {
 export function setAttribute(name, value) {
   return (_, getState) => {
     const state = getState();
+    debugger;
     const type = state.beamline.hardwareObjects[name].type.toLowerCase();
     sendSetAttribute(name, type, value);
   };

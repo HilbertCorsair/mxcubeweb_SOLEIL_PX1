@@ -23,7 +23,6 @@ import { sendUpdateDependentFields } from '../../api/queue';
 class GenericTaskForm extends React.Component {
   constructor(props) {
     super(props);
-
     this.submitAddToQueue = this.submitAddToQueue.bind(this);
     this.showFooter = this.showFooter.bind(this);
     this.showDCFooter = this.showDCFooter.bind(this);

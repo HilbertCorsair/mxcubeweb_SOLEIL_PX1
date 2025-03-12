@@ -56,7 +56,11 @@ class MotorAdapter(ActuatorAdapterBase):
         Returns:
             (str): The state.
         """
-        return self._ho.get_state().name
+        #Hack to accomodate both TangoMotor where get_state returns a state obj and PX1Minidiff motors where get_state returns a string
+        if not isinstance(self._ho.get_state(), str):
+            return self._ho.get_state().name
+        else:
+            return self._ho.get_state()
 
     def stop(self):
         self._ho.abort()

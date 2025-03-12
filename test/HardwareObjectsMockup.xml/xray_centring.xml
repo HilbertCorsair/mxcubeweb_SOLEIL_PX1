@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<object class="PX1XrayCentring">
+    <tangoname>i10-c-cx1/ex/pandacollect</tangoname>
+    <sgonaxis>i10-c-cx1/ex/sgonaxis</sgonaxis>
+
+    <user_enable>True</user_enable>
+
+    <testmode>False</testmode>
+
+    <omega_increment>120</omega_increment>
+
+    <processing>dials</processing>
+
+    <mxcube_createdir_server>http://localhost:9023</mxcube_createdir_server>
+
+    <channel type="tango" name="state">State</channel>
+
+    <channel type="tango" name="latest_image_num" polling="300">currentImage</channel>
+    <channel type="tango" name="latest_trigger_num" polling="300">currentTrigger</channel>
+
+    <object href="/minidiff" role="diffractometer"/>
+    <object href="/omega" role="omega"/>
+    <object href="/sampx" role="sampx"/>
+    <object href="/sampy" role="sampy"/>
+    <object href="/phiy" role="phiy"/>
+    <object href="/phiz" role="phiz"/>
+    <object href="/kappa" role="kappa"/>
+    <object href="/kappa_phi" role="kappa_phi"/>
+    <object href="/lightarm" role="lightarm"/>
+    <object href="/smargon" role="smargon"/>
+    <object href="/px1environment" role="px1environment"/>
+    <object href="/beam_info" role="beaminfo"/>
+    <object href="/session" role="session"/>
+    <object href="/sample_view" role="graphics_manager"/>
+
+</object>

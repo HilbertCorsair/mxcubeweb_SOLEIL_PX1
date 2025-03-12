@@ -1,0 +1,10 @@
+<object class="RedisMpegVideo">
+  <username>Camera redis</username>
+  <host>0.0.0.0</host>
+  <uri>redis://195.221.8.84:6379</uri>
+  <cam_type>redis</cam_type>
+  <port>8000</port>
+  <width>1360</width>
+  <height>1024</height>
+  <format>MJPEG</format>
+</object>

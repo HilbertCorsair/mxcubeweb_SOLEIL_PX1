@@ -1,0 +1,10 @@
+<device class = "TangoMachineInfo">
+  <username>Mach</username>
+  <tangoname>ans/ca/machinestatus</tangoname>
+  <channel type="tango" name="current" polling="4000">current</channel>
+  <!-- <channel type="tango" name="operatorMessage" polling="2000">operatorMessage</channel> -->
+  <!-- <channel type="tango" name="fillingMode" polling="2000">fillingMode</channel> -->
+  <!-- <channel type="tango" name="lifetime" polling="2000">lifetime</channel> -->
+  <current_threshold>3</current_threshold>
+</device>
+

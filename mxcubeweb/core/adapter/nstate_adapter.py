@@ -33,7 +33,6 @@ class NStateAdapter(ActuatorAdapterBase):
         state_names = [v.name for v in self._ho.VALUES]
         if "UNKNOWN" in state_names:
             state_names.remove("UNKNOWN")
-
         return state_names
 
     def _get_available_states(self):
@@ -49,17 +48,23 @@ class NStateAdapter(ActuatorAdapterBase):
         self._ho.set_value(self._ho.VALUES[value.value])
 
     def _get_value(self) -> StrValueModel:
+        #Hack to accomodate zoom_motor
+        if self._ho.name() == "/zoom":
+            return StrValueModel( ** {"value":self._ho.get_value()} )
         return StrValueModel(**{"value": self._ho.get_value().name})
 
     def msg(self):
         try:
             msg = self._ho.get_value().name
-        except Exception:
+        except AttributeError:
+            msg = self._ho.get_value()
+            import re
+            msg = str(re.search(r'\d+', msg))
+        except:
             msg = "---"
             logging.getLogger("MX3.HWR").error(
-                "Failed to get beamline attribute message"
+                "ERROR in nstate adapter : Failed to get beamline attribute message"
             )
-
         return msg
 
     def data(self) -> NStateModel:

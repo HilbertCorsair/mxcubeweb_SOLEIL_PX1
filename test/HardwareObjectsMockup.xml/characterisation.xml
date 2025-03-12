@@ -1,0 +1,10 @@
+<object class="PX1Beamline">
+
+
+  <object href="/mxcollect" role="collect"/>
+  <object href="/energy" role="energy"/>
+  <object href="/attenuators_pslits" role="transmission"/>
+  <object href="/resolution" role="resolution"/>
+  <!--<edna_command>/users/blissadm/local/bin/edna_script_bes.py</edna_command> -->
+ <!--  <edna_default_file>edna_defaults.xml</edna_default_file>-->
+</object>

@@ -1,0 +1,50 @@
+<equipment class = "PX1Eiger">
+
+  <tangoname>i10-c-cx1/dt/eiger.1-specific</tangoname>
+<!--
+  <tangoname>test/arafat/eiger.test-specific</tangoname>
+-->
+
+  <object href="/detector_distance" role="detector_distance" />
+  <binning>1</binning>
+
+<!-- LIST OF CHANNELS -->
+  <channel type="tango" polling="events" name="state">State</channel>
+  <channel type="tango" name="flatfield_correction">flatfieldCorrection</channel>
+  <channel type="tango" name="pixel_mask">pixelMask</channel>
+  <channel type="tango" name="managed_mode">managedMode</channel>
+  <channel type="tango" name="data_collection_date">dataCollectionDate</channel>
+  <channel type="tango" name="threshold">thresholdEnergy</channel>
+  <channel type="tango" name="photon_energy">photonEnergy</channel>
+  <channel type="tango" name="wavelength">wavelength</channel>
+  <channel type="tango" name="roi_mode">roiMode</channel>
+  <channel type="tango" name="beam_x">beamCenterX</channel>
+  <channel type="tango" name="beam_y">beamCenterY</channel>
+  <channel type="tango" name="detector_distance">detectorDistance</channel>
+  <channel type="tango" name="detector_readout_time">detectorReadoutTime</channel>
+  <channel type="tango" name="temperature">temperature</channel>
+  <channel type="tango" name="humidity">humidity</channel>
+  <channel type="tango" name="chi_increment">chiIncrement</channel>
+  <channel type="tango" name="chi_start">chiStart</channel>
+  <channel type="tango" name="kappa_increment">kappaIncrement</channel>
+  <channel type="tango" name="kappa_start">kappaStart</channel>
+  <channel type="tango" name="omega_increment">omegaIncrement</channel>
+  <channel type="tango" name="omega_start">omegaStart</channel>
+  <channel type="tango" name="phi_increment">phiIncrement</channel>
+  <channel type="tango" name="phi_start">phiStart</channel>
+
+<!-- LIST OF PROPERTIES -->
+  <manufacturer>DECTRIS</manufacturer>
+  <type>Eiger_X</type>
+  <model>16M</model>
+  <px>0.075</px>
+  <py>0.075</py> 
+  <width>4150</width>
+  <height>4371</height>
+  <exposure_limits>0.00135,100</exposure_limits>
+  <minimum_exposure_time>0.00135</minimum_exposure_time>
+  <default_exposure_time>0.02</default_exposure_time>
+  <file_suffix>h5</file_suffix>
+  <default_roi_mode>disabled</default_roi_mode>
+
+</equipment>

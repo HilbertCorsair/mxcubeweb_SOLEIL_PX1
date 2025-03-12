@@ -207,12 +207,16 @@ export default class SampleImage extends React.Component {
   }
 
   setVCellSpacing(e) {
+    console.log("Setting VCellSpacing")
     let value = Number.parseFloat(e.target.value);
     if (Number.isNaN(value)) {
       value = '';
     }
+    console.log(`Value is ${value}`)
 
     const gridData = this.selectedGrid();
+
+    console.log(`Grid data is ${gridData}`)
 
     if (gridData) {
       const gd = this.drawGridPlugin.setCellSpace(
@@ -513,6 +517,7 @@ export default class SampleImage extends React.Component {
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   leftClick(option) {
+    console.log("Left click of options ")
     this.canvas.selection = true; // Enable group selection
     let objectFound = false;
     this.drawGridPlugin.clearMouseOverGridLabel(this.canvas);
@@ -572,6 +577,7 @@ export default class SampleImage extends React.Component {
         shapeData.numRows,
         shapeData.numCols,
       );
+      console.log(`Counting cells: ${shapeData.cellCountFun} __ ${cellIdxY} __${cellIdxX}, ${shapeData.numRows},${shapeData.numCols}`)
 
       const { resultDataPath } = shapeData;
       if (resultDataPath !== undefined) {
@@ -625,9 +631,13 @@ export default class SampleImage extends React.Component {
     this.drawGridPlugin.setPixelsPerMM(this.props.pixelsPerMm);
     this.drawGridPlugin.setCellSize(cellSizeX, cellSizeY);
     this.drawGridPlugin.setCellCounting(this.props.cellCounting);
-
+    console.log(`configureGrid ${this.props.pixelsPerMm}, cel size ${cellSizeX} , ${cellSizeY}`)
     if (!this.props.drawGrid) {
+      console.log("NO DRAW")
       this.drawGridPlugin.reset();
+    }else{
+      console.log("draw grid is active", `pixels par mm ${this.props.pixelsPerMm}`)
+      
     }
   }
 
@@ -732,6 +742,7 @@ export default class SampleImage extends React.Component {
   }
 
   saveGrid() {
+    console.log("Saving the grid !")
     const gd = this.drawGridPlugin.saveGrid(
       this.drawGridPlugin.currentGridData(),
     );
@@ -741,11 +752,13 @@ export default class SampleImage extends React.Component {
 
   toggleGridVisibility(id) {
     const grid = this.props.grids[id];
+    console.log("Grid visibility", `grid is: ${grid}`)
 
     if (grid.state === 'HIDDEN') {
       grid.state = 'SAVED';
       grid.user_state = 'SAVED';
     } else {
+      console.log("grid state is hidden ")
       grid.state = 'HIDDEN';
       grid.user_state = 'HIDDEN';
     }
@@ -888,6 +901,7 @@ export default class SampleImage extends React.Component {
 
     // Grid beeing defined (being drawn)
     if (this.drawGridPlugin.shapeGroup) {
+      console.log(`Pushing ShapeGroupe to fabricSelectibles ${this.drawGridPlugin.shapeGroup}`)
       fabricSelectables.push(this.drawGridPlugin.shapeGroup);
     }
 
@@ -909,6 +923,7 @@ export default class SampleImage extends React.Component {
       if (this.props.selectedShapes.includes(shape.id)) {
         aShapes.push(shape);
         shape.active = true;
+        console.log("In defining grid", shape.id)
       }
     });
 

@@ -3,7 +3,7 @@ import { Button } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 
 import MotorInput from '../MotorInput/MotorInput';
-import TwoAxisTranslationControl from '../MotorInput/TwoAxisTranslationControl';
+//import TwoAxisTranslationControl from '../MotorInput/TwoAxisTranslationControl';
 
 import styles from './MotorControls.module.css';
 import motorInputStyles from '../MotorInput/MotorInput.module.css';
@@ -36,10 +36,7 @@ function MotorControls() {
 
       <div className={motorInputStyles.container}>
         <p className={`${motorInputStyles.label} mb-1`}>Sample alignment</p>
-        <TwoAxisTranslationControl
-          verticalMotorProps={verticalMotorProps}
-          horizontalMotorProps={horizontalMotorProps}
-        />
+        
       </div>
 
       <Button

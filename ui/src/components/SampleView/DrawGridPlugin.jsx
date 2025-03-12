@@ -183,6 +183,7 @@ export default class DrawGridPlugin {
    * @param {float} cellCounting
    */
   setCellCounting(cellCounting) {
+    console.log(`cellCounting from DrawgreidPlugin jsx ${cellCounting}`)
     this.gridData.cellCountFun = cellCounting;
   }
 
@@ -223,6 +224,7 @@ export default class DrawGridPlugin {
       gridData.width = gridData.numCols * cellTW;
       gridData.height = gridData.numRows * cellTH;
     }
+    console.log(`returning grid data setCellSpace ${snapToGrid}, ${gd}`)
 
     return gridData;
   }
@@ -273,6 +275,7 @@ export default class DrawGridPlugin {
       hSpace,
       vSpace,
     );
+    console.log(`setCurrentCellSpace ${hSpace}, ${vSpace}`)
   }
 
   setGridOverlay(level) {

@@ -1,0 +1,14 @@
+<object class="PX1XrayCentring" role="workflow">
+  
+    <tangoname>i10-c-cx1/ex/pandacollect</tangoname>
+    <sgonaxis>i10-c-cx1/ex/sgonaxis</sgonaxis>
+
+  <object href="/session" role="session"/>
+ 
+  <workflow>
+    <title>X-ray Centring</title>
+    <path>XrayCentring</path>
+    <requires>grid</requires>
+  </workflow>
+ 
+</object>
