@@ -11,6 +11,7 @@ import motorInputStyles from '../MotorInput/MotorInput.module.css';
 function MotorControls() {
   const [showAll, setShowAll] = useState(false);
 
+
   const motorsProps = useSelector((state) =>
     state.uiproperties.sample_view.components.filter(
       ({ value_type }) => value_type === 'MOTOR',
@@ -23,6 +24,7 @@ function MotorControls() {
   const horizontalMotorProps = motorsProps.find(
     (c) => c.role === 'sample_horizontal',
   );
+  //debugger; 
 
   if (!verticalMotorProps || !horizontalMotorProps) {
     return motorsProps.map(({ role }) => <MotorInput key={role} role={role} />);
@@ -30,7 +32,7 @@ function MotorControls() {
 
   return (
     <>
-      {motorsProps.slice(0, 3).map(({ role }) => (
+      {motorsProps.slice(0, 1).map(({ role }) => (
         <MotorInput key={role} role={role} />
       ))}
 
@@ -56,7 +58,8 @@ function MotorControls() {
 
       {showAll &&
         motorsProps
-          .slice(3)
+          //.filter((_, index) => mot_index_to_keep.includes(index))//.slice(0, 10).slice(1, 3)
+          .slice(1,3)
           .map(({ role }) => <MotorInput key={role} role={role} />)}
     </>
   );
