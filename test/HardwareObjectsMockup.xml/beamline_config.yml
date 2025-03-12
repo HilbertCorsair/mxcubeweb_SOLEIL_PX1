@@ -61,11 +61,11 @@ _objects:
   - collect: mxcollect.xml
   - xrf_spectrum: xrf.xml
   - energy_scan: energyscan.xml
-  - gphl_connection: gphl/gphl-setup.yml
-  - gphl_workflow: gphl/gphl-workflow.yml
-  - xray_centring: xray_centring.xml
+  #- gphl_connection: gphl/gphl-setup.yml
+  #- gphl_workflow: gphl/gphl-workflow.yml
+  #- xray_centring: xray_centring.xml
   #    - centring: centring.xml
-  - xml_rpc_server: xml_rpc_server.xl
+  #- xml_rpc_server: xml_rpc_server.xl
   #
   # Analysis:
   #- offline_processing: auto_processing.xml

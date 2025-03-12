@@ -185,7 +185,6 @@ def init_route(app, server, url_prefix):  # noqa: C901
             :statuscode: 409: error
         """
         shapes = request.get_json().get("shapes", [])
-
         resp = jsonify(app.sample_view.update_shapes(shapes))
         resp.status_code = 200
 

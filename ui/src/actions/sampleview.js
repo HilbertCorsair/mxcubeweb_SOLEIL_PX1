@@ -232,6 +232,7 @@ export function addShape(shapeData = {}, successCb = null) {
     try {
       const json = await sendAddOrUpdateShapes([shapeData]);
       const shape = json.shapes[0];
+      //debugger;
       console.log(`shape data: ${shape}`)
       dispatch(addShapeAction(shape));
 

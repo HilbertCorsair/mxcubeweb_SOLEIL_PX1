@@ -74,6 +74,7 @@ sample_view:
       precision: 3
       suffix: mm
 
+
 sample_view_video_controls:
   id: sample_view_video_controls
   components:
@@ -87,8 +88,9 @@ sample_view_video_controls:
       show: true
     - id: zoom
       show: true
-    #- id: backlight
-    #  show: true
+    - id: backlight
+      show: true
+      attribute: diffractometer.backlight
     # - id: frontlight
     #   show: true
     - id: video_size

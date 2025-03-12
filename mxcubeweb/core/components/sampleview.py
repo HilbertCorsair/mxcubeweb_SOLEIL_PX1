@@ -273,6 +273,8 @@ class SampleView(ComponentBase):
         signals.grid_result_available(to_camel(shape.as_dict()))
 
     def update_shapes(self, shapes):
+        #import pdb
+        #pdb.set_trace()
         updated_shapes = []
         for s in shapes:
             shape_data = from_camel(s)
@@ -291,6 +293,7 @@ class SampleView(ComponentBase):
                 # certain calculations
 
                 beam_info_dict = beam_info_dict = self.app.beamline.get_beam_info()
+                
 
                 shape_data[
                     "pixels_per_mm"

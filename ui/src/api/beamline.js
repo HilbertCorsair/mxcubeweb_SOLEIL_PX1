@@ -19,6 +19,7 @@ export function sendExecuteCommand(obj, name, args) {
 }
 
 export function sendSetAttribute(name, type, value) {
+  console.log(`Sending attributes ${name}, ${type}, ${value}`, `/${type}/value/${name}`)
   return endpoint.put({ name, value }, `/${type}/value/${name}`).res();
 }
 

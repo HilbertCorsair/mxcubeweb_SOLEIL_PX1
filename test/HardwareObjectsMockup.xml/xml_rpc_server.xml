@@ -3,9 +3,7 @@
     True
   </all_interfaces>
 
-  <port>
-    7171
-  </port>
+  <port>7171</port>
 
   <apis>
     <api>
