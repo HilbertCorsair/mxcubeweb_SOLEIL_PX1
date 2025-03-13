@@ -2,7 +2,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from 'react-bootstrap';
-
 import BaseMotorInput from './BaseMotorInput';
 import { stopBeamlineAction } from '../../actions/beamlineActions';
 import { setAttribute } from '../../actions/beamline';
