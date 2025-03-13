@@ -28,6 +28,7 @@ class WavelengthAdapter(ActuatorAdapterBase):
 
     @RateLimited(6)
     def _value_change(self, pos, wl, *args, **kwargs):
+        print(f"wavelength adapter value changed to {wl}")
         self.value_change(wl)
 
     def _set_value(self, value: HOActuatorValueChangeModel):
