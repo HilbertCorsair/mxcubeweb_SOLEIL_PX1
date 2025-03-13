@@ -30,7 +30,7 @@ function MotorControls() {
 
   return (
     <>
-      {motorsProps.slice(0, 3).map(({ role }) => (
+      {motorsProps.slice(0, 1).map(({ role }) => (
         <MotorInput key={role} role={role} />
       ))}
 
@@ -56,7 +56,7 @@ function MotorControls() {
 
       {showAll &&
         motorsProps
-          .slice(3)
+          .slice(1, 3)
           .map(({ role }) => <MotorInput key={role} role={role} />)}
     </>
   );
