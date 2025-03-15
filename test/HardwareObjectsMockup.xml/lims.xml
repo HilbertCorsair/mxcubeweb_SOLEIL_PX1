@@ -1,5 +1,5 @@
 <object class="PX1ISPyBLims">
-  <object hwrid="/lims_rest" role="lims_rest"/>
+  <!--<object hwrid="/lims_rest" role="lims_rest"/> -->
   <base_result_url>
     http://195.221.10.20/ispyb/ispyb-ws/ispybWS/
   </base_result_url>
@@ -12,6 +12,7 @@
   </rest_root>
   
   <site>SOLEIL</site>
+  <beamline_name>Proxima1</beamline_name>
   
   <exi_root>
    https://your.exi.org
@@ -48,7 +49,7 @@
 
   <connectionTimeout>360</connectionTimeout>
 
-  <beamline_name>Proxima1</beamline_name>
+  
 
   <loginType>proposal</loginType>
   <object role="session" href="/session"/>

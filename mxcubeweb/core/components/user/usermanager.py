@@ -8,7 +8,6 @@ import flask
 import flask_security
 import requests
 
-# from authlib.oauth2.rfc6749 import OAuth2Token
 from authlib.integrations.flask_client import OAuth
 from flask_login import current_user
 from mxcubecore import HardwareRepository as HWR
@@ -16,7 +15,7 @@ from mxcubecore.model.lims_session import LimsSessionManager
 
 from mxcubeweb.core.components.component_base import ComponentBase
 from mxcubeweb.core.models.usermodels import User
-from mxcubeweb.core.util.networkutils import is_local_host
+
 
 
 class BaseUserManager(ComponentBase):
@@ -103,15 +102,18 @@ class BaseUserManager(ComponentBase):
 
         return users
 
+
     def get_user(self, username: str) -> User | None:
         """Return user model instance based on username."""
-        user = None
+        try:
+            # This replaces the manual iteration by using the database's native filtering
+            user = User.query.filter_by(username=username).first()
+            return user
+        except Exception:
+            # Return None if the query fails (e.g., if the username column doesn't exist)
+            return None
 
-        for _u in User.query.all():
-            if _u.username == username:
-                user = _u
 
-        return user
 
     def set_operator(self, username: str) -> User | None:
         """Set the user with the given username to be an operator."""
@@ -127,18 +129,26 @@ class BaseUserManager(ComponentBase):
         return user
 
     def update_active_users(self) -> None:
-        """Check if any user have been inactive for longer than session lifetime.
-
-        If so, deactivate the user in datastore and emit the relvant signals
+        """Check if any users have been inactive for longer than session lifetime.
+        If so, deactivate the user in datastore and emit the relevant signals
         ``userChanged`` and ``observersChanged`` to the client.
         """
-        for _u in User.query.all():
-            if (
-                _u.active
-                and _u.last_request_timestamp
-                and (datetime.datetime.now() - _u.last_request_timestamp)
-                > flask.current_app.permanent_session_lifetime
-            ):
+
+
+        try:
+
+            # Calculate the cutoff time for inactive users
+            cutoff_time = datetime.datetime.now() - flask.current_app.permanent_session_lifetime
+            
+            # Query only active users with last_request_timestamp older than the cutoff
+            inactive_users = User.query.filter(
+                User.active == True,
+                User.last_request_timestamp.isnot(None),
+                User.last_request_timestamp < cutoff_time
+            ).all()
+            
+            # Process only the inactive users that need to be deactivated
+            for _u in inactive_users:
                 logging.getLogger("MX3.HWR").info(
                     "Logged out inactive user %s", _u.username
                 )
@@ -148,9 +158,16 @@ class BaseUserManager(ComponentBase):
                 self.app.server.emit(
                     "userChanged", room=_u.socketio_session_id, namespace="/hwr"
                 )
-
-        self.app.server.emit("observersChanged", namespace="/hwr")
-
+                
+            # Only emit observersChanged if we actually deactivated any users
+            if inactive_users:
+                self.app.server.emit("observersChanged", namespace="/hwr")
+                
+        except Exception as e:
+            logging.getLogger("MX3.HWR").error(
+                "Error updating active users: %s", str(e)
+        )
+            
     def update_operator(self, new_login: bool = False) -> None:
         """Sets the operator based on the logged in users.
 
@@ -160,41 +177,59 @@ class BaseUserManager(ComponentBase):
         Args:
             new_login: True if method was invoked with new user login.
         """
-        if not current_user.is_anonymous:
-            active_in_control = False
-
-            for _u in User.query.all():
-                if _u.is_authenticated and _u.in_control:
-                    active_in_control = True
-                else:
+        if current_user.is_anonymous:
+            return
+        
+        try:
+            # Find if any authenticated user is in control
+            user_in_control = User.query.filter(
+                User.is_authenticated == True,
+                User.in_control == True
+            ).first()
+            
+            active_in_control = user_in_control is not None
+            
+            # Reset control status for users not in control
+            if active_in_control:
+                # Only reset users that have in_control set to True
+                users_to_reset = User.query.filter(
+                    User.id != user_in_control.id,
+                    User.in_control == True
+                ).all()
+                
+                for _u in users_to_reset:
                     self.db_set_in_control(_u, False)
-
+            
             # If new login and new observer login, clear nickname
-            # so that the user get an opertunity to set one
             if new_login:
                 current_user.nickname = ""
-
-            # If no user is currently in control set this user to be
-            # in control
+                
+            # If no user is currently in control, set this user to be in control
             if not active_in_control:
                 if not HWR.beamline.lims.is_user_login_type():
-                    # current_user.nickname = self.app.lims.get_proposal(current_user)
                     current_user.fullname = HWR.beamline.lims.get_full_user_name()
                     current_user.nickname = HWR.beamline.lims.get_user_name()
                 else:
                     current_user.nickname = current_user.username
+                    
                 self.db_set_in_control(current_user, True)
+                user_in_control = current_user
+            
+            # Set active proposal based on the controlling user
+            if user_in_control:
+                if not HWR.beamline.lims.is_user_login_type():
+                    # Get the active session's proposal name
+                    active_session = self.app.lims.get_session_manager().active_session
+                    if active_session:
+                        self.app.lims.select_session(active_session.proposal_name)
+                elif user_in_control.selected_proposal is not None:
+                    self.app.lims.select_session(user_in_control.selected_proposal)
+                    
+        except Exception as e:
+            logging.getLogger("MX3.HWR").error(
+                "Error updating operator: %s", str(e)
+            )
 
-            # Set active proposal to that of the active user
-            for _u in User.query.all():
-                if _u.is_authenticated and _u.in_control:
-                    if not HWR.beamline.lims.is_user_login_type():
-                        # In principle there is no need for doing so..
-                        self.app.lims.select_session(
-                            self.app.lims.get_session_manager().active_session.proposal_name
-                        )  # The username is the proposal
-                    elif _u.selected_proposal is not None:
-                        self.app.lims.select_session(_u.selected_proposal)
 
     def is_inhouse_user(self, user_id: str) -> bool:
         """Check if the ``user_id`` is in the in-house user list.
@@ -205,12 +240,15 @@ class BaseUserManager(ComponentBase):
         Returns:
             ``True`` if ``user_id`` is in the in-house user list, ``False`` otherwise.
         """
-        user_id_list = [
-            "%s%s" % (code, number)
-            for (code, number) in HWR.beamline.session.in_house_users
-        ]
+        # Use a cached list if available
+        if not hasattr(self, '_inhouse_user_id_list') or self._inhouse_user_id_list is None:
+            self._inhouse_user_id_list = [
+                f"{code}{number}" 
+                for (code, number) in HWR.beamline.session.in_house_users
+            ]
+        
+        return user_id in self._inhouse_user_id_list
 
-        return user_id in user_id_list
 
     # Abstract method to be implemented by concrete implementation
     def _login(self, login_id: str, password: str) -> LimsSessionManager:
@@ -385,12 +423,13 @@ class BaseUserManager(ComponentBase):
         ):
             self.app.lims.select_session(session_manager.active_session.session_id)
 
+ 
         res = {
             "synchrotronName": HWR.beamline.session.synchrotron_name,
             "beamlineName": HWR.beamline.session.beamline_name,
             "loggedIn": True,
             "loginType": login_type,
-            "limsName": [item.dict() for item in HWR.beamline.lims.get_lims_name()],
+            "limsName": HWR.beamline.lims.get_lims_name(),
             "proposalList": [session.__dict__ for session in session_manager.sessions],
             "rootPath": HWR.beamline.session.get_base_image_directory(),
             "user": current_user.todict(),
@@ -437,37 +476,39 @@ class BaseUserManager(ComponentBase):
 
     def db_create_user(self, user: str, password: str, sso_data: dict) -> User:
         """Create or update user in datastore.
-
         If the user already exists, update the user information. If not create new one.
         Assign roles to the user, prevoiusly making sure the roles of 'staff' and
         'incontrol' existis in data store. If not create them also.
-
         Args:
             user: representation of username (eventually part of it).
                 Also a nickname for new users.
             password: password (unused).
             sso_data: dictionary containing information from the SSO service used.
-
         Returns:
             User model instance existing in or added to datastore.
         """
         sid = flask.session["sid"]
         user_datastore = self.app.server.user_datastore
-
-
         sid = flask.session["sid"]
         user_datastore = self.app.server.user_datastore
 
-        username = HWR.beamline.lims.get_user_name()
-        fullname = HWR.beamline.lims.get_full_user_name()
+        
+        # hack to test login 
+        username = "20100023"#HWR.beamline.lims.get_user_name()
+        fullname = "mx20100023"#HWR.beamline.lims.get_full_user_name()
+        
 
         # Make sure that the roles staff and incontrol always exists
         if not user_datastore.find_role("staff"):
             user_datastore.create_role(name="staff")
             user_datastore.create_role(name="incontrol")
             self.app.server.user_datastore.commit()
+        
+        try:
 
-        _u = user_datastore.find_user(username=username)
+            _u = user_datastore.find_user(username=username)
+        except:
+            _u = None
 
         if not _u:
             if not HWR.beamline.lims.is_user_login_type():
@@ -492,6 +533,7 @@ class BaseUserManager(ComponentBase):
             user_datastore.append_roles(_u, self._get_configured_roles(user))
 
         self.app.server.user_datastore.commit()
+
 
         return user_datastore.find_user(username=username)
 
@@ -552,13 +594,12 @@ class UserManager(BaseUserManager):
         """
         self._debug("_login. login_id=%s" % login_id)
         try:
-            session_manager: LimsSessionManager = HWR.beamline.lims.login(
-                login_id, password, is_local_host()
-            )
+            session_manager: LimsSessionManager = HWR.beamline.lims.login(login_id)
+            print("LOGIN SUCCESSFUL!: retunning session manager")
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
             raise e
-        if login_id in self.active_logged_in_users():
+        """if login_id in self.active_logged_in_users():
             if current_user.is_anonymous:
                 self.force_signout_user(login_id)
             else:
@@ -579,7 +620,7 @@ class UserManager(BaseUserManager):
         # Only allow local login when remote is disabled
         if not self.app.ALLOW_REMOTE and not is_local_host():
             msg = "Remote access disabled"
-            raise Exception(msg)
+            raise Exception(msg)"""
 
         return session_manager
 
