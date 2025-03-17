@@ -1,3 +1,0 @@
-<device class="PX1MailNotifier">
-   <command type="tango" name="send_command" tangoname="i10-c-cx1/ca/mailnotifier">Send_Mail</command>
-</device>

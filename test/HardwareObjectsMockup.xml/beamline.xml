@@ -1,3 +1,0 @@
-<!-- Example beamline setup file -->
-<object class="PX1Beamline" role="BeamlineSetup">
-  <!-- Objects directly associatd with hardware -->

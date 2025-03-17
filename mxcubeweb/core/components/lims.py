@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-import copy
-import io
-import json
 import logging
 import math
 import re
 import sys
 
-from flask import session
 from flask_login import current_user
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.model import queue_model_objects as qmo
+from mxcubecore.model.lims_session import LimsSessionManager
 
 from mxcubeweb.core.components.component_base import ComponentBase
 
@@ -127,6 +123,10 @@ class Lims(ComponentBase):
             if params["subdir"].endswith("-"):
                 params["subdir"] = sample_model.get_name()
 
+        # Making sure that there are no ":" left from the sample name incase
+        # no synchronisation with LIMS was done
+        params["subdir"] = params["subdir"].replace(":", "-")
+
         if "{" in params.get("prefix", ""):
             sample = self.app.SAMPLE_LIST["sampleList"].get(sample_model.loc_str, {})
             prefix = self.get_default_prefix(sample)
@@ -240,8 +240,7 @@ class Lims(ComponentBase):
             logging.getLogger("MX3.HWR").info(
                 "[LIMS] Session is rescheduled in time or beamline."
             )
-
-            session["proposal"] = proposal_info
+            self.allow_session(session)
 
         if hasattr(HWR.beamline.session, "prepare_directories"):
             try:
@@ -255,15 +254,15 @@ class Lims(ComponentBase):
                     "[LIMS] Error creating data directories, %s" % sys.exc_info()[1]
                 )
 
-            # save selected proposal in users db
-            current_user.selected_proposal = session.session_id
-            self.app.usermanager.update_user(current_user)
+        # save selected proposal in users db
+        current_user.selected_proposal = session.session_id
+        self.app.usermanager.update_user(current_user)
 
-            logging.getLogger("user_log").info("[LIMS] Proposal selected.")
+        logging.getLogger("user_log").info(
+            "[LIMS] Proposal selected session_id=%s.", session_id
+        )
 
-            return True
-        else:
-            return False
+        return True
 
     def get_default_prefix(self, sample_data, generic_name=False):
         if isinstance(sample_data, dict):
@@ -285,6 +284,7 @@ class Lims(ComponentBase):
         self.app.queue.queue_clear()
         self.app.sample_changer.get_sample_list()
 
+        samples_info_list = HWR.beamline.lims.get_samples(lims_name)
         for sample_info in samples_info_list:
             sample_info["limsID"] = sample_info.pop("sampleId")
             sample_info["defaultPrefix"] = self.get_default_prefix(sample_info)
@@ -324,6 +324,7 @@ class Lims(ComponentBase):
                 )
             else:
                 sample_info["lims_location"] = lims_location
+
                 self.sample_list_sync_sample(sample_info)
 
         return self.sample_list_get()
