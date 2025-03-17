@@ -1,8 +1,0 @@
-<object class="PX1BeamInfo">
-   <object href="/zoom" role="zoom" />
-   <object href="/beam_definer" role="definer" />
-   <tangoname>i10-c-cx1/ex/beamsize</tangoname>
-   <!-- <object hwrid="/aperture" role="aperture" /> -->
-   <aperture>[30]</aperture>
-</object>
-

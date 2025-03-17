@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<object class="PX1MiniDiff">
+<object class="SOLEIL.PX1.PX1MiniDiff">
   <username>diffractometer</username> <!--Minidiff-->
 
   <channel type="tango" tangoname="i10-c-cx1/ex/sgonaxis" polling="events" name="smargon_state">State</channel>
