@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic.v1 import (
     BaseModel,
     Field,
@@ -10,7 +8,8 @@ from mxcubeweb.core.models.configmodels import ModeEnum
 
 class SimpleNameValue(BaseModel):
     name: str
-    value: Union[str, bool, int]
+    # It's important to have str before bool, to avoid issue with bool being casted to string
+    value: bool | str | int
 
 
 class AppSettingsModel(BaseModel):

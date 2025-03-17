@@ -138,7 +138,7 @@ class MXCUBECore:
 
     @staticmethod
     def adapt_hardware_objects(app):
-        hwobject_list = [item for item in MXCUBECore.hwr.hardware_objects]
+        hwobject_list = list(MXCUBECore.hwr.hardware_objects)
 
         for ho_name in hwobject_list:
             # Go through all hardware objects exposed by mxcubecore
@@ -214,7 +214,7 @@ class MXCUBEApplication:
     VIDEO_FORMAT = "MPEG1"
 
     # Contains the complete client side ui state, managed up state_storage.py
-    UI_STATE = dict()
+    UI_STATE = {}
     TEMP_DISABLED = []
 
     # Below variables used for application wide settings
@@ -247,9 +247,8 @@ class MXCUBEApplication:
     server = None
 
     def __init__(self):
-        raise NotImplementedError(
-            "MXCUBEApplication is to be used as a pure static class, dont instanciate"
-        )
+        msg = "MXCUBEApplication is to be used as a pure static class, dont instanciate"
+        raise NotImplementedError(msg)
 
     @staticmethod
     def init(
@@ -395,10 +394,7 @@ class MXCUBEApplication:
             )
             uilog_file_handler.setFormatter(file_formatter)
 
-        if not log_level:
-            log_level = "INFO"
-        else:
-            log_level = log_level.upper()
+        log_level = "INFO" if not log_level else log_level.upper()
 
         custom_log_handler = MX3LoggingHandler(MXCUBEApplication.server)
         custom_log_handler.setLevel(log_level)

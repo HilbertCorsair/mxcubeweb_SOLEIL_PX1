@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 
@@ -9,7 +10,6 @@ from mxcubecore.HardwareObjects.Harvester import HarvesterState
 from mxcubecore.model import queue_model_objects as qmo
 
 from mxcubeweb.app import MXCUBEApplication as mxcube
-from mxcubeweb.core.adapter.beamline_adapter import BeamlineAdapter
 from mxcubeweb.core.components.queue import (
     COLLECTED,
     FAILED,
@@ -82,7 +82,6 @@ def handle_auto_mount_next(entry):
     model = entry.get_data_model()
 
     if isinstance(model.get_parent(), qmo.TaskGroup):
-        tgroup = model.get_parent()
         auto_mount = mxcube.queue.get_auto_mount_sample()
         tgroup = entry.get_data_model()
         tgroup_list = entry.get_data_model().get_parent().get_children()
@@ -181,10 +180,7 @@ def loaded_sample_changed(sample):
         else:
             sample = HWR.beamline.sample_changer.get_loaded_sample()
 
-            if sample:
-                address = sample.get_address()
-            else:
-                address = None
+            address = sample.get_address() if sample else None
 
             mxcube.sample_changer.set_current_sample(address)
 
@@ -261,7 +257,7 @@ def get_task_state(entry):
         msg = "Could not get lims link for collection with id: %s" % lims_id
         logging.getLogger("HWR").error(msg)
 
-    msg = {
+    return {
         "Signal": "",
         "Message": "",
         "taskIndex": node_index["idx"],
@@ -271,8 +267,6 @@ def get_task_state(entry):
         "state": state,
         "progress": 1 if state == COLLECTED else 0,
     }
-
-    return msg
 
 
 def update_task_result(entry):
@@ -438,10 +432,8 @@ def collect_oscillation_failed(
     mxcube.NODE_ID_TO_LIMS_ID[node["queue_id"]] = lims_id
 
     if not mxcube.queue.is_interleaved(node["node"]):
-        try:
-            HWR.beamline.lims_rest.get_dc(lims_id)
-        except Exception:
-            pass
+        with contextlib.suppress(Exception):
+            HWR.beamline.get_dc(lims_id)
 
         msg = {
             "Signal": "collectOscillationFailed",
@@ -644,7 +636,7 @@ def beam_changed(*args, **kwargs):
         "shape": "",
         "size_x": 0,
         "size_y": 0,
-        "label": 0,
+        "label": "",
     }
     _beam = beam_info.get_value()
     beam_info_dict.update(

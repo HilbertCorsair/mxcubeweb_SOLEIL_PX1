@@ -53,7 +53,6 @@ import {
   setSCState,
   setLoadedSample,
   setSCGlobalState,
-  updateSCContents,
 } from './actions/sampleChanger';
 
 import {
@@ -92,7 +91,7 @@ class ServerIO {
 
   connectHwr() {
     const serverUrl = 'http://195.221.8.78:5173'; // Based on the URLs in your error messages
-    
+
     this.hwrSocket = io(`${serverUrl}/hwr`, {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
@@ -116,7 +115,22 @@ class ServerIO {
     this.hwrSocket.on('disconnect', (reason) => {
       console.log('hwrSocket disconnected!'); // eslint-disable-line no-console
 
-      setTimeout(() => {
+      if (reason === 'io server disconnect') {
+        //
+        // If socket disconnects with this reason, it is possible that our
+        // session have become invalid.
+        //
+        // That is, we can establish connection to the server, but then we
+        // get a 'unauthorized' response which closes the socket.
+        //
+        // Check if that is the case by fetching the login info. If our
+        // session is invalid, getLoginInfo() will update state to
+        // 'not logged in' and the login page will be shown.
+        //
+        dispatch(getLoginInfo());
+      }
+
+      this.connectionLostTimeout = setTimeout(() => {
         dispatch(
           // Show message if socket still hasn't reconnected (and wasn't manually disconnected in the first place)
           showConnectionLostDialog(this.hwrSocket && !this.hwrSocket.connected),
@@ -364,6 +378,10 @@ class ServerIO {
       dispatch(signOut());
     });
 
+    this.hwrSocket.on('sessionsChanged', () => {
+      dispatch(getLoginInfo());
+    });
+
     this.hwrSocket.on('workflowParametersDialog', (data) => {
       if (data) {
         dispatch(showWorkflowParametersDialog(data, true));
@@ -404,8 +422,8 @@ class ServerIO {
       dispatch(setSCGlobalState(data));
     });
 
-    this.hwrSocket.on('sc_contents_update', () => {
-      dispatch(updateSCContents());
+    this.hwrSocket.on('update_queue', () => {
+      dispatch(getQueue());
     });
 
     this.hwrSocket.on('diff_phase_changed', (data) => {
@@ -436,7 +454,7 @@ class ServerIO {
 
   connectLogging() {
     const serverUrl = 'http://195.221.8.78:5173';
-    
+
     this.loggingSocket = io(`${serverUrl}/logging`, {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
@@ -447,16 +465,9 @@ class ServerIO {
     this.loggingSocket.on('connect', () => {
       console.log('loggingSocket connected!'); // eslint-disable-line no-console
     });
-  
+
     this.loggingSocket.on('disconnect', (reason) => {
       console.log('loggingSocket disconnected!'); // eslint-disable-line no-console
-
-      if (reason === 'io server disconnect') {
-        const socket = this.loggingSocket;
-        setTimeout(() => {
-          socket.connect();
-        }, 500);
-      }
     });
 
     this.loggingSocket.on('log_record', (record) => {

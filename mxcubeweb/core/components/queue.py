@@ -1,17 +1,18 @@
-# -*- coding: utf-8 -*-
+import contextlib
 import itertools
 import json
 import logging
 import os
 import re
 from functools import reduce
+from unittest.mock import Mock
 
-from mock import Mock
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore import queue_entry as qe
 from mxcubecore.HardwareObjects.Gphl import GphlQueueEntry
 from mxcubecore.model import queue_model_enumerables as qme
 from mxcubecore.model import queue_model_objects as qmo
+from mxcubecore.model.queue_model_enumerables import CENTRING_METHOD
 from mxcubecore.queue_entry.base_queue_entry import QUEUE_ENTRY_STATUS
 
 from mxcubeweb.core.components.component_base import ComponentBase
@@ -73,7 +74,8 @@ class Queue(ComponentBase):
             pt.run_number += 1
 
             if pt.run_number > 1000:
-                raise RuntimeError("Over a thousand runs of the same collection")
+                msg = "Over a thousand runs of the same collection"
+                raise RuntimeError(msg)
 
             start_fname, end_fname = pt.get_first_and_last_file()
 
@@ -110,10 +112,8 @@ class Queue(ComponentBase):
                 else:
                     tlist.extend(group.get_children())
 
-            try:
+            with contextlib.suppress(Exception):
                 index = tlist.index(node)
-            except Exception:
-                pass
 
         return {
             "sample": sample,
@@ -165,13 +165,11 @@ class Queue(ComponentBase):
         if not node:
             node = HWR.beamline.queue_model.get_model_root()
 
-        res = reduce(
+        return reduce(
             lambda x, y: x.update(y) or x,
             self.queue_to_dict_rec(node, include_lims_data),
             {},
         )
-
-        return res
 
     def queue_to_json(self, node=None, include_lims_data=False):
         """
@@ -280,6 +278,7 @@ class Queue(ComponentBase):
             "numSnapshots": HWR.beamline.collect.get_property(
                 "num_snapshots", self.app.DEFAULT_NUM_SNAPSHOTS
             ),
+            "centringMethod": HWR.beamline.queue_manager.centring_method,
         }
 
         res.update(settings)
@@ -368,7 +367,7 @@ class Queue(ComponentBase):
             else dtype_label
         )
 
-        res = {
+        return {
             "label": dtype_label + " (" + parameters["fileName"] + ")",
             "type": "DataCollection",
             "parameters": parameters,
@@ -380,8 +379,6 @@ class Queue(ComponentBase):
             "state": state,
             "limsResultData": limsres,
         }
-
-        return res
 
     def _handle_gphl_wf(self, sample_node, node, include_lims_data=False):
         pt = node.path_template
@@ -411,18 +408,7 @@ class Queue(ComponentBase):
             parameters["directory"], parameters["fileName"]
         )
 
-        limsres = {}
-        lims_id = self.app.NODE_ID_TO_LIMS_ID.get(node._node_id, "null")
-
-        # Only add data from lims if explicitly asked for, since
-        # its a operation that can take some time.
-        if include_lims_data and HWR.beamline.lims.lims_rest:
-            limsres = HWR.beamline.lims.lims_rest.get_dc(lims_id)
-
-        # Always add link to data, (no request made)
-        limsres["limsTaskLink"] = self.app.lims.get_dc_link(lims_id)
-
-        res = {
+        return {
             "label": parameters["label"],
             "strategy_name": parameters["strategy_name"],
             "type": "GphlWorkflow",
@@ -435,8 +421,6 @@ class Queue(ComponentBase):
             "state": state,
             "limsResultData": limsres,
         }
-
-        return res
 
     def _handle_wf(self, sample_node, node, include_lims_data):
         queueID = node._node_id
@@ -460,18 +444,7 @@ class Queue(ComponentBase):
             parameters["path"], parameters["fileName"]
         )
 
-        limsres = {}
-        lims_id = self.app.NODE_ID_TO_LIMS_ID.get(node._node_id, "null")
-
-        # Only add data from lims if explicitly asked for, since
-        # its a operation that can take some time.
-        if include_lims_data and HWR.beamline.lims.lims_rest:
-            limsres = HWR.beamline.lims.lims_rest.get_dc(lims_id)
-
-        # Always add link to data, (no request made)
-        limsres["limsTaskLink"] = self.app.lims.get_dc_link(lims_id)
-
-        res = {
+        return {
             "label": parameters["label"],
             "type": "Workflow",
             "name": node._type,
@@ -483,8 +456,6 @@ class Queue(ComponentBase):
             "state": state,
             "limsResultData": limsres,
         }
-
-        return res
 
     def _handle_xrf(self, sample_node, node):
         queueID = node._node_id
@@ -510,7 +481,7 @@ class Queue(ComponentBase):
             parameters["path"], parameters["fileName"]
         )
 
-        res = {
+        return {
             "label": "XRF Scan",
             "type": "xrf_spectrum",
             "parameters": parameters,
@@ -521,8 +492,6 @@ class Queue(ComponentBase):
             "checked": node.is_enabled(),
             "state": state,
         }
-
-        return res
 
     def _handle_energy_scan(self, sample_node, node):
         queueID = node._node_id
@@ -550,7 +519,7 @@ class Queue(ComponentBase):
             parameters["path"], parameters["fileName"]
         )
 
-        res = {
+        return {
             "label": "Energy Scan",
             "type": "energy_scan",
             "parameters": parameters,
@@ -561,8 +530,6 @@ class Queue(ComponentBase):
             "checked": node.is_enabled(),
             "state": state,
         }
-
-        return res
 
     def _handle_char(self, parent_node, node, include_lims_data=False):
         sample_node = parent_node.get_sample_node()
@@ -590,7 +557,7 @@ class Queue(ComponentBase):
 
         originID, task = self._handle_diffraction_plan(node, sample_node)
 
-        res = {
+        return {
             "label": "CHARACTERISATION",
             "type": "Characterisation",
             "parameters": parameters,
@@ -604,8 +571,6 @@ class Queue(ComponentBase):
             "diffractionPlan": task,
             "diffractionPlanID": originID,
         }
-
-        return res
 
     def _handle_diffraction_plan(self, node, sample_node):
         model, _ = self.get_entry(node._node_id)
@@ -637,7 +602,7 @@ class Queue(ComponentBase):
         queueID = node._node_id
         _, state = self.get_node_state(queueID)
 
-        res = {
+        return {
             "label": "Interleaved",
             "type": "Interleaved",
             "parameters": {
@@ -651,8 +616,6 @@ class Queue(ComponentBase):
             "queueID": node._node_id,
             "state": state,
         }
-
-        return res
 
     def _handle_sample(self, node, include_lims_data=False):
         location = "Manual" if node.free_pin_mode else node.loc_str
@@ -711,10 +674,7 @@ class Queue(ComponentBase):
         """
         result = []
 
-        if isinstance(node, list):
-            node_list = node
-        else:
-            node_list = node.get_children()
+        node_list = node if isinstance(node, list) else node.get_children()
 
         for node in node_list:
             # NB under GPhL workflow, nodes do not have predictable distance
@@ -890,7 +850,7 @@ class Queue(ComponentBase):
         :param list sample_order: List of sample ids
         """
         current_queue = self.queue_to_dict()
-        sid_list = list([sid for sid in order if current_queue.get(sid, False)])
+        sid_list = [sid for sid in order if current_queue.get(sid, False)]
 
         if sid_list:
             queue_id_list = [current_queue[sid]["queueID"] for sid in sid_list]
@@ -956,9 +916,7 @@ class Queue(ComponentBase):
                 for ti in reversed(tindex_list):
                     self.delete_entry_at([[sid, int(ti)]])
 
-        res = self.queue_to_dict()
-
-        return res
+        return self.queue_to_dict()
 
     def _queue_add_item_rec(self, item_list, sample_node_id=None):
         """
@@ -1459,13 +1417,11 @@ class Queue(ComponentBase):
         queue_entry_name = task_name.title().replace("_", "") + "QueueEntry"
         entry_cls = getattr(qe, queue_entry_name)
         data = entry_cls.DATA_MODEL(
-            **{
-                "path_parameters": task["parameters"],
-                "common_parameters": task["parameters"],
-                "user_collection_parameters": task["parameters"],
-                "collection_parameters": task["parameters"],
-                "legacy_parameters": task["parameters"],
-            }
+            path_parameters=task["parameters"],
+            common_parameters=task["parameters"],
+            user_collection_parameters=task["parameters"],
+            collection_parameters=task["parameters"],
+            legacy_parameters=task["parameters"],
         )
 
         entry = entry_cls(Mock(), entry_cls.QMO(task_data=data))
@@ -1707,7 +1663,7 @@ class Queue(ComponentBase):
         HWR.beamline.queue_model.add_child(parent_model, group_model)
         HWR.beamline.queue_model.add_child(group_model, wf_model)
 
-        if not task["parameters"]["wfpath"] == "Gphl":
+        if task["parameters"]["wfpath"] != "Gphl":
             self.set_wf_params(wf_model, dc_entry, task, sample_model)
 
         group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
@@ -2127,6 +2083,21 @@ class Queue(ComponentBase):
         self.app.AUTO_ADD_DIFFPLAN = HWR.beamline.collect.get_property(
             "auto_add_diff_plan", False
         )
+        # Change value of the parameter, without changing the hardware object property.
+        # This allows to properly reset the value on logout when invoking init_queue_settings.
+        self.app.REMEMBER_PARAMETERS_BETWEEN_SAMPLES = (
+            HWR.beamline.queue_manager.get_property(
+                "remember_parameters_between_samples", False
+            )
+        )
+
+        centring_method_as_string = HWR.beamline.queue_manager.get_property(
+            "default_centring_method", "NONE"
+        )
+        HWR.beamline.queue_manager.centring_method = getattr(
+            CENTRING_METHOD,
+            centring_method_as_string,
+        )
 
     def queue_start(self, sid):
         """
@@ -2449,11 +2420,10 @@ class Queue(ComponentBase):
             msg = "[QUEUE] sample info could not be retrieved"
             logging.getLogger("MX3.HWR").error(msg)
             raise Exception(msg)
-        else:
-            # Find task with queue id method_id
-            for task in sample.tasks:
-                if task["queueID"] == int(method_id):
-                    return task
+        # Find task with queue id method_id
+        for task in sample.tasks:
+            if task["queueID"] == int(method_id):
+                return task
 
         msg = "[QUEUE] method info could not be retrieved, it does not exits for"
         msg += " the given sample"

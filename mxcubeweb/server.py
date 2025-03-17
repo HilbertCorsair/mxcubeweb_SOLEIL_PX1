@@ -37,9 +37,8 @@ class Server:
     flask_socketio = None
 
     def __init__(self):
-        raise NotImplementedError(
-            "Server is to be used as a pure static class, don't instantiate."
-        )
+        msg = "Server is to be used as a pure static class, don't instantiate."
+        raise NotImplementedError(msg)
 
     @staticmethod
     def exception_handler(e):
@@ -53,7 +52,7 @@ class Server:
         # of non-zero exit code, so we don't kill the processes
         # when running the tests
         if not Server.flask.testing:
-            with open("/tmp/mxcube.pid", "r") as f:
+            with open("/tmp/mxcube.pid") as f:
                 pid_list = f.read().strip()
                 pid_list = pid_list.split(" ")
                 pid_list.reverse()
@@ -124,9 +123,8 @@ class Server:
         Server.flask.register_blueprint(bp)
 
         for key, function in Server.flask.view_functions.items():
-            if key.startswith(bp.name):
-                if not hasattr(function, "tags"):
-                    function.tags = [bp.name.title().replace("_", " ")]
+            if key.startswith(bp.name) and not hasattr(function, "tags"):
+                function.tags = [bp.name.title().replace("_", " ")]
 
     @staticmethod
     def register_routes(mxcube):

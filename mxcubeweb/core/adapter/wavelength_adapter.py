@@ -17,7 +17,7 @@ class WavelengthAdapter(ActuatorAdapterBase):
         Args:
             (object): Hardware object.
         """
-        super(WavelengthAdapter, self).__init__(ho, *args)
+        super().__init__(ho, *args)
         self._type = "MOTOR"
 
         try:
@@ -58,9 +58,10 @@ class WavelengthAdapter(ActuatorAdapterBase):
             ValueError: When value for any reason can't be retrieved.
         """
         try:
-            return FloatValueModel(**{"value": self._ho.get_wavelength()})
+            return FloatValueModel(value=self._ho.get_wavelength())
         except (AttributeError, TypeError) as ex:
-            raise ValueError("Could not get value") from ex
+            msg = "Could not get value"
+            raise ValueError(msg) from ex
 
     def state(self):
         """
@@ -88,7 +89,8 @@ class WavelengthAdapter(ActuatorAdapterBase):
         try:
             return self._ho.get_wavelength_limits()
         except (AttributeError, TypeError) as ex:
-            raise ValueError("Could not get limits") from ex
+            msg = "Could not get limits"
+            raise ValueError(msg) from ex
 
     def read_only(self):
         """

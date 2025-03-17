@@ -56,7 +56,8 @@ def init_route(app, server, url_prefix):  # noqa: C901
 
             # Check if send data is a jpeg image
             if "image/jpeg" not in mimetype:
-                raise Exception("Image type should be jpeg")
+                msg = "Image type should be jpeg"
+                raise Exception(msg)
 
             image = HWR.beamline.sample_view.take_snapshot(
                 overlay_data=overlay_data,
@@ -122,8 +123,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
 
         if point:
             return Response(status=200)
-        else:
-            return Response(status=409)
+        return Response(status=409)
 
     @bp.route("/shapes", methods=["GET"])
     @server.restrict
@@ -155,8 +155,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
             resp = jsonify(shape)
             resp.status_code = 200
             return resp
-        else:
-            return Response(status=409)
+        return Response(status=409)
 
     @bp.route("/shapes/<sid>", methods=["POST"])
     def shape_add_result(sid):
@@ -250,11 +249,12 @@ def init_route(app, server, url_prefix):  # noqa: C901
 
         try:
             data = app.sample_view.start_manual_centring()
-        except Exception as ex:
+        except Exception:
+            logging.getLogger("MX3.HWR").exception("Could not start 3 click centring")
             resp = (
-                "Could not move motor %s" % str(ex),
+                "Could not move motor",
                 409,
-                {"Content-Type": "application/json", "msg": str(ex)},
+                {"Content-Type": "application/json"},
             )
         else:
             resp = jsonify(data)

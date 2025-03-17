@@ -15,17 +15,14 @@ class NStateAdapter(ActuatorAdapterBase):
         Args:
             (object): Hardware object.
         """
-        super(NStateAdapter, self).__init__(ho, *args)
+        super().__init__(ho, *args)
         self._value_change_model = HOActuatorValueChangeModel
 
         ho.connect("valueChanged", self._value_change)
         ho.connect("stateChanged", self.state_change)
 
     def _value_change(self, value):
-        if isinstance(value, Enum):
-            v = value.name
-        else:
-            v = value
+        v = value.name if isinstance(value, Enum) else value
 
         self.value_change(v)
 

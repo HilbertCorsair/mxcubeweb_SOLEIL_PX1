@@ -1,5 +1,7 @@
 #
 """Authentication tests."""
+
+import contextlib
 import os
 import time
 import mxcubecore
@@ -26,10 +28,8 @@ def login_type(request):
 
 @pytest.fixture
 def server(request, login_type):
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.remove(USER_DB_PATH)
-    except FileNotFoundError:
-        pass
 
     mxcubecore.HardwareRepository.uninit_hardware_repository()
 
@@ -46,10 +46,8 @@ def server(request, login_type):
 
     yield server_
 
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.remove(USER_DB_PATH)
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
@@ -133,19 +131,19 @@ def test_authn_same_proposal(make_client):
 # def test_authn_different_proposals(make_client):
 #     """Test two users for different proposals.
 
-#     If a user signs in for a different proposal than an already signed in user,
-#     this user should not be allowed to sign in.
-#     """
-#     client_0 = make_client()
-#     resp = client_0.post(URL_SIGNIN, json=CREDENTIALS_0)
-#     assert resp.status_code == 200
-#     resp = client_0.get(URL_INFO)
-#     assert resp.status_code == 200
-
-#     client_1 = make_client()
-#     resp = client_1.post(URL_SIGNIN, json=CREDENTIALS_1)
-#     assert resp.status_code == 200
-#     assert resp.json["msg"] == "Could not authenticate"
+#    If a user signs in for a different proposal than an already signed in user,
+#    this user should not be allowed to sign in.
+#    """
+#    client_0 = make_client()
+#    resp = client_0.post(URL_SIGNIN, json=CREDENTIALS_0)
+#    assert resp.status_code == 200
+#    resp = client_0.get(URL_INFO)
+#    assert resp.status_code == 200
+#
+#    client_1 = make_client()
+#   resp = client_1.post(URL_SIGNIN, json=CREDENTIALS_1)
+#    assert resp.status_code == 200
+#    assert resp.json["msg"] == "Authentication failed"
 
 
 def test_authn_session_timeout(client):

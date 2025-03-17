@@ -15,7 +15,7 @@ function ZoomControl() {
   const { state, value, commands } = useSelector(
     (state) => state.beamline.hardwareObjects[ZOOM_HWO_ID],
   );
-  
+
   return (
     <OverlayTrigger
       trigger="click"

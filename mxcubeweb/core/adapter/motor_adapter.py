@@ -12,7 +12,7 @@ class MotorAdapter(ActuatorAdapterBase):
         Args:
             (object): Hardware object.
         """
-        super(MotorAdapter, self).__init__(ho, *args)
+        super().__init__(ho, *args)
         ho.connect("valueChanged", self._value_change)
         ho.connect("stateChanged", self.state_change)
 
@@ -48,7 +48,7 @@ class MotorAdapter(ActuatorAdapterBase):
         except (TypeError, AttributeError):
             value = 0.0
 
-        return FloatValueModel(**{"value": value})
+        return FloatValueModel(value=value)
 
     def state(self):
         """
@@ -76,4 +76,5 @@ class MotorAdapter(ActuatorAdapterBase):
         try:
             return self._ho.get_limits()
         except (AttributeError, TypeError):
-            raise ValueError("Could not get limits")
+            msg = "Could not get limits"
+            raise ValueError(msg)

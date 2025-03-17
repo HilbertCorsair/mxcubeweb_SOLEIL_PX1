@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 from os.path import (
     isfile,
@@ -12,9 +11,7 @@ from flask import (
     jsonify,
     render_template,
     request,
-    send_file,
 )
-from mxcubecore import HardwareRepository as HWR
 from mxcubecore.model import queue_model_objects as qmo
 
 from . import signals
@@ -28,17 +25,15 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @server.restrict
     def proposal_samples():
         try:
-            res = jsonify(app.lims.synch_with_lims())
-        except Exception as ex:
-            logging.getLogger("MX3.HWR").exception(
-                "Could not synchronize with LIMS %s" % str(ex)
-            )
+            lims_name = request.get_json().get("lims", None)
+            res = jsonify(app.lims.synch_with_lims(lims_name))
+        except Exception:
+            logging.getLogger("MX3.HWR").exception("Could not synchronize with Lims")
             res = (
                 "Could not synchronize with LIMS",
                 409,
                 {
                     "Content-Type": "application/json",
-                    "message": str(ex),
                 },
             )
 
@@ -74,8 +69,10 @@ def init_route(app, server, url_prefix):  # noqa: C901
         """
         Set the selected proposal.
         """
-        proposal_number = request.get_json().get("proposal_number", None)
-        app.lims.select_proposal(proposal_number)
+        # proposal_number is the session identifier
+        session_id = request.get_json().get("proposal_number", None)
+        app.lims.select_session(session_id)
+        app.usermanager.update_active_users()
 
         return Response(status=200)
 
@@ -121,9 +118,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
                 elif result_file_test("data-collection-results.html"):
                     r = apply_template("data-collection-results.html", data)
 
-            elif isinstance(model, qmo.Characterisation) or isinstance(
-                model, qmo.Workflow
-            ):
+            elif isinstance(model, qmo.Characterisation | qmo.Workflow):
                 if result_file_test("characterisation-results.js"):
                     try:
                         url_list = data["limsResultData"]["workflow_result_url_list"]
@@ -151,11 +146,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
                 elif result_file_test("characterisation-results.html"):
                     r = apply_template("characterisation-results.html", data)
 
-            elif isinstance(model, qmo.Workflow):
-                pass
-            elif isinstance(model, qmo.XRFSpectrum):
-                pass
-            elif isinstance(model, qmo.EnergyScan):
+            elif isinstance(model, qmo.Workflow | qmo.XRFSpectrum | qmo.EnergyScan):
                 pass
             else:
                 pass

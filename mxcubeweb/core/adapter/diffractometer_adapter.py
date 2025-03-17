@@ -10,7 +10,7 @@ class DiffractometerAdapter(AdapterBase):
         Args:
             (object): Hardware object.
         """
-        super(DiffractometerAdapter, self).__init__(ho, *args)
+        super().__init__(ho, *args)
         ho.connect("stateChanged", self._state_change)
         ho.connect("valueChanged", self._state_change)
         ho.connect("phaseChanged", self._diffractometer_phase_changed)
@@ -33,9 +33,7 @@ class DiffractometerAdapter(AdapterBase):
 
     def head_configuration(self) -> dict:
         data = self._ho.get_head_configuration()
-        data = data.dict() if data else {}
-
-        return data
+        return data.dict() if data else {}
 
     def set_chip_layout(
         self,

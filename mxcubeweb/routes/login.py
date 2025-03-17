@@ -53,6 +53,26 @@ def init_route(app, server, url_prefix):
 
         return res
 
+    @bp.route("/sso_post_logout", methods=["GET"])
+    @server.restrict
+    def ssosignout():
+        app.usermanager.signout()
+        return redirect("/")
+
+    @bp.route("/ssologin", methods=["GET"])
+    def ssosignin():
+        redirect_uri = url_for("login.auth", _external=True)
+        return app.usermanager.oauth_client.keycloak.authorize_redirect(redirect_uri)
+
+    @bp.route("/auth", methods=["GET"])
+    def auth():
+        try:
+            app.usermanager.sso_validate()
+        except Exception:
+            return redirect("/login")
+        else:
+            return redirect("/datacollection")
+
     @bp.route("/signout")
     @server.restrict
     def signout():

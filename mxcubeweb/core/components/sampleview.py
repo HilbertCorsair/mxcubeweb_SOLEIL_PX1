@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 from io import StringIO
 
@@ -52,9 +51,7 @@ class HttpStreamer:
             )
 
     def _new_frame_received(self, img, width, height, *args, **kwargs):
-        if isinstance(img, str):
-            img = img
-        elif isinstance(img, bytes):
+        if isinstance(img, str | bytes):
             img = img
         else:
             rawdata = img.bits().asstring(img.numBytes())
@@ -273,8 +270,7 @@ class SampleView(ComponentBase):
         signals.grid_result_available(to_camel(shape.as_dict()))
 
     def update_shapes(self, shapes):
-        #import pdb
-        #pdb.set_trace()
+
         updated_shapes = []
         for s in shapes:
             shape_data = from_camel(s)
@@ -292,12 +288,11 @@ class SampleView(ComponentBase):
                 # Store pixels per mm for third party software, to facilitate
                 # certain calculations
 
-                beam_info_dict = beam_info_dict = self.app.beamline.get_beam_info()
-                
+                beam_info_dict = self.app.beamline.get_beam_info()
 
-                shape_data[
-                    "pixels_per_mm"
-                ] = HWR.beamline.diffractometer.get_pixels_per_mm()
+                shape_data["pixels_per_mm"] = (
+                    HWR.beamline.diffractometer.get_pixels_per_mm()
+                )
                 shape_data["beam_pos"] = (
                     beam_info_dict.get("position")[0],
                     beam_info_dict.get("position")[1],
@@ -336,7 +331,7 @@ class SampleView(ComponentBase):
                             pos, (x, y), t, state, user_state
                         )
                     except Exception:
-                        logging.getLogger("HWR.MX3").info(shape_data)
+                        logging.getLogger("MX3.HWR").info(shape_data)
 
                 else:
                     shape = HWR.beamline.sample_view.add_shape_from_refs(
@@ -404,7 +399,8 @@ class SampleView(ComponentBase):
             logging.getLogger("user_level_log").warning(
                 "Diffracomter is busy, cannot start centering"
             )
-            raise RuntimeError("Diffracomter is busy, cannot start centering")
+            msg = "Diffracomter is busy, cannot start centering"
+            raise RuntimeError(msg)
 
         return {"clicksLeft": self.centring_clicks_left()}
 

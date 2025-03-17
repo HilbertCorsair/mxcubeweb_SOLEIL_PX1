@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-""" Helper functions for pytest """
+"""Helper functions for pytest"""
+
 from gevent import monkey
 
 monkey.patch_all(thread=False)
@@ -24,6 +24,8 @@ sys.path.append(MXCUBE_ROOT)
 sys.path.append("./")
 
 
+import contextlib
+
 from mxcubecore import HardwareRepository
 
 from mxcubeweb import build_server_and_config
@@ -33,10 +35,8 @@ _SIO_TEST_CLIENT = None
 
 @pytest.fixture
 def client():
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.remove("/tmp/mxcube-test-user.db")
-    except FileNotFoundError:
-        pass
 
     global _SIO_TEST_CLIENT
 
@@ -71,7 +71,8 @@ def client():
 
     resp = client.get("/mxcube/api/v0.1/queue/")
 
-    assert resp.status_code == 200 and json.loads(resp.data).get("1:05")
+    assert resp.status_code == 200
+    assert json.loads(resp.data).get("1:05")
 
     queue_id = json.loads(resp.data).get("1:05")["queueID"]
     task_to_add = copy.deepcopy(test_task)
@@ -90,16 +91,13 @@ def client():
 
     client.get("/mxcube/api/v0.1/login/signout/")
 
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.remove("/tmp/mxcube-test-user.db")
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
 def add_sample(client):
-    """Fixture to add a sample to the queue, since it is required for alot of test cases.
-    """
+    """Fixture to add a sample to the queue, since it is required for alot of test cases."""
     resp = client.post(
         "/mxcube/api/v0.1/queue",
         data=json.dumps([test_sample_1]),
@@ -115,16 +113,16 @@ def add_sample(client):
     )
 
     assert resp.status_code == 200
-    yield client
+    return client
 
 
 @pytest.fixture
 def add_task(client):
-    """Fixture to add a task to the sample in the queue queue, since it is required for alot of test cases.
-    """
+    """Fixture to add a task to the sample in the queue queue, since it is required for alot of test cases."""
     resp = client.get("/mxcube/api/v0.1/queue")
 
-    assert resp.status_code == 200 and json.loads(resp.data).get("1:05")
+    assert resp.status_code == 200
+    assert json.loads(resp.data).get("1:05")
 
     queue_id = json.loads(resp.data).get("1:05")["queueID"]
     task_to_add = copy.deepcopy(test_task)
@@ -139,4 +137,4 @@ def add_task(client):
 
     assert resp.status_code == 200
 
-    yield client
+    return client

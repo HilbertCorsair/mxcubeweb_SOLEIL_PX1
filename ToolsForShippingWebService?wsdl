@@ -1,0 +1,1526 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://ispyb.ejb3.webservices.shipping" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="ispybWS" targetNamespace="http://ispyb.ejb3.webservices.shipping">
+  <wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://ispyb.ejb3.webservices.shipping" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://ispyb.ejb3.webservices.shipping">
+  <xs:element name="echo" type="tns:echo"/>
+  <xs:element name="echoResponse" type="tns:echoResponse"/>
+  <xs:element name="findLaboratoryByCodeAndNumber" type="tns:findLaboratoryByCodeAndNumber"/>
+  <xs:element name="findLaboratoryByCodeAndNumberResponse" type="tns:findLaboratoryByCodeAndNumberResponse"/>
+  <xs:element name="findLaboratoryByProposal" type="tns:findLaboratoryByProposal"/>
+  <xs:element name="findLaboratoryByProposalResponse" type="tns:findLaboratoryByProposalResponse"/>
+  <xs:element name="findPersonByCodeAndNumber" type="tns:findPersonByCodeAndNumber"/>
+  <xs:element name="findPersonByCodeAndNumberResponse" type="tns:findPersonByCodeAndNumberResponse"/>
+  <xs:element name="findPersonByLogin" type="tns:findPersonByLogin"/>
+  <xs:element name="findPersonByLoginResponse" type="tns:findPersonByLoginResponse"/>
+  <xs:element name="findPersonByProposal" type="tns:findPersonByProposal"/>
+  <xs:element name="findPersonByProposalResponse" type="tns:findPersonByProposalResponse"/>
+  <xs:element name="findPersonByProteinAcronym" type="tns:findPersonByProteinAcronym"/>
+  <xs:element name="findPersonByProteinAcronymResponse" type="tns:findPersonByProteinAcronymResponse"/>
+  <xs:element name="findPersonBySessionId" type="tns:findPersonBySessionId"/>
+  <xs:element name="findPersonBySessionIdLocalContact" type="tns:findPersonBySessionIdLocalContact"/>
+  <xs:element name="findPersonBySessionIdLocalContactResponse" type="tns:findPersonBySessionIdLocalContactResponse"/>
+  <xs:element name="findPersonBySessionIdResponse" type="tns:findPersonBySessionIdResponse"/>
+  <xs:element name="findProposal" type="tns:findProposal"/>
+  <xs:element name="findProposalByCodeAndNumber" type="tns:findProposalByCodeAndNumber"/>
+  <xs:element name="findProposalByCodeAndNumberResponse" type="tns:findProposalByCodeAndNumberResponse"/>
+  <xs:element name="findProposalByLoginAndBeamline" type="tns:findProposalByLoginAndBeamline"/>
+  <xs:element name="findProposalByLoginAndBeamlineResponse" type="tns:findProposalByLoginAndBeamlineResponse"/>
+  <xs:element name="findProposalResponse" type="tns:findProposalResponse"/>
+  <xs:element name="findProposalsByLoginName" type="tns:findProposalsByLoginName"/>
+  <xs:element name="findProposalsByLoginNameResponse" type="tns:findProposalsByLoginNameResponse"/>
+  <xs:element name="findShippingById" type="tns:findShippingById"/>
+  <xs:element name="findShippingByIdResponse" type="tns:findShippingByIdResponse"/>
+  <xs:complexType name="findShippingById">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="shippingId" type="xs:int"/>
+      <xs:element minOccurs="0" name="withDewars" type="xs:string"/>
+      <xs:element minOccurs="0" name="withContainers" type="xs:string"/>
+      <xs:element minOccurs="0" name="withSamples" type="xs:string"/>
+      <xs:element minOccurs="0" name="withSubSamples" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findShippingByIdResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="findShippingById" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByProposal">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByProposalResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="personWS3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:person3VO">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="laboratoryId" type="xs:int"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="person3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="emailAddress" type="xs:string"/>
+          <xs:element minOccurs="0" name="externalId" type="xs:int"/>
+          <xs:element minOccurs="0" name="familyName" type="xs:string"/>
+          <xs:element minOccurs="0" name="faxNumber" type="xs:string"/>
+          <xs:element minOccurs="0" name="givenName" type="xs:string"/>
+          <xs:element minOccurs="0" name="laboratoryVO" type="tns:laboratory3VO"/>
+          <xs:element minOccurs="0" name="login" type="xs:string"/>
+          <xs:element minOccurs="0" name="personId" type="xs:int"/>
+          <xs:element minOccurs="0" name="personUUID" type="xs:string"/>
+          <xs:element minOccurs="0" name="phoneNumber" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="proposalDirectVOs" nillable="true" type="tns:proposal3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="proposalVOs" nillable="true" type="tns:proposal3VO"/>
+          <xs:element minOccurs="0" name="siteId" type="xs:string"/>
+          <xs:element minOccurs="0" name="title" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType abstract="true" name="isPyBValueObject">
+    <xs:sequence/>
+  </xs:complexType>
+  <xs:complexType name="laboratory3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="address" type="xs:string"/>
+          <xs:element minOccurs="0" name="city" type="xs:string"/>
+          <xs:element minOccurs="0" name="country" type="xs:string"/>
+          <xs:element minOccurs="0" name="laboratoryExtPk" type="xs:int"/>
+          <xs:element minOccurs="0" name="laboratoryId" type="xs:int"/>
+          <xs:element minOccurs="0" name="laboratoryUUID" type="xs:string"/>
+          <xs:element minOccurs="0" name="name" type="xs:string"/>
+          <xs:element minOccurs="0" name="organization" type="xs:string"/>
+          <xs:element minOccurs="0" name="url" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="proposal3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="code" type="xs:string"/>
+          <xs:element minOccurs="0" name="externalId" type="xs:int"/>
+          <xs:element minOccurs="0" name="number" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="participants" nillable="true" type="tns:person3VO"/>
+          <xs:element minOccurs="0" name="personVO" type="tns:person3VO"/>
+          <xs:element minOccurs="0" name="proposalId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="proteinVOs" nillable="true" type="tns:protein3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="sessionVOs" nillable="true" type="tns:session3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="shippingVOs" nillable="true" type="tns:shipping3VO"/>
+          <xs:element minOccurs="0" name="title" type="xs:string"/>
+          <xs:element minOccurs="0" name="type" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="protein3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="acronym" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="crystalVOs" nillable="true" type="tns:crystal3VO"/>
+          <xs:element minOccurs="0" name="externalId" type="xs:int"/>
+          <xs:element minOccurs="0" name="isCreatedBySampleSheet" type="xs:byte"/>
+          <xs:element minOccurs="0" name="molecularMass" type="xs:double"/>
+          <xs:element minOccurs="0" name="name" type="xs:string"/>
+          <xs:element minOccurs="0" name="personId" type="xs:int"/>
+          <xs:element minOccurs="0" name="proposalVO" type="tns:proposal3VO"/>
+          <xs:element minOccurs="0" name="proteinId" type="xs:int"/>
+          <xs:element minOccurs="0" name="proteinType" type="xs:string"/>
+          <xs:element minOccurs="0" name="safetyLevel" type="xs:string"/>
+          <xs:element minOccurs="0" name="sequence" type="xs:string"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="crystal3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="cellA" type="xs:double"/>
+          <xs:element minOccurs="0" name="cellAlpha" type="xs:double"/>
+          <xs:element minOccurs="0" name="cellB" type="xs:double"/>
+          <xs:element minOccurs="0" name="cellBeta" type="xs:double"/>
+          <xs:element minOccurs="0" name="cellC" type="xs:double"/>
+          <xs:element minOccurs="0" name="cellGamma" type="xs:double"/>
+          <xs:element minOccurs="0" name="color" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="crystalId" type="xs:int"/>
+          <xs:element minOccurs="0" name="crystalUUID" type="xs:string"/>
+          <xs:element minOccurs="0" name="diffractionPlanVO" type="tns:diffractionPlan3VO"/>
+          <xs:element minOccurs="0" name="morphology" type="xs:string"/>
+          <xs:element minOccurs="0" name="name" type="xs:string"/>
+          <xs:element minOccurs="0" name="pdbFileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="pdbFilePath" type="xs:string"/>
+          <xs:element minOccurs="0" name="proteinVO" type="tns:protein3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="sampleVOs" nillable="true" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="sizeX" type="xs:double"/>
+          <xs:element minOccurs="0" name="sizeY" type="xs:double"/>
+          <xs:element minOccurs="0" name="sizeZ" type="xs:double"/>
+          <xs:element minOccurs="0" name="spaceGroup" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="structure3VOs" nillable="true" type="tns:structure3VO"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="diffractionPlan3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="aimedCompleteness" type="xs:double"/>
+          <xs:element minOccurs="0" name="aimedIOverSigmaAtHighestRes" type="xs:double"/>
+          <xs:element minOccurs="0" name="aimedMultiplicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="aimedResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="anomalousData" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="anomalousScatterer" type="xs:string"/>
+          <xs:element minOccurs="0" name="axisRange" type="xs:double"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="complexity" type="xs:string"/>
+          <xs:element minOccurs="0" name="diffractionPlanId" type="xs:int"/>
+          <xs:element minOccurs="0" name="estimateRadiationDamage" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="experimentKind" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="experimentKindVOs" nillable="true" type="tns:experimentKindDetails3VO"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="forcedSpaceGroup" type="xs:string"/>
+          <xs:element minOccurs="0" name="kappaStrategyOption" type="xs:string"/>
+          <xs:element minOccurs="0" name="maxDimAccrossSpindleAxis" type="xs:double"/>
+          <xs:element minOccurs="0" name="maximalResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="minDimAccrossSpindleAxis" type="xs:double"/>
+          <xs:element minOccurs="0" name="minOscWidth" type="xs:double"/>
+          <xs:element minOccurs="0" name="minimalResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="numberOfPositions" type="xs:int"/>
+          <xs:element minOccurs="0" name="observedResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="oscillationRange" type="xs:double"/>
+          <xs:element minOccurs="0" name="preferredBeamDiameter" type="xs:double"/>
+          <xs:element minOccurs="0" name="preferredBeamSizeX" type="xs:double"/>
+          <xs:element minOccurs="0" name="preferredBeamSizeY" type="xs:double"/>
+          <xs:element minOccurs="0" name="radiationSensitivity" type="xs:double"/>
+          <xs:element minOccurs="0" name="radiationSensitivityBeta" type="xs:double"/>
+          <xs:element minOccurs="0" name="radiationSensitivityGamma" type="xs:double"/>
+          <xs:element minOccurs="0" name="requiredCompleteness" type="xs:double"/>
+          <xs:element minOccurs="0" name="requiredMultiplicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="requiredResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="screeningResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="strategyOption" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="experimentKindDetails3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="dataCollectionKind" type="xs:string"/>
+          <xs:element minOccurs="0" name="dataCollectionType" type="xs:string"/>
+          <xs:element minOccurs="0" name="diffractionPlanId" type="xs:int"/>
+          <xs:element minOccurs="0" name="experimentKindId" type="xs:int"/>
+          <xs:element minOccurs="0" name="exposureIndex" type="xs:int"/>
+          <xs:element minOccurs="0" name="wedgeValue" type="xs:float"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="blSample3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="blSampleId" type="xs:int"/>
+          <xs:element minOccurs="0" name="blSampleStatus" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="blSubSampleVOs" nillable="true" type="tns:blSubSample3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="blsampleImageVOs" nillable="true" type="tns:blSampleImage3VO"/>
+          <xs:element minOccurs="0" name="code" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="completionStage" type="xs:string"/>
+          <xs:element minOccurs="0" name="containerVO" type="tns:container3VO"/>
+          <xs:element minOccurs="0" name="crystalVO" type="tns:crystal3VO"/>
+          <xs:element minOccurs="0" name="diffractionPlanVO" type="tns:diffractionPlan3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="energyScanVOs" nillable="true" type="tns:energyScan3VO"/>
+          <xs:element minOccurs="0" name="holderLength" type="xs:double"/>
+          <xs:element minOccurs="0" name="isInSampleChanger" type="xs:byte"/>
+          <xs:element minOccurs="0" name="lastImageURL" type="xs:string"/>
+          <xs:element minOccurs="0" name="lastKnownCenteringPosition" type="xs:string"/>
+          <xs:element minOccurs="0" name="location" type="xs:string"/>
+          <xs:element minOccurs="0" name="loopLength" type="xs:double"/>
+          <xs:element minOccurs="0" name="loopType" type="xs:string"/>
+          <xs:element minOccurs="0" name="name" type="xs:string"/>
+          <xs:element minOccurs="0" name="publicationComments" type="xs:string"/>
+          <xs:element minOccurs="0" name="publicationStage" type="xs:string"/>
+          <xs:element minOccurs="0" name="smiles" type="xs:string"/>
+          <xs:element minOccurs="0" name="structureStage" type="xs:string"/>
+          <xs:element minOccurs="0" name="wireWidth" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="blSubSample3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="blSampleVO" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="blSubSampleId" type="xs:int"/>
+          <xs:element minOccurs="0" name="blSubSampleUUID" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="diffractionPlanVO" type="tns:diffractionPlan3VO"/>
+          <xs:element minOccurs="0" name="imgFileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="imgFilePath" type="xs:string"/>
+          <xs:element minOccurs="0" name="position2VO" type="tns:position3VO"/>
+          <xs:element minOccurs="0" name="positionVO" type="tns:position3VO"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="position3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="posX" type="xs:double"/>
+          <xs:element minOccurs="0" name="posY" type="xs:double"/>
+          <xs:element minOccurs="0" name="posZ" type="xs:double"/>
+          <xs:element minOccurs="0" name="positionId" type="xs:int"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="relativePositionVO" type="tns:position3VO"/>
+          <xs:element minOccurs="0" name="scale" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="blSampleImage3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="blSampleImageId" type="xs:int"/>
+          <xs:element minOccurs="0" name="blSampleImageScoreId" type="xs:int"/>
+          <xs:element minOccurs="0" name="blsampleVO" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="containerInspectionId" type="xs:int"/>
+          <xs:element minOccurs="0" name="imageFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="micronsPerPixelX" type="xs:double"/>
+          <xs:element minOccurs="0" name="micronsPerPixelY" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="container3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="barcode" type="xs:string"/>
+          <xs:element minOccurs="0" name="beamlineLocation" type="xs:string"/>
+          <xs:element minOccurs="0" name="capacity" type="xs:int"/>
+          <xs:element minOccurs="0" name="code" type="xs:string"/>
+          <xs:element minOccurs="0" name="containerId" type="xs:int"/>
+          <xs:element minOccurs="0" name="containerStatus" type="xs:string"/>
+          <xs:element minOccurs="0" name="containerType" type="xs:string"/>
+          <xs:element minOccurs="0" name="dewarVO" type="tns:dewar3VO"/>
+          <xs:element minOccurs="0" name="personVO" type="tns:person3VO"/>
+          <xs:element minOccurs="0" name="sampleChangerLocation" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="sampleVOs" nillable="true" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="sessionVO" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="dewar3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="barCode" type="xs:string"/>
+          <xs:element minOccurs="0" name="code" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="containerVOs" nillable="true" type="tns:container3VO"/>
+          <xs:element minOccurs="0" name="customsValue" type="xs:int"/>
+          <xs:element minOccurs="0" name="dewarId" type="xs:int"/>
+          <xs:element minOccurs="0" name="dewarStatus" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="dewarTransportHistoryVOs" nillable="true" type="tns:dewarTransportHistory3VO"/>
+          <xs:element minOccurs="0" name="facilityCode" type="xs:string"/>
+          <xs:element minOccurs="0" name="isReimbursed" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="isStorageDewar" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="sessionVO" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="shippingVO" type="tns:shipping3VO"/>
+          <xs:element minOccurs="0" name="storageLocation" type="xs:string"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="trackingNumberFromSynchrotron" type="xs:string"/>
+          <xs:element minOccurs="0" name="trackingNumberToSynchrotron" type="xs:string"/>
+          <xs:element minOccurs="0" name="transportValue" type="xs:int"/>
+          <xs:element minOccurs="0" name="type" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="dewarTransportHistory3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="arrivalDate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="dewarStatus" type="xs:string"/>
+          <xs:element minOccurs="0" name="dewarTransportHistoryId" type="xs:int"/>
+          <xs:element minOccurs="0" name="dewarVO" type="tns:dewar3VO"/>
+          <xs:element minOccurs="0" name="storageLocation" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="session3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="beamLineSetupVO" type="tns:beamLineSetup3VO"/>
+          <xs:element minOccurs="0" name="beamlineName" type="xs:string"/>
+          <xs:element minOccurs="0" name="beamlineOperator" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="dataCollectionGroupVOs" nillable="true" type="tns:dataCollectionGroup3VO"/>
+          <xs:element minOccurs="0" name="databackupEurope" type="xs:float"/>
+          <xs:element minOccurs="0" name="databackupFrance" type="xs:float"/>
+          <xs:element minOccurs="0" name="dewarTransport" type="xs:float"/>
+          <xs:element minOccurs="0" name="endDate" type="xs:dateTime"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="energyScanVOs" nillable="true" type="tns:energyScan3VO"/>
+          <xs:element minOccurs="0" name="expSessionPk" type="xs:long"/>
+          <xs:element minOccurs="0" name="externalId" type="xs:int"/>
+          <xs:element minOccurs="0" name="lastUpdate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="nbReimbDewars" type="xs:int"/>
+          <xs:element minOccurs="0" name="nbShifts" type="xs:int"/>
+          <xs:element minOccurs="0" name="operatorSiteNumber" type="xs:string"/>
+          <xs:element minOccurs="0" name="projectCode" type="xs:string"/>
+          <xs:element minOccurs="0" name="proposalVO" type="tns:proposal3VO"/>
+          <xs:element minOccurs="0" name="protectedData" type="xs:string"/>
+          <xs:element minOccurs="0" name="scheduled" type="xs:byte"/>
+          <xs:element minOccurs="0" name="sessionId" type="xs:int"/>
+          <xs:element minOccurs="0" name="sessionTitle" type="xs:string"/>
+          <xs:element minOccurs="0" name="startDate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="structureDeterminations" type="xs:float"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="usedFlag" type="xs:byte"/>
+          <xs:element minOccurs="0" name="visit_number" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="xfeSpectrumVOs" nillable="true" type="tns:xfeFluorescenceSpectrum3VO"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="beamLineSetup3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="beamDivergenceHorizontal" type="xs:double"/>
+          <xs:element minOccurs="0" name="beamDivergenceVertical" type="xs:double"/>
+          <xs:element minOccurs="0" name="beamLineSetupId" type="xs:int"/>
+          <xs:element minOccurs="0" name="CS" type="xs:float"/>
+          <xs:element minOccurs="0" name="focalSpotSizeAtSample" type="xs:double"/>
+          <xs:element minOccurs="0" name="focusingOptic" type="xs:string"/>
+          <xs:element minOccurs="0" name="goniostatMaxOscillationSpeed" type="xs:double"/>
+          <xs:element minOccurs="0" name="goniostatMinOscillationWidth" type="xs:double"/>
+          <xs:element minOccurs="0" name="maxExpTimePerDataCollection" type="xs:double"/>
+          <xs:element minOccurs="0" name="minExposureTimePerImage" type="xs:double"/>
+          <xs:element minOccurs="0" name="minTransmission" type="xs:double"/>
+          <xs:element minOccurs="0" name="monochromatorType" type="xs:string"/>
+          <xs:element minOccurs="0" name="polarisation" type="xs:double"/>
+          <xs:element minOccurs="0" name="setupDate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="synchrotronMode" type="xs:string"/>
+          <xs:element minOccurs="0" name="synchrotronName" type="xs:string"/>
+          <xs:element minOccurs="0" name="undulatorType1" type="xs:string"/>
+          <xs:element minOccurs="0" name="undulatorType2" type="xs:string"/>
+          <xs:element minOccurs="0" name="undulatorType3" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="dataCollectionGroup3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="actualContainerBarcode" type="xs:string"/>
+          <xs:element minOccurs="0" name="actualContainerSlotInSC" type="xs:int"/>
+          <xs:element minOccurs="0" name="actualSampleBarcode" type="xs:string"/>
+          <xs:element minOccurs="0" name="actualSampleSlotInContainer" type="xs:int"/>
+          <xs:element minOccurs="0" name="blSampleVO" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="crystalClass" type="xs:string"/>
+          <xs:element minOccurs="0" name="dataCollectionGroupId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="dataCollectionVOs" nillable="true" type="tns:dataCollection3VO"/>
+          <xs:element minOccurs="0" name="detectorMode" type="xs:string"/>
+          <xs:element minOccurs="0" name="endTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="experimentType" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningVOs" nillable="true" type="tns:screening3VO"/>
+          <xs:element minOccurs="0" name="sessionVO" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="startTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="workflowVO" type="tns:workflow3VO"/>
+          <xs:element minOccurs="0" name="xtalSnapshotFullPath" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="dataCollection3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="actualCenteringPosition" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="autoProcIntegrationVOs" nillable="true" type="tns:autoProcIntegration3VO"/>
+          <xs:element minOccurs="0" name="averageTemperature" type="xs:double"/>
+          <xs:element minOccurs="0" name="axisEnd" type="xs:double"/>
+          <xs:element minOccurs="0" name="axisRange" type="xs:double"/>
+          <xs:element minOccurs="0" name="axisStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="beamShape" type="xs:string"/>
+          <xs:element minOccurs="0" name="beamSizeAtSampleX" type="xs:double"/>
+          <xs:element minOccurs="0" name="beamSizeAtSampleY" type="xs:double"/>
+          <xs:element minOccurs="0" name="bestWilsonPlotPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="blSubSampleVO" type="tns:blSubSample3VO"/>
+          <xs:element minOccurs="0" name="centeringMethod" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="dataCollectionGroupVO" type="tns:dataCollectionGroup3VO"/>
+          <xs:element minOccurs="0" name="dataCollectionId" type="xs:int"/>
+          <xs:element minOccurs="0" name="dataCollectionNumber" type="xs:int"/>
+          <xs:element minOccurs="0" name="detector2theta" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorDistance" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorVO" type="tns:detector3VO"/>
+          <xs:element minOccurs="0" name="endTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="fileTemplate" type="xs:string"/>
+          <xs:element minOccurs="0" name="flux" type="xs:double"/>
+          <xs:element minOccurs="0" name="flux_end" type="xs:double"/>
+          <xs:element minOccurs="0" name="imageDirectory" type="xs:string"/>
+          <xs:element minOccurs="0" name="imagePrefix" type="xs:string"/>
+          <xs:element minOccurs="0" name="imageQualityIndicatorsCSVPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="imageQualityIndicatorsPlotPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="imageSuffix" type="xs:string"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="imageVOs" nillable="true" type="tns:image3VO"/>
+          <xs:element minOccurs="0" name="kappaStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="magnification" type="xs:int"/>
+          <xs:element minOccurs="0" name="numberOfImages" type="xs:int"/>
+          <xs:element minOccurs="0" name="numberOfPasses" type="xs:int"/>
+          <xs:element minOccurs="0" name="omegaStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="overlap" type="xs:double"/>
+          <xs:element minOccurs="0" name="phiStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="printableForReport" type="xs:byte"/>
+          <xs:element minOccurs="0" name="resolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="resolutionAtCorner" type="xs:double"/>
+          <xs:element minOccurs="0" name="rotationAxis" type="xs:string"/>
+          <xs:element minOccurs="0" name="runStatus" type="xs:string"/>
+          <xs:element minOccurs="0" name="slitGapHorizontal" type="xs:double"/>
+          <xs:element minOccurs="0" name="slitGapVertical" type="xs:double"/>
+          <xs:element minOccurs="0" name="startImageNumber" type="xs:int"/>
+          <xs:element minOccurs="0" name="startTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="strategySubWedgeOrigVO" type="tns:screeningStrategySubWedge3VO"/>
+          <xs:element minOccurs="0" name="synchrotronMode" type="xs:string"/>
+          <xs:element minOccurs="0" name="totalAbsorbedDose" type="xs:double"/>
+          <xs:element minOccurs="0" name="transmission" type="xs:double"/>
+          <xs:element minOccurs="0" name="undulatorGap1" type="xs:double"/>
+          <xs:element minOccurs="0" name="undulatorGap2" type="xs:double"/>
+          <xs:element minOccurs="0" name="undulatorGap3" type="xs:double"/>
+          <xs:element minOccurs="0" name="voltage" type="xs:float"/>
+          <xs:element minOccurs="0" name="wavelength" type="xs:double"/>
+          <xs:element minOccurs="0" name="xbeam" type="xs:double"/>
+          <xs:element minOccurs="0" name="xbeamPix" type="xs:double"/>
+          <xs:element minOccurs="0" name="xtalSnapshotFullPath1" type="xs:string"/>
+          <xs:element minOccurs="0" name="xtalSnapshotFullPath2" type="xs:string"/>
+          <xs:element minOccurs="0" name="xtalSnapshotFullPath3" type="xs:string"/>
+          <xs:element minOccurs="0" name="xtalSnapshotFullPath4" type="xs:string"/>
+          <xs:element minOccurs="0" name="ybeam" type="xs:double"/>
+          <xs:element minOccurs="0" name="ybeamPix" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="autoProcIntegration3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="anomalous" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="autoProcIntegrationId" type="xs:int"/>
+          <xs:element minOccurs="0" name="autoProcProgramVO" type="tns:autoProcProgram3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="autoProcStatusVOs" nillable="true" type="tns:autoProcStatus3VO"/>
+          <xs:element minOccurs="0" name="beamVectorX" type="xs:float"/>
+          <xs:element minOccurs="0" name="beamVectorY" type="xs:float"/>
+          <xs:element minOccurs="0" name="beamVectorZ" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellA" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellAlpha" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellB" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellBeta" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellC" type="xs:float"/>
+          <xs:element minOccurs="0" name="cellGamma" type="xs:float"/>
+          <xs:element minOccurs="0" name="dataCollectionVO" type="tns:dataCollection3VO"/>
+          <xs:element minOccurs="0" name="endImageNumber" type="xs:int"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="refinedDetectorDistance" type="xs:float"/>
+          <xs:element minOccurs="0" name="refinedXbeam" type="xs:float"/>
+          <xs:element minOccurs="0" name="refinedYbeam" type="xs:float"/>
+          <xs:element minOccurs="0" name="rotationAxisX" type="xs:float"/>
+          <xs:element minOccurs="0" name="rotationAxisY" type="xs:float"/>
+          <xs:element minOccurs="0" name="rotationAxisZ" type="xs:float"/>
+          <xs:element minOccurs="0" name="startImageNumber" type="xs:int"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="autoProcProgram3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="attachmentVOs" nillable="true" type="tns:autoProcProgramAttachment3VO"/>
+          <xs:element minOccurs="0" name="autoProcProgramId" type="xs:int"/>
+          <xs:element minOccurs="0" name="processingCommandLine" type="xs:string"/>
+          <xs:element minOccurs="0" name="processingEndTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="processingEnvironment" type="xs:string"/>
+          <xs:element minOccurs="0" name="processingMessage" type="xs:string"/>
+          <xs:element minOccurs="0" name="processingPrograms" type="xs:string"/>
+          <xs:element minOccurs="0" name="processingStartTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="processingStatus" type="xs:string"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="autoProcProgramAttachment3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="autoProcProgramAttachmentId" type="xs:int"/>
+          <xs:element minOccurs="0" name="autoProcProgramVO" type="tns:autoProcProgram3VO"/>
+          <xs:element minOccurs="0" name="fileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="filePath" type="xs:string"/>
+          <xs:element minOccurs="0" name="fileType" type="xs:string"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="autoProcStatus3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="autoProcIntegrationVO" type="tns:autoProcIntegration3VO"/>
+          <xs:element minOccurs="0" name="autoProcStatusId" type="xs:int"/>
+          <xs:element minOccurs="0" name="blTimeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="status" type="xs:string"/>
+          <xs:element minOccurs="0" name="step" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="detector3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="detectorDistanceMax" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorDistanceMin" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorId" type="xs:int"/>
+          <xs:element minOccurs="0" name="detectorManufacturer" type="xs:string"/>
+          <xs:element minOccurs="0" name="detectorMode" type="xs:string"/>
+          <xs:element minOccurs="0" name="detectorModel" type="xs:string"/>
+          <xs:element minOccurs="0" name="detectorPixelSizeHorizontal" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorPixelSizeVertical" type="xs:double"/>
+          <xs:element minOccurs="0" name="detectorSerialNumber" type="xs:string"/>
+          <xs:element minOccurs="0" name="detectorType" type="xs:string"/>
+          <xs:element minOccurs="0" name="overload" type="xs:double"/>
+          <xs:element minOccurs="0" name="sensorThickness" type="xs:double"/>
+          <xs:element minOccurs="0" name="trustedPixelValueRangeLower" type="xs:double"/>
+          <xs:element minOccurs="0" name="trustedPixelValueRangeUpper" type="xs:double"/>
+          <xs:element minOccurs="0" name="xGeoCorr" type="xs:string"/>
+          <xs:element minOccurs="0" name="yGeoCorr" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="image3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="cumulativeIntensity" type="xs:float"/>
+          <xs:element minOccurs="0" name="dataCollectionVO" type="tns:dataCollection3VO"/>
+          <xs:element minOccurs="0" name="fileLocation" type="xs:string"/>
+          <xs:element minOccurs="0" name="fileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="imageId" type="xs:int"/>
+          <xs:element minOccurs="0" name="imageNumber" type="xs:int"/>
+          <xs:element minOccurs="0" name="jpegFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="jpegThumbnailFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="machineMessage" type="xs:string"/>
+          <xs:element minOccurs="0" name="measuredIntensity" type="xs:float"/>
+          <xs:element minOccurs="0" name="synchrotronCurrent" type="xs:float"/>
+          <xs:element minOccurs="0" name="temperature" type="xs:float"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningStrategySubWedge3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="axisEnd" type="xs:double"/>
+          <xs:element minOccurs="0" name="axisStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="completeness" type="xs:double"/>
+          <xs:element minOccurs="0" name="doseTotal" type="xs:double"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="multiplicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="numberOfImages" type="xs:int"/>
+          <xs:element minOccurs="0" name="oscillationRange" type="xs:double"/>
+          <xs:element minOccurs="0" name="rotationAxis" type="xs:string"/>
+          <xs:element minOccurs="0" name="screeningStrategySubWedgeId" type="xs:int"/>
+          <xs:element minOccurs="0" name="screeningStrategyWedgeVO" type="tns:screeningStrategyWedge3VO"/>
+          <xs:element minOccurs="0" name="subWedgeNumber" type="xs:int"/>
+          <xs:element minOccurs="0" name="transmission" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningStrategyWedge3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="chi" type="xs:double"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="completeness" type="xs:double"/>
+          <xs:element minOccurs="0" name="doseTotal" type="xs:double"/>
+          <xs:element minOccurs="0" name="kappa" type="xs:double"/>
+          <xs:element minOccurs="0" name="multiplicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="numberOfImages" type="xs:int"/>
+          <xs:element minOccurs="0" name="phi" type="xs:double"/>
+          <xs:element minOccurs="0" name="resolution" type="xs:double"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningStrategySubWedgeVOs" nillable="true" type="tns:screeningStrategySubWedge3VO"/>
+          <xs:element minOccurs="0" name="screeningStrategyVO" type="tns:screeningStrategy3VO"/>
+          <xs:element minOccurs="0" name="screeningStrategyWedgeId" type="xs:int"/>
+          <xs:element minOccurs="0" name="wavelength" type="xs:double"/>
+          <xs:element minOccurs="0" name="wedgeNumber" type="xs:int"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningStrategy3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="anomalous" type="xs:byte"/>
+          <xs:element minOccurs="0" name="completeness" type="xs:double"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="multiplicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="phiEnd" type="xs:double"/>
+          <xs:element minOccurs="0" name="phiStart" type="xs:double"/>
+          <xs:element minOccurs="0" name="program" type="xs:string"/>
+          <xs:element minOccurs="0" name="rankingResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="resolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="rotation" type="xs:double"/>
+          <xs:element minOccurs="0" name="screeningOutputVO" type="tns:screeningOutput3VO"/>
+          <xs:element minOccurs="0" name="screeningStrategyId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningStrategyWedgeVOs" nillable="true" type="tns:screeningStrategyWedge3VO"/>
+          <xs:element minOccurs="0" name="transmission" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningOutput3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="beamShiftX" type="xs:double"/>
+          <xs:element minOccurs="0" name="beamShiftY" type="xs:double"/>
+          <xs:element minOccurs="0" name="diffractionRings" type="xs:byte"/>
+          <xs:element minOccurs="0" name="doseTotal" type="xs:double"/>
+          <xs:element minOccurs="0" name="indexingSuccess" type="xs:byte"/>
+          <xs:element minOccurs="0" name="ioverSigma" type="xs:double"/>
+          <xs:element minOccurs="0" name="mosaicity" type="xs:double"/>
+          <xs:element minOccurs="0" name="mosaicityEstimated" type="xs:byte"/>
+          <xs:element minOccurs="0" name="numSpotsFound" type="xs:int"/>
+          <xs:element minOccurs="0" name="numSpotsRejected" type="xs:int"/>
+          <xs:element minOccurs="0" name="numSpotsUsed" type="xs:int"/>
+          <xs:element minOccurs="0" name="program" type="xs:string"/>
+          <xs:element minOccurs="0" name="rankingResolution" type="xs:double"/>
+          <xs:element minOccurs="0" name="rejectedReflections" type="xs:int"/>
+          <xs:element minOccurs="0" name="resolutionObtained" type="xs:double"/>
+          <xs:element minOccurs="0" name="screeningOutputId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningOutputLatticeVOs" nillable="true" type="tns:screeningOutputLattice3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningStrategyVOs" nillable="true" type="tns:screeningStrategy3VO"/>
+          <xs:element minOccurs="0" name="screeningVO" type="tns:screening3VO"/>
+          <xs:element minOccurs="0" name="spotDeviationR" type="xs:double"/>
+          <xs:element minOccurs="0" name="spotDeviationTheta" type="xs:double"/>
+          <xs:element minOccurs="0" name="statusDescription" type="xs:string"/>
+          <xs:element minOccurs="0" name="strategySuccess" type="xs:byte"/>
+          <xs:element minOccurs="0" name="totalExposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="totalNumberOfImages" type="xs:int"/>
+          <xs:element minOccurs="0" name="totalRotationRange" type="xs:double"/>
+          <xs:element minOccurs="0" name="rFriedel" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningOutputLattice3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="bravaisLattice" type="xs:string"/>
+          <xs:element minOccurs="0" name="labelitIndexing" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="pointGroup" type="xs:string"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_a_x" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_a_y" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_a_z" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_b_x" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_b_y" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_b_z" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_c_x" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_c_y" type="xs:double"/>
+          <xs:element minOccurs="0" name="rawOrientationMatrix_c_z" type="xs:double"/>
+          <xs:element minOccurs="0" name="screeningOutputLatticeId" type="xs:int"/>
+          <xs:element minOccurs="0" name="screeningOutputVO" type="tns:screeningOutput3VO"/>
+          <xs:element minOccurs="0" name="spaceGroup" type="xs:string"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="unitCell_a" type="xs:double"/>
+          <xs:element minOccurs="0" name="unitCell_alpha" type="xs:double"/>
+          <xs:element minOccurs="0" name="unitCell_b" type="xs:double"/>
+          <xs:element minOccurs="0" name="unitCell_beta" type="xs:double"/>
+          <xs:element minOccurs="0" name="unitCell_c" type="xs:double"/>
+          <xs:element minOccurs="0" name="unitCell_gamma" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screening3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="dataCollectionGroupVO" type="tns:dataCollectionGroup3VO"/>
+          <xs:element minOccurs="0" name="diffractionPlanVO" type="tns:diffractionPlan3VO"/>
+          <xs:element minOccurs="0" name="programVersion" type="xs:string"/>
+          <xs:element minOccurs="0" name="screeningId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningOutputVOs" nillable="true" type="tns:screeningOutput3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningRankVOs" nillable="true" type="tns:screeningRank3VO"/>
+          <xs:element minOccurs="0" name="shortComments" type="xs:string"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="xmlSampleInformation" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningRank3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="rankInformation" type="xs:string"/>
+          <xs:element minOccurs="0" name="rankValue" type="xs:double"/>
+          <xs:element minOccurs="0" name="screeningRankId" type="xs:int"/>
+          <xs:element minOccurs="0" name="screeningRankSetVO" type="tns:screeningRankSet3VO"/>
+          <xs:element minOccurs="0" name="screeningVO" type="tns:screening3VO"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="screeningRankSet3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="rankEngine" type="xs:string"/>
+          <xs:element minOccurs="0" name="rankingProjectFileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="rankingSummaryFileName" type="xs:string"/>
+          <xs:element minOccurs="0" name="screeningRankSetId" type="xs:int"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="screeningRankVOs" nillable="true" type="tns:screeningRank3VO"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="workflow3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="logFilePath" type="xs:string"/>
+          <xs:element minOccurs="0" name="recordTimeStamp" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="resultFilePath" type="xs:string"/>
+          <xs:element minOccurs="0" name="status" type="xs:string"/>
+          <xs:element minOccurs="0" name="workflowId" type="xs:int"/>
+          <xs:element minOccurs="0" name="workflowTitle" type="xs:string"/>
+          <xs:element minOccurs="0" name="workflowType" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="energyScan3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="beamSizeHorizontal" type="xs:float"/>
+          <xs:element minOccurs="0" name="beamSizeVertical" type="xs:float"/>
+          <xs:element minOccurs="0" name="blSampleVO" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="blSubSampleVO" type="tns:blSubSample3VO"/>
+          <xs:element minOccurs="0" name="choochFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="crystalClass" type="xs:string"/>
+          <xs:element minOccurs="0" name="edgeEnergy" type="xs:string"/>
+          <xs:element minOccurs="0" name="element" type="xs:string"/>
+          <xs:element minOccurs="0" name="endEnergy" type="xs:double"/>
+          <xs:element minOccurs="0" name="endTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="energyScanId" type="xs:int"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:double"/>
+          <xs:element minOccurs="0" name="filename" type="xs:string"/>
+          <xs:element minOccurs="0" name="fluorescenceDetector" type="xs:string"/>
+          <xs:element minOccurs="0" name="flux" type="xs:double"/>
+          <xs:element minOccurs="0" name="flux_end" type="xs:double"/>
+          <xs:element minOccurs="0" name="inflectionEnergy" type="xs:double"/>
+          <xs:element minOccurs="0" name="inflectionFDoublePrime" type="xs:double"/>
+          <xs:element minOccurs="0" name="inflectionFPrime" type="xs:double"/>
+          <xs:element minOccurs="0" name="jpegChoochFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="peakEnergy" type="xs:double"/>
+          <xs:element minOccurs="0" name="peakFDoublePrime" type="xs:double"/>
+          <xs:element minOccurs="0" name="peakFPrime" type="xs:double"/>
+          <xs:element minOccurs="0" name="scanFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="sessionVO" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="startEnergy" type="xs:double"/>
+          <xs:element minOccurs="0" name="startTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="synchrotronCurrent" type="xs:double"/>
+          <xs:element minOccurs="0" name="temperature" type="xs:double"/>
+          <xs:element minOccurs="0" name="transmissionFactor" type="xs:double"/>
+          <xs:element minOccurs="0" name="workingDirectory" type="xs:string"/>
+          <xs:element minOccurs="0" name="xrayDose" type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="xfeFluorescenceSpectrum3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="annotatedPymcaXfeSpectrum" type="xs:string"/>
+          <xs:element minOccurs="0" name="beamSizeHorizontal" type="xs:float"/>
+          <xs:element minOccurs="0" name="beamSizeVertical" type="xs:float"/>
+          <xs:element minOccurs="0" name="beamTransmission" type="xs:float"/>
+          <xs:element minOccurs="0" name="blSampleVO" type="tns:blSample3VO"/>
+          <xs:element minOccurs="0" name="blSubSampleVO" type="tns:blSubSample3VO"/>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="crystalClass" type="xs:string"/>
+          <xs:element minOccurs="0" name="endTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="energy" type="xs:float"/>
+          <xs:element minOccurs="0" name="exposureTime" type="xs:float"/>
+          <xs:element minOccurs="0" name="filename" type="xs:string"/>
+          <xs:element minOccurs="0" name="fittedDataFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="flux" type="xs:double"/>
+          <xs:element minOccurs="0" name="flux_end" type="xs:double"/>
+          <xs:element minOccurs="0" name="jpegScanFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="scanFileFullPath" type="xs:string"/>
+          <xs:element minOccurs="0" name="sessionVO" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="startTime" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="workingDirectory" type="xs:string"/>
+          <xs:element minOccurs="0" name="xfeFluorescenceSpectrumId" type="xs:int"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="shipping3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="comments" type="xs:string"/>
+          <xs:element minOccurs="0" name="creationDate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="dateOfShippingToUser" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="deliveryAgentAgentCode" type="xs:string"/>
+          <xs:element minOccurs="0" name="deliveryAgentAgentName" type="xs:string"/>
+          <xs:element minOccurs="0" name="deliveryAgentDeliveryDate" type="xs:dateTime"/>
+          <xs:element minOccurs="0" name="deliveryAgentFlightCode" type="xs:string"/>
+          <xs:element minOccurs="0" name="deliveryAgentShippingDate" type="xs:dateTime"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="dewarVOs" nillable="true" type="tns:dewar3VO"/>
+          <xs:element minOccurs="0" name="isStorageShipping" type="xs:boolean"/>
+          <xs:element minOccurs="0" name="laboratoryId" type="xs:int"/>
+          <xs:element minOccurs="0" name="proposalVO" type="tns:proposal3VO"/>
+          <xs:element minOccurs="0" name="returnCourier" type="xs:string"/>
+          <xs:element minOccurs="0" name="returnLabContactVO" type="tns:labContact3VO"/>
+          <xs:element minOccurs="0" name="sendingLabContactVO" type="tns:labContact3VO"/>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="sessions" nillable="true" type="tns:session3VO"/>
+          <xs:element minOccurs="0" name="shippingId" type="xs:int"/>
+          <xs:element minOccurs="0" name="shippingName" type="xs:string"/>
+          <xs:element minOccurs="0" name="shippingStatus" type="xs:string"/>
+          <xs:element minOccurs="0" name="shippingType" type="xs:string"/>
+          <xs:element minOccurs="0" name="timeStamp" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="labContact3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:isPyBValueObject">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="billingReference" type="xs:string"/>
+          <xs:element minOccurs="0" name="cardName" type="xs:string"/>
+          <xs:element minOccurs="0" name="courierAccount" type="xs:string"/>
+          <xs:element minOccurs="0" name="defaultCourrierCompany" type="xs:string"/>
+          <xs:element minOccurs="0" name="dewarAvgCustomsValue" type="xs:int"/>
+          <xs:element minOccurs="0" name="dewarAvgTransportValue" type="xs:int"/>
+          <xs:element minOccurs="0" name="labContactId" type="xs:int"/>
+          <xs:element minOccurs="0" name="personVO" type="tns:person3VO"/>
+          <xs:element minOccurs="0" name="proposalVO" type="tns:proposal3VO"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="structure3VO">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="blSampleId" type="xs:int"/>
+      <xs:element minOccurs="0" name="creationDate" type="xs:dateTime"/>
+      <xs:element minOccurs="0" name="crystalId" type="xs:int"/>
+      <xs:element minOccurs="0" name="filePath" type="xs:string"/>
+      <xs:element minOccurs="0" name="fromResiduesBases" type="xs:string"/>
+      <xs:element minOccurs="0" name="groupName" type="xs:string"/>
+      <xs:element minOccurs="0" name="macromoleculeId" type="xs:int"/>
+      <xs:element minOccurs="0" name="multiplicity" type="xs:string"/>
+      <xs:element minOccurs="0" name="name" type="xs:string"/>
+      <xs:element minOccurs="0" name="sequence" type="xs:string"/>
+      <xs:element minOccurs="0" name="structureId" type="xs:int"/>
+      <xs:element minOccurs="0" name="symmetry" type="xs:string"/>
+      <xs:element minOccurs="0" name="toResiduesBases" type="xs:string"/>
+      <xs:element minOccurs="0" name="type" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonBySessionIdLocalContact">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="sessionId" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonBySessionIdLocalContactResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByProteinAcronym">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:int"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByProteinAcronymResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByCodeAndNumber">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByCodeAndNumberResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposal">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="proposal" type="tns:proposalWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="proposalWS3VO">
+    <xs:complexContent>
+      <xs:extension base="tns:proposal3VO">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="personId" type="xs:int"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="echo">
+    <xs:sequence/>
+  </xs:complexType>
+  <xs:complexType name="echoResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="echo" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalsByLoginName">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="loginName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalsByLoginNameResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="findProposalsByLoginName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalByCodeAndNumber">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalByCodeAndNumberResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="proposal" type="tns:proposalWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findLaboratoryByCodeAndNumber">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findLaboratoryByCodeAndNumberResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="laboratory" type="tns:laboratory3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findLaboratoryByProposal">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findLaboratoryByProposalResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="laboratory" type="tns:laboratory3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonBySessionId">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="sessionId" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonBySessionIdResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalByLoginAndBeamline">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+      <xs:element minOccurs="0" name="arg1" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findProposalByLoginAndBeamlineResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="proposal" type="tns:proposalWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByLogin">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="arg0" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="findPersonByLoginResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="person" type="tns:personWS3VO"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="Exception" type="tns:Exception"/>
+  <xs:complexType name="Exception">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="message" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="findPersonByProteinAcronymResponse">
+    <wsdl:part element="tns:findPersonByProteinAcronymResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalResponse">
+    <wsdl:part element="tns:findProposalResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalByLoginAndBeamlineResponse">
+    <wsdl:part element="tns:findProposalByLoginAndBeamlineResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalByCodeAndNumberResponse">
+    <wsdl:part element="tns:findProposalByCodeAndNumberResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findLaboratoryByCodeAndNumberResponse">
+    <wsdl:part element="tns:findLaboratoryByCodeAndNumberResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findLaboratoryByCodeAndNumber">
+    <wsdl:part element="tns:findLaboratoryByCodeAndNumber" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByCodeAndNumber">
+    <wsdl:part element="tns:findPersonByCodeAndNumber" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonBySessionIdResponse">
+    <wsdl:part element="tns:findPersonBySessionIdResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Exception">
+    <wsdl:part element="tns:Exception" name="Exception">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByProposal">
+    <wsdl:part element="tns:findPersonByProposal" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposal">
+    <wsdl:part element="tns:findProposal" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByLogin">
+    <wsdl:part element="tns:findPersonByLogin" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByProteinAcronym">
+    <wsdl:part element="tns:findPersonByProteinAcronym" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonBySessionId">
+    <wsdl:part element="tns:findPersonBySessionId" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findLaboratoryByProposal">
+    <wsdl:part element="tns:findLaboratoryByProposal" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="echo">
+    <wsdl:part element="tns:echo" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalsByLoginNameResponse">
+    <wsdl:part element="tns:findProposalsByLoginNameResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByLoginResponse">
+    <wsdl:part element="tns:findPersonByLoginResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findLaboratoryByProposalResponse">
+    <wsdl:part element="tns:findLaboratoryByProposalResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByProposalResponse">
+    <wsdl:part element="tns:findPersonByProposalResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="echoResponse">
+    <wsdl:part element="tns:echoResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonByCodeAndNumberResponse">
+    <wsdl:part element="tns:findPersonByCodeAndNumberResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findShippingByIdResponse">
+    <wsdl:part element="tns:findShippingByIdResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findShippingById">
+    <wsdl:part element="tns:findShippingById" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonBySessionIdLocalContact">
+    <wsdl:part element="tns:findPersonBySessionIdLocalContact" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalsByLoginName">
+    <wsdl:part element="tns:findProposalsByLoginName" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalByCodeAndNumber">
+    <wsdl:part element="tns:findProposalByCodeAndNumber" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findProposalByLoginAndBeamline">
+    <wsdl:part element="tns:findProposalByLoginAndBeamline" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="findPersonBySessionIdLocalContactResponse">
+    <wsdl:part element="tns:findPersonBySessionIdLocalContactResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="ToolsForShippingWebService">
+    <wsdl:operation name="findShippingById">
+      <wsdl:input message="tns:findShippingById" name="findShippingById">
+    </wsdl:input>
+      <wsdl:output message="tns:findShippingByIdResponse" name="findShippingByIdResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByProposal">
+      <wsdl:input message="tns:findPersonByProposal" name="findPersonByProposal">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonByProposalResponse" name="findPersonByProposalResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonBySessionIdLocalContact">
+      <wsdl:input message="tns:findPersonBySessionIdLocalContact" name="findPersonBySessionIdLocalContact">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonBySessionIdLocalContactResponse" name="findPersonBySessionIdLocalContactResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByProteinAcronym">
+      <wsdl:input message="tns:findPersonByProteinAcronym" name="findPersonByProteinAcronym">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonByProteinAcronymResponse" name="findPersonByProteinAcronymResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByCodeAndNumber">
+      <wsdl:input message="tns:findPersonByCodeAndNumber" name="findPersonByCodeAndNumber">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonByCodeAndNumberResponse" name="findPersonByCodeAndNumberResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposal">
+      <wsdl:input message="tns:findProposal" name="findProposal">
+    </wsdl:input>
+      <wsdl:output message="tns:findProposalResponse" name="findProposalResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="echo">
+      <wsdl:input message="tns:echo" name="echo">
+    </wsdl:input>
+      <wsdl:output message="tns:echoResponse" name="echoResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalsByLoginName">
+      <wsdl:input message="tns:findProposalsByLoginName" name="findProposalsByLoginName">
+    </wsdl:input>
+      <wsdl:output message="tns:findProposalsByLoginNameResponse" name="findProposalsByLoginNameResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalByCodeAndNumber">
+      <wsdl:input message="tns:findProposalByCodeAndNumber" name="findProposalByCodeAndNumber">
+    </wsdl:input>
+      <wsdl:output message="tns:findProposalByCodeAndNumberResponse" name="findProposalByCodeAndNumberResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findLaboratoryByCodeAndNumber">
+      <wsdl:input message="tns:findLaboratoryByCodeAndNumber" name="findLaboratoryByCodeAndNumber">
+    </wsdl:input>
+      <wsdl:output message="tns:findLaboratoryByCodeAndNumberResponse" name="findLaboratoryByCodeAndNumberResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findLaboratoryByProposal">
+      <wsdl:input message="tns:findLaboratoryByProposal" name="findLaboratoryByProposal">
+    </wsdl:input>
+      <wsdl:output message="tns:findLaboratoryByProposalResponse" name="findLaboratoryByProposalResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonBySessionId">
+      <wsdl:input message="tns:findPersonBySessionId" name="findPersonBySessionId">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonBySessionIdResponse" name="findPersonBySessionIdResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalByLoginAndBeamline">
+      <wsdl:input message="tns:findProposalByLoginAndBeamline" name="findProposalByLoginAndBeamline">
+    </wsdl:input>
+      <wsdl:output message="tns:findProposalByLoginAndBeamlineResponse" name="findProposalByLoginAndBeamlineResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByLogin">
+      <wsdl:input message="tns:findPersonByLogin" name="findPersonByLogin">
+    </wsdl:input>
+      <wsdl:output message="tns:findPersonByLoginResponse" name="findPersonByLoginResponse">
+    </wsdl:output>
+      <wsdl:fault message="tns:Exception" name="Exception">
+    </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ispybWSSoapBinding" type="tns:ToolsForShippingWebService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="findShippingById">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findShippingById">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findShippingByIdResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByProposal">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonByProposal">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonByProposalResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByCodeAndNumber">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonByCodeAndNumber">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonByCodeAndNumberResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByProteinAcronym">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonByProteinAcronym">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonByProteinAcronymResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonBySessionIdLocalContact">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonBySessionIdLocalContact">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonBySessionIdLocalContactResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposal">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findProposal">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findProposalResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="echo">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="echo">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="echoResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalsByLoginName">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findProposalsByLoginName">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findProposalsByLoginNameResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalByCodeAndNumber">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findProposalByCodeAndNumber">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findProposalByCodeAndNumberResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findLaboratoryByCodeAndNumber">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findLaboratoryByCodeAndNumber">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findLaboratoryByCodeAndNumberResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findLaboratoryByProposal">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findLaboratoryByProposal">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findLaboratoryByProposalResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonBySessionId">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonBySessionId">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonBySessionIdResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findPersonByLogin">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findPersonByLogin">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findPersonByLoginResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findProposalByLoginAndBeamline">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="findProposalByLoginAndBeamline">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findProposalByLoginAndBeamlineResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="Exception">
+        <soap:fault name="Exception" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ispybWS">
+    <wsdl:port binding="tns:ispybWSSoapBinding" name="ToolsForShippingWebServicePort">
+      <soap:address location="http://europium.exp.synchrotron-soleil.fr:8019/ispyb/ispyb-ws/ispybWS/ToolsForShippingWebService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

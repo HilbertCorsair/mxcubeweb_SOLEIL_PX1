@@ -8,7 +8,7 @@ from mxcubeweb.core.util.adapterutils import export
 
 class BeamAdapter(ActuatorAdapterBase):
     def __init__(self, ho, *args):
-        super(BeamAdapter, self).__init__(ho, *args)
+        super().__init__(ho, *args)
 
     def limits(self):
         return -1, -1
@@ -57,7 +57,7 @@ class BeamAdapter(ActuatorAdapterBase):
             }
         )
 
-        return HOBeamValueModel(**{"value": beam_info_dict})
+        return HOBeamValueModel(value=beam_info_dict)
 
     @export
     def get_size(self) -> HOBeamModel:

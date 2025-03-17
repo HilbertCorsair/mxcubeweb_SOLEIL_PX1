@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import logging
@@ -7,10 +6,6 @@ from mxcubecore import HardwareRepository as HWR
 from mxcubecore.HardwareObjects.abstract.sample_changer import Crims
 
 from mxcubeweb.core.components.component_base import ComponentBase
-from mxcubeweb.core.components.queue import (
-    COLLECTED,
-    UNCOLLECTED,
-)
 
 
 # TO CONSIDER:
@@ -55,7 +50,7 @@ class Harvester(ComponentBase):
         except Exception:
             state = "OFFLINE"
 
-        initial_state = {
+        return {
             "state": state,
             "contents": contents,
             "global_state": {"global_state": global_state, "commands_state": cmdstate},
@@ -63,8 +58,6 @@ class Harvester(ComponentBase):
             "msg": msg,
             "plate_mode": HWR.beamline.diffractometer.in_plate_mode(),
         }
-
-        return initial_state
 
     def mount_from_harvester(self):
         sc = HWR.beamline.sample_changer

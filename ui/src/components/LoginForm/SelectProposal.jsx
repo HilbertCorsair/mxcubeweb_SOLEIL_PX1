@@ -1,95 +1,135 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { reduxForm } from 'redux-form';
-import { Modal, Button, Table } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Modal, Button, Tabs, Tab, Form } from 'react-bootstrap';
+import SessionTable from './SessionTable';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  hideProposalsForm,
+  selectProposal,
+  signOut,
+} from '../../actions/login';
+import styles from './SessionTable.module.css';
+import ActionButton from './ActionButton';
 
-class SelectProposal extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onClickRow = this.onClickRow.bind(this);
-    this.handleCancel = this.handleCancel.bind(this);
-    this.state = {
-      pId: 0,
-      pNumber: null,
-    };
+function SelectProposal() {
+  const dispatch = useDispatch();
+
+  const login = useSelector((state) => state.login);
+  const { loginType, proposalList, selectedProposalID, showProposalsForm } =
+    login;
+
+  const show =
+    showProposalsForm || (loginType === 'User' && selectedProposalID === null);
+
+  const [selectedSession, setSelectedSession] = useState(
+    proposalList.find((s) => s.session_id === selectedProposalID),
+  );
+  const selectedSessionId = selectedSession ? selectedSession.session_id : null;
+
+  const [filter, setFilter] = useState('');
+  const filteredSessions = proposalList.filter(
+    ({ title, number, code }) =>
+      title.includes(filter) ||
+      number.includes(filter) ||
+      code.includes(filter),
+  );
+
+  filteredSessions.sort(
+    (a, b) => (a.actual_start_date < b.actual_start_date ? 1 : -1), // sort by start date
+  );
+
+  const scheduledSessions = filteredSessions.filter(
+    (s) => s.is_scheduled_beamline && s.is_scheduled_time,
+  );
+  const unscheduledSessions = filteredSessions.filter(
+    (s) => s.is_scheduled_beamline && !s.is_scheduled_time,
+  );
+  const otherBeamlineSessions = filteredSessions.filter(
+    (s) => !s.is_scheduled_beamline && s.is_scheduled_time,
+  );
+  function handleHide() {
+    if (selectedProposalID === null) {
+      dispatch(signOut());
+    } else {
+      dispatch(hideProposalsForm());
+    }
   }
 
-  onClickRow(prop) {
-    this.setState({ pId: prop.proposalId });
-    this.setState({ pNumber: prop.code + prop.number });
-  }
-
-  handleCancel() {
-    this.props.handleHide();
-  }
-
-  render() {
-    const sortedlist = this.props.data.proposalList.sort((a, b) =>
-      a.number < b.number ? 1 : -1,
-    );
-    const proposals = sortedlist.map((prop) => (
-      <tr
-        key={prop.proposalId}
-        style={
-          this.state.pId === prop.proposalId
-            ? { backgroundColor: '#d3d3d3' }
-            : null
+  return (
+    <Modal
+      show={show}
+      backdrop={showProposalsForm || 'static'}
+      onHide={() => {
+        if (showProposalsForm) {
+          handleHide();
         }
-        onClick={() => this.onClickRow(prop)}
-      >
-        <td>{prop.code + prop.number}</td>
-        <td>{prop.title}</td>
-        <td>{prop.person}</td>
-      </tr>
-    ));
+      }}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Select a session</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Control
+          type="text"
+          className="mb-3"
+          placeholder="Filter"
+          aria-label="Filter sessions"
+          value={filter}
+          onChange={(evt) => setFilter(evt.target.value)}
+        />
 
-    return (
-      <Modal
-        show={this.props.show}
-        backdrop="static"
-        onHide={this.handleCancel}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Select a proposal</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div style={{ overflow: 'auto', height: '550px' }}>
-            <Table bordered hover>
-              <thead>
-                <tr>
-                  <th>Proposal Number</th>
-                  <th>Title</th>
-                  <th>Person</th>
-                </tr>
-              </thead>
-              <tbody>{proposals}</tbody>
-            </Table>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={this.handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            className="float-end"
-            disabled={this.state.pNumber === null}
-            onClick={() => {
-              this.props.selectProposal(this.state.pNumber);
-            }}
+        <Tabs id="scheduled-tab" defaultActiveKey="scheduled">
+          <Tab eventKey="active" title={`Active (${scheduledSessions.length})`}>
+            <div className={styles.table}>
+              <SessionTable
+                sessions={scheduledSessions}
+                selectedSessionId={selectedSessionId}
+                onSessionSelected={setSelectedSession}
+              />
+            </div>
+          </Tab>
+          <Tab
+            eventKey="scheduled"
+            title={`Scheduled (${unscheduledSessions.length})`}
           >
-            Select Proposal
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
+            <div className={styles.table}>
+              <SessionTable
+                showBeamline
+                sessions={unscheduledSessions}
+                selectedSessionId={selectedSessionId}
+                onSessionSelected={setSelectedSession}
+              />
+            </div>
+          </Tab>
+          <Tab
+            eventKey="other-unscheduled"
+            title={`Other beamlines (${otherBeamlineSessions.length})`}
+          >
+            <div className={styles.table}>
+              <SessionTable
+                showBeamline
+                sessions={otherBeamlineSessions}
+                selectedSessionId={selectedSessionId}
+                onSessionSelected={setSelectedSession}
+              />
+            </div>
+          </Tab>
+        </Tabs>
+      </Modal.Body>
+      <Modal.Footer>
+        <ActionButton
+          selectedSession={selectedSession}
+          onClick={() => dispatch(selectProposal(selectedSessionId))}
+        />
+        <Button
+          variant="outline-secondary"
+          data-default-styles
+          onClick={() => handleHide()}
+        >
+          {showProposalsForm ? 'Cancel' : 'Sign out'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
-const SelectProposalForm = reduxForm({
-  form: 'proposals',
-})(SelectProposal);
-
-export default connect((state) => ({
-  initialValues: { ...state.login.data },
-}))(SelectProposalForm);
+export default SelectProposal;

@@ -9,8 +9,8 @@ import os  # noqa: E402
 import sys  # noqa: E402
 import traceback  # noqa: E402
 from pathlib import Path  # noqa: E402
+from unittest import mock  # noqa: E402
 
-import mock  # noqa: E402
 from mxcubecore import HardwareRepository as HWR  # noqa: E402
 
 from mxcubeweb.app import MXCUBEApplication as mxcube  # noqa: E402
@@ -143,8 +143,7 @@ def main():
     if server and cfg:
         server.run(cfg)
         return 0
-    else:
-        return 1
+    return 1
 
 
 if __name__ == "__main__":

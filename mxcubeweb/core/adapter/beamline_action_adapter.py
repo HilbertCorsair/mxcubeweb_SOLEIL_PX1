@@ -22,28 +22,23 @@ class BeamlineActionAdapter(ActuatorAdapterBase):
         ho.connect("stateChanged", self.state_change)
 
     def _value_change(self, value):
-        if isinstance(value, Enum):
-            v = value.name
-        else:
-            v = value
+        v = value.name if isinstance(value, Enum) else value
 
         self.value_change(v)
 
     def commands(self):
-        method_list = [
+        return [
             attribute
             for attribute in dir(self._ho.__class__)
             if callable(getattr(self._ho.__class__, attribute))
             and attribute.startswith("_") is False
         ]
 
-        return method_list
-
     def _set_value(self, value: HOActuatorValueChangeModel):
         self._ho.set_value(self._ho.VALUES[value.value])
 
     def _get_value(self) -> StrValueModel:
-        return StrValueModel(**{"value": self._ho.get_value().name})
+        return StrValueModel(value=self._ho.get_value().name)
 
     def msg(self):
         try:

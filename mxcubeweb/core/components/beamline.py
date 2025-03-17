@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 
 from mxcubecore import HardwareRepository as HWR
@@ -120,9 +119,13 @@ class Beamline(ComponentBase):
     def beamline_get_all_attributes(self):
         ho = BeamlineAdapter(HWR.beamline)
         data = ho.dict()
-        actions = list()
-        cmds = HWR.beamline.beamline_actions.get_commands()
-        cmds = []
+
+        actions = []
+
+        try:
+            cmds = HWR.beamline.beamline_actions.get_commands()
+        except Exception:
+            cmds = []
         for cmd in cmds:
             args = []
             for arg in cmd.get_arguments():
@@ -143,9 +146,6 @@ class Beamline(ComponentBase):
                     "type": cmd.type,
                     "data": cmd.value(),
                 })
-    
-        
-
         actions.extend(self.beamline_get_actions())
         data.update({"availableMethods": ho.get_available_methods()})
         data.update(
@@ -165,7 +165,7 @@ class Beamline(ComponentBase):
         beamline_actions = HWR.beamline.beamline_actions
 
         if getattr(beamline_actions, "pydantic_model", None):
-            for cmd_name in beamline_actions.exported_attributes.keys():
+            for cmd_name in beamline_actions.exported_attributes:
                 cmd_object = beamline_actions.get_annotated_command(cmd_name)
 
                 actions.append(
@@ -265,7 +265,7 @@ class Beamline(ComponentBase):
 
     def diffractometer_set_phase(self, phase):
         try:
-            HWR.beamline.diffractometer.wait_device_ready(30)
+            HWR.beamline.diffractometer.wait_ready(30)
         except Exception:
             logging.getLogger("MX3.HWR").warning("Diffractometer not ready")
 

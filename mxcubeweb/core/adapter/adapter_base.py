@@ -1,3 +1,4 @@
+import contextlib
 import inspect
 import logging
 import traceback
@@ -40,7 +41,7 @@ class AdapterBase:
         self._msg = ""
 
     def get_adapter_id(self, ho=None):
-        ho = self._ho if not ho else ho
+        ho = ho if ho else self._ho
         return self.app.mxcubecore._get_adapter_id(ho)
 
     def _add_adapter(self, attr_name, ho, adapter_cls=None):
@@ -81,8 +82,7 @@ class AdapterBase:
         try:
             if _cmd:
                 return _cmd(**args)
-            else:
-                return self._ho.execute_exported_command(cmd_name, args)
+            return self._ho.execute_exported_command(cmd_name, args)
         except Exception as ex:
             self._command_exception(cmd_name, ex)
             logging.getLogger("MX3.HWR").exception("")
@@ -198,8 +198,7 @@ class AdapterBase:
     def _pydantic_model_for_command(self, cmd_name):
         if cmd_name in self.METHODS:
             return self._model_from_typehint(getattr(self, cmd_name, None))["args"]
-        else:
-            return self._ho.pydantic_model[cmd_name]
+        return self._ho.pydantic_model[cmd_name]
 
     def _exported_methods(self):
         exported_methods = {}
@@ -350,14 +349,12 @@ class ActuatorAdapterBase(AdapterBase):
             (object): Hardware object to mediate for.
             (str): The name of the object.
         """
-        super(ActuatorAdapterBase, self).__init__(ho, *args)
+        super().__init__(ho, *args)
 
         self._unique = False
 
-        try:
+        with contextlib.suppress(AttributeError):
             self._read_only = ho.read_only
-        except AttributeError:
-            pass
 
     # Don't limit rate this method with utils.LimitRate, all subclasses
     # will share this method thus all methods will be effected if limit rated.
@@ -423,14 +420,15 @@ class ActuatorAdapterBase(AdapterBase):
             # as we are returning floats
             return (0, 0) if None in self._ho.get_limits() else self._ho.get_limits()
         except (AttributeError, TypeError):
-            raise ValueError("Could not get limits")
+            msg = "Could not get limits"
+            raise ValueError(msg)
 
     def _dict_repr(self):
         """Dictionary representation of the hardware object.
         Returns:
             (dict): The dictionary.
         """
-        data = super(ActuatorAdapterBase, self)._dict_repr()
+        data = super()._dict_repr()
 
         try:
             data.update({"value": self.get_value(), "limits": self.limits()})

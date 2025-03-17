@@ -11,10 +11,7 @@ from email.utils import make_msgid
 import flask
 import flask_security
 import flask_socketio
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
 from mxcubecore import HardwareRepository as HWR
 
 
@@ -28,15 +25,12 @@ def RateLimited(maxPerSecond):
 
     def decorate(func):
         def rateLimitedFunction(*args, **kargs):
-            if type(args[0]) is dict:
-                key = args[0].get("Signal")
-            else:
-                key = args[0]
+            key = args[0].get("Signal") if type(args[0]) is dict else args[0]
             elapsed = time.time() - lastTimeCalled.get(key, 0)
             leftToWait = minInterval - elapsed
             if leftToWait > 0:
                 # ignore update
-                return
+                return None
             ret = func(*args, **kargs)
             lastTimeCalled.update({key: time.time()})
             return ret
@@ -83,8 +77,7 @@ def valid_login_only(f):
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             return flask.Response(status=404)
-        else:
-            return f(*args, **kwargs)
+        return f(*args, **kwargs)
 
     return wrapped
 
@@ -94,8 +87,7 @@ def require_control(f):
     def wrapped(*args, **kwargs):
         if current_user.is_authenticated and not current_user.in_control:
             return flask.Response(status=401)
-        else:
-            return f(*args, **kwargs)
+        return f(*args, **kwargs)
 
     return wrapped
 
@@ -105,8 +97,8 @@ def ws_valid_login_only(f):
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             flask_socketio.disconnect()
-        else:
-            return f(*args, **kwargs)
+            return None
+        return f(*args, **kwargs)
 
     return wrapped
 

@@ -42,14 +42,13 @@ def init_route(app, server, url_prefix):  # noqa: C901
         try:
             crystal_uuid = json.loads(request.data)
             HWR.beamline.harvester.harvest_crystal(crystal_uuid)
-        except Exception as ex:
-            logging.getLogger("user_level_log").exception("Cannot Harvest Crystal")
-            resp = (
+        except Exception:
+            logging.getLogger("MX3.HWR").exception("Cannot Harvest Crystal")
+            return (
                 "Cannot Harvest Crystal",
                 409,
-                {"Content-Type": "application/json", "message": str(ex)},
+                {"Content-Type": "application/json"},
             )
-            return resp
 
         return jsonify(app.harvester.get_harvester_contents())
 
@@ -63,16 +62,13 @@ def init_route(app, server, url_prefix):  # noqa: C901
             HWR.beamline.sample_changer.harvest_and_mount_sample(
                 crystal_uuid, sample["sampleID"]
             )
-        except Exception as ex:
-            logging.getLogger("user_level_log").exception(
-                "Cannot Harvest or mount Crystal"
-            )
-            resp = (
+        except Exception:
+            logging.getLogger("MX3.HWR").exception("Cannot Harvest or mount Crystal")
+            return (
                 "Cannot Harvest or Mount Sample",
                 409,
-                {"Content-Type": "application/json", "message": str(ex)},
+                {"Content-Type": "application/json"},
             )
-            return resp
         app.harvester.init_signals()
         return jsonify(app.harvester.get_harvester_contents())
 
@@ -83,6 +79,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
         ret = HWR.beamline.harvester_maintenance.calibrate_pin()
         if ret:
             return jsonify(app.harvester.get_harvester_contents())
+        return None
 
     @bp.route("/send_data_collection_info_to_crims", methods=["GET"])
     @server.require_control
@@ -91,6 +88,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
         ret = app.harvester.send_data_collection_info_to_crims()
         if ret:
             return jsonify(app.harvester.get_harvester_contents())
+        return None
 
     @bp.route("/validate_calibration", methods=["POST"])
     @server.restrict
@@ -110,23 +108,21 @@ def init_route(app, server, url_prefix):  # noqa: C901
     def send_ha_command(cmdparts, args=None):
         try:
             if cmdparts == "set_room_temperature_mode":
-                value = True if args in ["true", "True", "TRUE", "1"] else False
+                value = args in ["true", "True", "TRUE", "1"]
                 HWR.beamline.harvester_maintenance.send_command(cmdparts, value)
                 # Temporary set MD and SC Temperature mode at the same time
                 HWR.beamline.sample_changer.set_room_temperature_mode(value)
                 HWR.beamline.diffractometer.set_room_temperature_mode(value)
             else:
                 HWR.beamline.harvester_maintenance.send_command(cmdparts, args)
-        except Exception as ex:
-            logging.getLogger("user_level_log").exception(
-                f"Cannot execute command{cmdparts}"
+        except Exception:
+            logging.getLogger("MX3.HWR").exception(
+                "Cannot execute command %s", cmdparts
             )
-            msg = str(ex)
-            msg = msg.replace("\n", " - ")
             return (
                 "Cannot execute command",
                 406,
-                {"Content-Type": "application/json", "message": msg},
+                {"Content-Type": "application/json"},
             )
         else:
             return jsonify(

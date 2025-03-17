@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
 import logging
+
+import pydantic
 
 BEAMLINE_ADAPTER = None
 
@@ -67,7 +68,12 @@ class _BeamlineAdapter:
         attributes = {}
 
         for attr_name in self.app.mxcubecore.adapter_dict:
-            _d = self.app.mxcubecore.get_adapter(attr_name).dict()
+            try:
+                _d = self.app.mxcubecore.get_adapter(attr_name).dict()
+            except pydantic.ValidationError:
+                logging.getLogger("MX3.HWR").error(f"Incorrect values in {attr_name}")
+                logging.getLogger("MX3.HWR").exception("")
+
             attributes.update({attr_name: _d})
 
         return {"hardwareObjects": attributes}
@@ -88,26 +94,3 @@ class _BeamlineAdapter:
             elements = escan.get_elements()
 
         return {"elements": elements}
-
-    def get_acquisition_limit_values(self):
-        """
-        Get the limits for the acquisition parameters.
-        Returns:
-            (dict): The limits.
-        """
-        _limits = self._bl.get_acquisition_limit_values()
-        limits = {}
-
-        for key, value in _limits.items():
-            if isinstance(value, str) and "," in value:
-                try:
-                    limits[key] = list(map(float, _limits[key].split(",")))
-                except Exception:
-                    msg = "[BEAMLINE_ADAPTER] Could not get limits for %s," % key
-                    msg += " using -10000, 10000"
-                    logging.getLogger("MX3.HWR").info(msg)
-                    limits[key] = [-10000, 10000]
-            else:
-                limits[key] = value
-
-        return limits
