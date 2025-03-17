@@ -80,19 +80,19 @@ export function getSamplesList() {
   };
 }
 
-export function syncSamples(lims) {
+export function syncSamples() {
   return async (dispatch) => {
-    dispatch(showWaitDialog('Please wait', 'Synchronizing with LIMS', true));
+    dispatch(showWaitDialog('Please wait', 'Synchronizing with ISPyB', true));
 
     try {
-      const json = await fetchLimsSamples(lims);
+      const json = await fetchLimsSamples();
       dispatch(updateSampleList(json.sampleList, json.sampleOrder));
       dispatch(setQueue(json));
     } catch (error) {
       dispatch(
         showErrorPanel(
           true,
-          `Synchronization with LIMS failed ${error.response.headers.get(
+          `Synchronization with ISPyB failed ${error.response.headers.get(
             'message',
           )}`,
         ),

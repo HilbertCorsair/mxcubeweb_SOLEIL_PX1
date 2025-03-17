@@ -7,12 +7,7 @@ import { fetchAvailableWorkflows } from '../api/workflow';
 import { fetchAvailableTasks, fetchQueueState } from '../api/queue';
 
 import { showErrorPanel, applicationFetched } from './general';
-import {
-  fetchLoginInfo,
-  sendLogIn,
-  sendSignOut,
-  sendSSOLogIn,
-} from '../api/login';
+import { fetchLoginInfo, sendLogIn, sendSignOut } from '../api/login';
 import { fetchDetectorInfo } from '../api/detector';
 import { fetchSampleChangerInitialState } from '../api/sampleChanger';
 import { fetchHarvesterInitialState } from '../api/harvester';
@@ -38,7 +33,6 @@ export function resetLoginInfo() {
     selectedProposalID: '',
     loggedIn: false,
     rootPath: '',
-    useSSO: false,
   });
 }
 
@@ -54,18 +48,26 @@ export function hideProposalsForm() {
   };
 }
 
+export function selectProposalAction(prop) {
+  return {
+    type: 'SELECT_PROPOSAL',
+    proposal: prop,
+  };
+}
+
 export function setInitialState(data) {
   return { type: 'SET_INITIAL_STATE', data };
 }
 
-export function selectProposal(number) {
+export function selectProposal(number, navigate) {
   return async (dispatch) => {
     try {
       await sendSelectProposal(number);
-      dispatch(hideProposalsForm());
-      dispatch(getLoginInfo());
+      navigate('/');
+      dispatch(selectProposalAction(number));
     } catch {
       dispatch(showErrorPanel(true, 'Server refused to select proposal'));
+      navigate('/login');
     }
   };
 }
@@ -91,22 +93,11 @@ export function logIn(proposal, password) {
   };
 }
 
-export function ssoLogIn() {
-  return (dispatch) => {
-    sendSSOLogIn();
-  };
-}
-
 export function signOut() {
   return async (dispatch) => {
-    dispatch(resetLoginInfo()); // disconnect sockets before actually logging out (cf. `App.jsx`)
+    dispatch(resetLoginInfo());
     dispatch(applicationFetched(false));
-
-    try {
-      await sendSignOut();
-    } finally {
-      dispatch(getLoginInfo());
-    }
+    await sendSignOut();
   };
 }
 

@@ -8,6 +8,7 @@ from typing import (
     Union,
 )
 
+from pydantic import model_validator
 from pydantic.v1 import (
     BaseModel,
     Field,
@@ -34,23 +35,6 @@ class FlaskConfigModel(BaseModel):
     CERT: str = Field(
         "NONE",
         description="One of the strings ['SIGNED', 'ADHOC', NONE]",
-    )
-
-
-class SSOConfigModel(BaseModel):
-    USE_SSO: bool = Field(False, description="Set to True to use SSO")
-    ISSUER: str = Field("", description="OpenIDConnect / OAuth Issuer URI")
-    LOGOUT_URI: str = Field("", description="OpenIDConnect / OAuth logout URI")
-    CLIENT_SECRET: str = Field("", description="OpenIDConnect / OAuth client secret")
-    CLIENT_ID: str = Field("", description="OpenIDConnect / OAuth  client id")
-    META_DATA_URI: str = Field(
-        "", description="OpenIDConnect / OAuth  .well-known configuration"
-    )
-    SCOPE: str = Field(
-        "openid email profile", description="OpenIDConnect / OAuth scope"
-    )
-    CODE_CHALLANGE_METHOD: str = Field(
-        "S256", description="OpenIDConnect / OAuth Challange"
     )
 
 
@@ -163,4 +147,3 @@ class MXCUBEAppConfigModel(BaseModel):
 class AppConfigModel(BaseModel):
     server: FlaskConfigModel
     mxcube: MXCUBEAppConfigModel
-    sso: Optional[SSOConfigModel]

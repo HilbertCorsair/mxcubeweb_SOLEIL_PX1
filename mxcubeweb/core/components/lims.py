@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+import copy
+import io
 import json
 import logging
 import math
 import re
 import sys
 
+from flask import session
 from flask_login import current_user
 from mxcubecore import HardwareRepository as HWR
 from mxcubecore.model import queue_model_objects as qmo
-from mxcubecore.model.lims_session import LimsSessionManager
 
 from mxcubeweb.core.components.component_base import ComponentBase
 from mxcubeweb.core.util import fsutils
@@ -126,10 +128,6 @@ class Lims(ComponentBase):
             if params["subdir"].endswith("-"):
                 params["subdir"] = sample_model.get_name()
 
-        # Making sure that there are no ":" left from the sample name incase
-        # no synchronisation with LIMS was done
-        params["subdir"] = params["subdir"].replace(":", "-")
-
         if "{" in params.get("prefix", ""):
             sample = self.app.SAMPLE_LIST["sampleList"].get(sample_model.loc_str, {})
             prefix = self.get_default_prefix(sample)
@@ -166,90 +164,196 @@ class Lims(ComponentBase):
 
         return prefix
 
-    def get_session_manager(self) -> LimsSessionManager:
-        return LimsSessionManager.parse_obj(json.loads(current_user.limsdata))
+    def lims_existing_session(self, login_res):
+        res = False
 
-    def is_rescheduled_session(self, session):
-        """
-        Returns true is the session is rescheduled. That means that either currently is not the expected timeslot
-        or because it is not in the expected beamline
-        """
-        return not (session.is_scheduled_beamline and session.is_scheduled_time)
-
-    def allow_session(self, session):
-        HWR.beamline.lims.allow_session(session)
-
-    def select_session(self, session_id: str) -> bool:
-        """
-        param session_id : this is a identifier that could be proposal name or session_id depending of the type of LIMS login type
-        """
-        logging.getLogger("MX3.HWR").debug("select_session session_id=%s" % session_id)
-        session = None
-
-        # Selecting the active session in the LIMS object
         try:
-            HWR.beamline.lims.set_active_session_by_id(session_id)
-            session = HWR.beamline.lims.set_active_session_by_id(session_id)
-            if session is None:
-                raise "No session selected on LIMS"
-        except BaseException as e:
-            import traceback
-
-            traceback.print_exc(file=sys.stdout)
-            logging.getLogger("MX3.HWR").info(
-                "No session candidate. Force signout. e=%s" % str(e)
+            res = (
+                login_res.get("Session", {}).get("session", {}).get("sessionId", False)
+                and True
             )
-            self.app.usermanager.signout()
-            return False
+        except KeyError:
+            res = False
 
-        if HWR.beamline.lims.is_user_login_type() and "Commissioning" in session.title:
+        return res
+
+    def lims_valid_login(self, login_res):
+        return login_res["status"]["code"] == "ok"
+
+    def lims_login(self, loginID, password, create_session):
+        """
+        :param str loginID: Username
+        :param str password: Password
+        :returns dict: On the format:
+
+        {'status': { 'code': 'ok', 'msg': msg },
+        'proposalList':[]
+        }
+        """
+        login_res = {}
+        # If this is used often, it could be moved to a better place.
+        ERROR_CODE = dict({"status": {"code": "0"}})
+
+        if HWR.beamline.lims.loginType.lower() == "user":
+            try:
+                connection_ok = HWR.beamline.lims.echo()
+                if not connection_ok:
+                    HWR.beamline.lims.init()
+            except Exception:
+                msg = "[LIMS] Connection Error!"
+                logging.getLogger("MX3.HWR").error(msg)
+                return ERROR_CODE
+
+            try:
+                HWR.beamline.lims.lims_rest.authenticate(loginID, password)
+            except Exception:
+                logging.getLogger("MX3.HWR").error("[LIMS-REST] Could not authenticate")
+                return ERROR_CODE
+
+            try:
+                proposals = HWR.beamline.lims.get_proposals_by_user(loginID)
+
+                logging.getLogger("MX3.HWR").info(
+                    "[LIMS] Retrieving proposal list for user: %s, proposals: %s"
+                    % (loginID, proposals)
+                )
+                session["proposal_list"] = copy.deepcopy(proposals)
+            except Exception:
+                logging.getLogger("MX3.HWR").error(
+                    "[LIMS] Could not retreive proposal list, %s" % sys.exc_info()[1]
+                )
+                return ERROR_CODE
+
+            for prop in session["proposal_list"]:
+                todays_session = HWR.beamline.lims.get_todays_session(prop)
+                prop["Session"] = [todays_session["session"]]
+
+            login_res["proposalList"] = session["proposal_list"]
+            login_res["status"] = {
+                "code": "ok",
+                "msg": "Successful login",
+            }
+        else:
+            try:
+                login_res = HWR.beamline.lims.login(
+                    loginID, password, create_session=create_session
+                )
+                proposal = HWR.beamline.lims.get_proposal(
+                    login_res["Proposal"]["code"],
+                    login_res["Proposal"]["number"],
+                )
+
+            except Exception:
+                logging.getLogger("MX3.HWR").error("[LIMS] Could not login to LIMS")
+                return ERROR_CODE
+
+            session["proposal_list"] = [proposal]
+            login_res["proposalList"] = [proposal]
+
+            logging.getLogger("MX3.HWR").info(
+                "[LIMS] Logged in, valid proposal: %s%s"
+                % (
+                    login_res["Proposal"]["code"],
+                    login_res["Proposal"]["number"],
+                )
+            )
+
+        return login_res
+
+    def create_lims_session(self, login_res):
+        for prop in session["proposal_list"]:
+            todays_session = HWR.beamline.lims.get_todays_session(prop)
+            prop["Session"] = [todays_session["session"]]
+
+        login_res["proposalList"] = session["proposal_list"]
+
+        return login_res
+
+    def get_proposal_info(self, proposal):
+        """
+        Search for the given proposal in the proposal list.
+        """
+        limsdata = json.loads(current_user.limsdata)
+
+        for prop in limsdata.get("proposalList", []):
+            _p = "%s%s" % (
+                prop.get("Proposal").get("code", "").lower(),
+                prop.get("Proposal").get("number", ""),
+            )
+
+            if _p == proposal.lower():
+                return prop
+
+        return {}
+
+    def get_proposal(self, user):
+        limsdata = json.loads(user.limsdata)
+
+        proposal = "%s%s" % (
+            limsdata.get("Proposal").get("code", "").lower(),
+            limsdata.get("Proposal").get("number", ""),
+        )
+
+        return proposal
+
+    def select_proposal(self, proposal):
+        proposal_info = self.get_proposal_info(proposal)
+
+        if (
+            HWR.beamline.lims.loginType.lower() == "user"
+            and "Commissioning" in proposal_info["Proposal"]["title"]
+        ):
             if hasattr(HWR.beamline.session, "set_in_commissioning"):
-                HWR.beamline.session.set_in_commissioning(self.get_proposal_info())
+                HWR.beamline.session.set_in_commissioning(proposal_info)
                 logging.getLogger("MX3.HWR").info(
                     "[LIMS] Commissioning proposal flag set."
                 )
 
-        HWR.beamline.session.proposal_code = session.code
-        HWR.beamline.session.proposal_number = session.number
-        HWR.beamline.session.session_id = HWR.beamline.lims.get_session_id()
-        HWR.beamline.session.proposal_id = session.proposal_id
-        HWR.beamline.session.set_session_start_date(session.start_date)
-
-        logging.getLogger("MX3.HWR").info(
-            "[LIMS] Selected session. proposal=%s session_id=%s.",
-            session.proposal_name,
-            session.session_id,
-        )
-
-        if self.is_rescheduled_session(session):
-            logging.getLogger("MX3.HWR").info(
-                "[LIMS] Session is rescheduled in time or beamline."
+        if proposal_info:
+            HWR.beamline.session.proposal_code = proposal_info.get("Proposal").get(
+                "code", ""
             )
-            self.allow_session(session)
+            HWR.beamline.session.proposal_number = proposal_info.get("Proposal").get(
+                "number", ""
+            )
 
-        if hasattr(HWR.beamline.session, "prepare_directories"):
-            try:
-                logging.getLogger("MX3.HWR").info(
-                    "[LIMS] Creating data directories for proposal %s%s" % session.code,
-                    session.number,
-                )
-                raise "To be implemented for those using prepare_directories"
-                # HWR.beamline.session.prepare_directories(proposal_tuple)
-            except Exception:
-                logging.getLogger("MX3.HWR").info(
-                    "[LIMS] Error creating data directories, %s" % sys.exc_info()[1]
-                )
+            todays_session = HWR.beamline.lims.get_todays_session(
+                proposal_info, create_session=False
+            )
+            HWR.beamline.session.session_id = todays_session.get("session").get(
+                "sessionId"
+            )
 
-        # save selected proposal in users db
+            HWR.beamline.session.proposal_id = todays_session.get("session").get(
+                "proposalId"
+            )
 
-        current_user.selected_proposal = session.session_id
-        self.app.usermanager.update_user(current_user)
+            HWR.beamline.session.set_session_start_date(
+                todays_session.get("session").get("startDate")
+            )
 
-        logging.getLogger("user_log").info(
-            "[LIMS] Proposal selected session_id=%s.", session_id
-        )
+            session["proposal"] = proposal_info
 
-        return True
+            if hasattr(HWR.beamline.session, "prepare_directories"):
+                try:
+                    logging.getLogger("MX3.HWR").info(
+                        "[LIMS] Creating data directories for proposal %s" % proposal
+                    )
+                    HWR.beamline.session.prepare_directories(proposal_info)
+                except Exception:
+                    logging.getLogger("MX3.HWR").info(
+                        "[LIMS] Error creating data directories, %s" % sys.exc_info()[1]
+                    )
+
+            # save selected proposal in users db
+            current_user.selected_proposal = proposal
+            self.app.usermanager.update_user(current_user)
+
+            logging.getLogger("user_log").info("[LIMS] Proposal selected.")
+
+            return True
+        else:
+            return False
 
     def get_default_prefix(self, sample_data, generic_name=False):
         if isinstance(sample_data, dict):
@@ -267,11 +371,38 @@ class Lims(ComponentBase):
     def get_default_subdir(self, sample_data):
         return HWR.beamline.session.get_default_subdir(sample_data)
 
-    def synch_with_lims(self, lims_name):
+    def get_dc_link(self, col_id):
+        link = HWR.beamline.lims.dc_link(col_id)
+
+        return link
+
+    def get_dc_thumbnail(self, image_id):
+        fname, data = HWR.beamline.lims.lims_rest.get_dc_thumbnail(image_id)
+        data = io.BytesIO(data)
+
+        return fname, data
+
+    def get_dc_image(self, image_id):
+        fname, data = HWR.beamline.lims.lims_rest.get_dc_image(image_id)
+        data = io.BytesIO(data)
+
+        return fname, data
+
+    def get_quality_indicator_plot(self, dc_id):
+        data = HWR.beamline.lims.lims_rest.get_quality_indicator_plot(dc_id)
+        data = io.BytesIO(data)
+
+        return "qind", data
+
+    def synch_with_lims(self):
+        proposal_id = HWR.beamline.session.proposal_id
+
         # session_id is not used, so we can pass None as second argument to
         # 'db_connection.get_samples'
+        lims_samples = HWR.beamline.lims.get_samples(proposal_id, None)
 
-        samples_info_list = HWR.beamline.lims.get_samples(lims_name)
+        samples_info_list = lims_samples
+
         for sample_info in samples_info_list:
             sample_info["limsID"] = sample_info.pop("sampleId")
             sample_info["defaultPrefix"] = self.get_default_prefix(sample_info)
@@ -311,7 +442,6 @@ class Lims(ComponentBase):
                 )
             else:
                 sample_info["lims_location"] = lims_location
-
                 self.sample_list_sync_sample(sample_info)
 
         return self.sample_list_get()

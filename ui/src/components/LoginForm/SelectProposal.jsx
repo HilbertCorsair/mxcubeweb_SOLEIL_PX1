@@ -1,123 +1,95 @@
-import React, { useState } from 'react';
-import { Modal, Button, Tabs, Tab, Form } from 'react-bootstrap';
-import SessionTable from './SessionTable';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  hideProposalsForm,
-  selectProposal,
-  signOut,
-} from '../../actions/login';
-import styles from './SessionTable.module.css';
-import ActionButton from './ActionButton';
+import React from 'react';
+import { connect } from 'react-redux';
+import { reduxForm } from 'redux-form';
+import { Modal, Button, Table } from 'react-bootstrap';
 
-function SelectProposal() {
-  const dispatch = useDispatch();
-
-  const login = useSelector((state) => state.login);
-  const { loginType, proposalList, selectedProposalID, showProposalsForm } =
-    login;
-
-  const show =
-    showProposalsForm || (loginType === 'User' && selectedProposalID === null);
-
-  const [selectedSession, setSelectedSession] = useState(
-    proposalList.find((s) => s.session_id === selectedProposalID),
-  );
-  const selectedSessionId = selectedSession ? selectedSession.session_id : null;
-
-  const [filter, setFilter] = useState('');
-  const filteredSessions = proposalList.filter(
-    ({ title, number, code }) =>
-      title.includes(filter) ||
-      number.includes(filter) ||
-      code.includes(filter),
-  );
-
-  filteredSessions.sort(
-    (a, b) => (a.actual_start_date < b.actual_start_date ? 1 : -1), // sort by start date
-  );
-
-  const scheduledSessions = filteredSessions.filter(
-    (s) => s.is_scheduled_beamline && s.is_scheduled_time,
-  );
-  const unscheduledSessions = filteredSessions.filter(
-    (s) => !s.is_scheduled_beamline || !s.is_scheduled_time,
-  );
-
-  function handleHide() {
-    if (selectedProposalID === null) {
-      dispatch(signOut());
-    } else {
-      dispatch(hideProposalsForm());
-    }
+class SelectProposal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onClickRow = this.onClickRow.bind(this);
+    this.handleCancel = this.handleCancel.bind(this);
+    this.state = {
+      pId: 0,
+      pNumber: null,
+    };
   }
 
-  return (
-    <Modal
-      show={show}
-      backdrop={showProposalsForm || 'static'}
-      onHide={() => {
-        if (showProposalsForm) {
-          handleHide();
-        }
-      }}
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>Select a session</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form.Control
-          type="text"
-          className="mb-3"
-          placeholder="Filter"
-          aria-label="Filter sessions"
-          value={filter}
-          onChange={(evt) => setFilter(evt.target.value)}
-        />
+  onClickRow(prop) {
+    this.setState({ pId: prop.proposalId });
+    this.setState({ pNumber: prop.code + prop.number });
+  }
 
-        <Tabs id="scheduled-tab" defaultActiveKey="scheduled">
-          <Tab
-            eventKey="scheduled"
-            title={`Scheduled (${scheduledSessions.length})`}
+  handleCancel() {
+    this.props.handleHide();
+  }
+
+  render() {
+    const sortedlist = this.props.data.proposalList.sort((a, b) =>
+      a.number < b.number ? 1 : -1,
+    );
+    const proposals = sortedlist.map((prop) => (
+      <tr
+        key={prop.proposalId}
+        style={
+          this.state.pId === prop.proposalId
+            ? { backgroundColor: '#d3d3d3' }
+            : null
+        }
+        onClick={() => this.onClickRow(prop)}
+      >
+        <td>{prop.code + prop.number}</td>
+        <td>{prop.title}</td>
+        <td>{prop.person}</td>
+      </tr>
+    ));
+
+    return (
+      <Modal
+        show={this.props.show}
+        backdrop="static"
+        onHide={this.handleCancel}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Select a proposal</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ overflow: 'auto', height: '550px' }}>
+            <Table bordered hover>
+              <thead>
+                <tr>
+                  <th>Proposal Number</th>
+                  <th>Title</th>
+                  <th>Person</th>
+                </tr>
+              </thead>
+              <tbody>{proposals}</tbody>
+            </Table>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={this.handleCancel}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            className="float-end"
+            disabled={this.state.pNumber === null}
+            onClick={() => {
+              this.props.selectProposal(this.state.pNumber);
+            }}
           >
-            <div className={styles.table}>
-              <SessionTable
-                sessions={scheduledSessions}
-                selectedSessionId={selectedSessionId}
-                onSessionSelected={setSelectedSession}
-              />
-            </div>
-          </Tab>
-          <Tab
-            eventKey="unscheduled"
-            title={`Unscheduled (${unscheduledSessions.length})`}
-          >
-            <div className={styles.table}>
-              <SessionTable
-                showBeamline
-                sessions={unscheduledSessions}
-                selectedSessionId={selectedSessionId}
-                onSessionSelected={setSelectedSession}
-              />
-            </div>
-          </Tab>
-        </Tabs>
-      </Modal.Body>
-      <Modal.Footer>
-        <ActionButton
-          selectedSession={selectedSession}
-          onClick={() => dispatch(selectProposal(selectedSessionId))}
-        />
-        <Button
-          variant="outline-secondary"
-          data-default-styles
-          onClick={() => handleHide()}
-        >
-          {showProposalsForm ? 'Cancel' : 'Sign out'}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
+            Select Proposal
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 }
 
-export default SelectProposal;
+const SelectProposalForm = reduxForm({
+  form: 'proposals',
+})(SelectProposal);
+
+export default connect((state) => ({
+  initialValues: { ...state.login.data },
+}))(SelectProposalForm);

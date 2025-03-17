@@ -12,38 +12,39 @@ const INITIAL_STATE = {
 function loginReducer(state = INITIAL_STATE, action = {}) {
   switch (action.type) {
     case 'SET_LOGIN_INFO': {
-      const {
-        beamlineName,
-        synchrotronName,
-        loginType,
-        user,
-        proposalList,
-        selectedProposal,
-        selectedProposalID,
-        loggedIn,
-        rootPath,
-        limsName,
-        useSSO,
-      } = action.loginInfo;
       return {
         ...state,
-        beamlineName,
-        synchrotronName,
-        loginType,
-        user,
-        proposalList,
-        selectedProposal,
-        selectedProposalID,
-        loggedIn,
-        rootPath,
-        limsName,
-        useSSO,
+        beamlineName: action.loginInfo.beamlineName,
+        synchrotronName: action.loginInfo.synchrotronName,
+        loginType: action.loginInfo.loginType,
+        user: action.loginInfo.user,
+        proposalList: action.loginInfo.proposalList,
+        selectedProposal: action.loginInfo.selectedProposal,
+        selectedProposalID: action.loginInfo.selectedProposalID,
+        loggedIn: action.loginInfo.loggedIn,
+        rootPath: action.loginInfo.rootPath,
       };
     }
     case 'SHOW_PROPOSALS_FORM': {
       return {
         ...state,
         showProposalsForm: true,
+      };
+    }
+    case 'SELECT_PROPOSAL': {
+      const proposals = state.proposalList;
+
+      const propInfo = proposals.find((prop) => {
+        const name = `${prop.code}${prop.number}`;
+        return name === action.proposal;
+      });
+      const propId = propInfo.proposalId;
+
+      return {
+        ...state,
+        selectedProposal: action.proposal,
+        selectedProposalID: propId,
+        showProposalsForm: false,
       };
     }
     case 'HIDE_PROPOSALS_FORM': {

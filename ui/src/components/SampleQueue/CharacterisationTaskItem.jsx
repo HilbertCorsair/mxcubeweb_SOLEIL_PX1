@@ -43,6 +43,14 @@ export default class TaskItem extends Component {
       return <span />;
     }
 
+    const link = this.props.data.limsResultData
+      ? this.props.data.limsResultData.limsTaskLink
+      : '#';
+
+    if (link === '#') {
+      return <span />;
+    }
+
     return (
       <div
         style={{
@@ -52,6 +60,19 @@ export default class TaskItem extends Component {
           padding: '0.5em',
         }}
       >
+        <a
+          href="#"
+          onClick={() =>
+            this.props.showDialog(
+              true,
+              'LIMS_RESULT_DIALOG',
+              'Lims Results',
+              this.props.data,
+            )
+          }
+        >
+          View Results
+        </a>
         {this.getDiffPlan(data)}
       </div>
     );

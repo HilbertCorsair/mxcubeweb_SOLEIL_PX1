@@ -433,7 +433,7 @@ export default class DrawGridPlugin {
           if (result[index] !== undefined) {
             fillingMatrix[nw][nh] = this.heatMapColorForValue(
               gd,
-              result[index][1],
+              result[index],
             );
           }
         }
