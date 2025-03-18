@@ -9,15 +9,17 @@ import {
   QUEUE_STOPPED,
   QUEUE_STARTED,
 } from '../../constants';
-
+import { washCommand } from '../../actions/queue';
 import QueueSettings from '../../containers/QueueSettings';
 import loader from '../../img/busy-indicator.gif';
+import { connect } from 'react-redux';
 
-export default class QueueControl extends React.Component {
+class QueueControl extends React.Component {
   constructor(props) {
     super(props);
 
     this.nextSample = this.nextSample.bind(this);
+    this.handleWashClick = this.handleWashClick.bind(this);
 
     this.state = {
       options: {
@@ -103,6 +105,10 @@ export default class QueueControl extends React.Component {
     };
   }
 
+  handleWashClick() {
+    this.props.washCommand();
+  }
+
   nextSample() {
     const idx = this.props.queue.indexOf(this.props.mounted);
 
@@ -119,6 +125,7 @@ export default class QueueControl extends React.Component {
   }
 
   renderOption(option) {
+
     return (
       <Button
         className={option.class}
@@ -177,30 +184,31 @@ export default class QueueControl extends React.Component {
     const showBusyIndicator = running ? 'inline' : 'none';
 
     return (
-      <Navbar className="m-tree" style={{ padding: '0.5em' }}>
-        <Nav
-          className="me-auto my-2 my-lg-0"
-          style={{ maxHeight: '100px' }}
-          navbarScroll
-        >
+      <div style={ { display: 'flex', alignItems: 'center' } }>
+        {/* Your existing code */}
+        <Nav>
           <Nav.Item>
-            <span style={{ marginRight: '0.6em' }}>
-              {queueOptions.map((option) => this.renderOption(option))}
-            </span>
             <span>
               {sampleQueueOptions.map((option) => this.renderOption(option))}
             </span>
+            {/* Add the Wash Sample button here */}
+            <Button
+              className="btn-info"
+              variant=""
+              size="sm"
+              onClick={this.handleWashClick}>
+              Wash Sample
+            </Button>
           </Nav.Item>
-          <Nav.Item>
-            <img
-              src={loader}
-              style={{ display: showBusyIndicator, marginLeft: '25%' }}
-              alt=""
-            />
-          </Nav.Item>
+          {/* Rest of your JSX */}
         </Nav>
-        <QueueSettings />
-      </Navbar>
+      </div>
     );
   }
 }
+
+const mapDispatchToProps = {
+  washCommand
+};
+
+export default connect(null, mapDispatchToProps)(QueueControl);

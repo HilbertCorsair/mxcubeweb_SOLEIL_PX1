@@ -26,7 +26,6 @@ server:
     - "http://localhost:8080"
     - "http://localhost:8090"
     - "http://195.221.8.78:8090" 
- 
 
 sso:
   USE_SSO: False

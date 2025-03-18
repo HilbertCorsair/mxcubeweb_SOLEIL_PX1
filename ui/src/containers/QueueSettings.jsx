@@ -16,8 +16,9 @@ import {
   setQueueSettings,
   setAutoAddDiffPlan,
   setAutoMountSample,
+  washCommand
 } from '../actions/queue';
-
+import QueueControl from '../components/SampleQueue/QueueControl';
 class QueueSettings extends React.Component {
   constructor(props) {
     super(props);

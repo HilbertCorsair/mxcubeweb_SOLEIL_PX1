@@ -85,3 +85,7 @@ export function sendUpdateDependentFields(task_name, field_data) {
     .post({ task_name, field_data }, '/update_dependent_field')
     .safeJson();
 }
+
+export function sendWashCommand() {
+  return endpoint.put('http://195.221.8.78:5173/wash').res();
+}

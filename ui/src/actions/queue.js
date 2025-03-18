@@ -22,8 +22,10 @@ import {
   sendStopQueue,
   sendToggleCheckBox,
   sendUpdateQueueItem,
+  sendWashCommand,
 } from '../api/queue';
 import { sendSetCentringMethod } from '../api/sampleview';
+
 
 export function queueLoading(loading) {
   return { type: 'QUEUE_LOADING', loading };
@@ -55,6 +57,24 @@ export function setQueue(queue) {
       // If queue contains sample loaded by sample changer, set it as the current sample (unless it already is)
       dispatch(setCurrentSample(loadedSampleId));
     }
+  };
+}
+export const WASH_COMMAND_REQUEST = 'WASH_COMMAND_REQUEST';
+export const WASH_COMMAND_SUCCESS = 'WASH_COMMAND_SUCCESS';
+export const WASH_COMMAND_FAILURE = 'WASH_COMMAND_FAILURE';
+
+export function washCommand() {
+  return (dispatch) => {
+    dispatch({ type: WASH_COMMAND_REQUEST });
+    return sendWashCommand()
+      .then(() => {
+        console.log('Wash command sent successfully');
+        dispatch({ type: WASH_COMMAND_SUCCESS });
+      })
+      .catch(error => {
+        console.error('Error sending wash command:', error);
+        dispatch({ type: WASH_COMMAND_FAILURE, error });
+      });
   };
 }
 

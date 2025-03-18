@@ -9,7 +9,6 @@ from flask import (
     session,
 )
 from mxcubecore import HardwareRepository as HWR
-
 from mxcubeweb.core.models.generic import SimpleNameValue
 
 
@@ -32,6 +31,15 @@ def init_route(app, server, url_prefix):  # noqa: C901
         app.queue.queue_start(sid)
 
         return Response(status=200)
+
+    @bp.route('/wash', methods=['PUT'])
+    @server.restrict
+    def wash():
+        try:
+            HWR.beamline.sample_changer.wash()  # This triggers the wash command on PX1CatsCryotong
+            return jsonify({"message": "Wash command executed successfully"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     @bp.route("/stop", methods=["PUT"])
     @server.require_control
