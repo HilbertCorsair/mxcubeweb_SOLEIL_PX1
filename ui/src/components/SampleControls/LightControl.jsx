@@ -1,79 +1,79 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
 import React from 'react';
-import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HW_STATE } from '../../constants';
+//import { HW_STATE } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './SampleControls.module.css';
 
-function LightControl(props) {
-  const { label, hwoId } = props;
+function LightControl() {
   const dispatch = useDispatch();
-
-  const light = useSelector((state) => state.beamline.hardwareObjects[hwoId]);
-
-  const lightSwitch = useSelector(
-    (state) => state.beamline.hardwareObjects[`${hwoId}switch`],
-  );
-
-  function handleToggleClick() {
-    dispatch(
-      setAttribute(
-        `${hwoId}switch`,
-        lightSwitch.commands.find((state) => state !== lightSwitch.value),
-      ),
-    );
-  }
+  const light =  true //useSelector((state) => state.beamline.hardwareObject["diffractometer.backlight"]);
+  const isActive = false //light ? true :false
 
   return (
-    <div className={styles.controlWrapper}>
-      <OverlayTrigger
-        trigger="click"
-        rootClose
-        placement="bottom"
-        overlay={
-          <Popover id={`${hwoId}_popover`} className={styles.popover} body>
-            <input
-              className="bar"
-              type="range"
-              step="0.1"
-              min={light.limits[0]}
-              max={light.limits[1]}
-              value={light.value}
-              disabled={light.state !== HW_STATE.READY}
-              onChange={(evt) =>
-                dispatch(setAttribute(hwoId, evt.target.value))
-              }
-            />
-          </Popover>
-        }
-      >
-        {({ ref, ...triggerHandlers }) => (
-          <>
-            <Button
-              ref={ref}
-              className={styles.lightBtn}
-              data-default-styles
-              active={lightSwitch.value === lightSwitch.commands[0]}
-              title={`${label} on/off`}
-              onClick={handleToggleClick}
-            >
-              <i className={`${styles.controlIcon} fas fa-lightbulb`} />
-              <span className={styles.controlLabel}>{label}</span>
-            </Button>
-            <Button
-              className={styles.lightArrowBtn}
-              data-default-styles
-              {...triggerHandlers}
-            >
-              <i className="fas fa-sort-down" />
-            </Button>
-          </>
-        )}
-      </OverlayTrigger>
-    </div>
+    <Button
+      className={styles.lightBtn}
+      data-default-styles
+      active={light == 'OFF' ? true : false}
+      title={`VIS phase is ${isActive ? 'ON' : 'OFF'}`}
+      onClick={() => dispatch(setAttribute("diffractometer.phase_switch", isActive ? "OFF" : "ON" ))} >
+      <i className={`${styles.controlIcon} fas fa-lightbulb`} />
+      <span className={styles.controlLabel}>backlight</span>
+    </Button>
   );
+
 }
 
 export default LightControl;
+
+/*
+
+import { useState, useEffect } from 'react';
+import axios from 'axios'; // For making API requests
+
+const LightControl = () => {
+  const [lightState, setLightState] = useState('OFF');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Function to toggle light state via API call
+  const toggleLight = async () => {
+    const newState = lightState === 'ON' ? 'OFF' : 'ON';
+    setIsLoading(true);
+    
+    try {
+           const response = await axios.post('/backlight', {
+        light: newState
+      });
+      
+      // If request was successful, update the local state
+      if (response.status === 200) {
+        setLightState(newState);
+      }
+    } catch (error) {
+      console.error('Error toggling light:', error);
+      // Handle error appropriately (could show an error message)
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Determine if button should be in active state
+  const isActive = lightState === 'ON';
+  
+  return (
+    <Button
+      className={styles.lightBtn}
+      data-default-styles
+      active={isActive}
+      disabled={isLoading}
+      title={`Backlight is ${lightState}`}
+      onClick={toggleLight}
+    >
+      <i className={`${styles.controlIcon} fas fa-lightbulb`} />
+      <span className={styles.controlLabel}>backlight</span>
+    </Button>
+  );
+};
+
+export default LightControl;*/
