@@ -1,7 +1,7 @@
 import update from 'immutability-helper';
 import { QUEUE_STOPPED, CLICK_CENTRING } from '../constants';
 import { clearAllLastUsedParameters } from '../components/Tasks/fields';
-
+import { WASH_COMMAND_REQUEST, WASH_COMMAND_SUCCESS, WASH_COMMAND_FAILURE } from '../actions/queue';
 const INITIAL_STATE = {
   queue: [],
   currentSampleID: null,
@@ -121,6 +121,16 @@ function queueReducer(state = INITIAL_STATE, action = {}) {
         queueStatus: action.data.queue.queueStatus,
       };
     }
+    case "WASH_COMMAND_REQUEST": {
+      return { ...state, isWashing: true };
+    }
+    case "WASH_COMMAND_SUCCESS": {
+      return { ...state, isWashing: false, lastWashed: Date.now() };
+    }
+    case "WASH_COMMAND_FAILURE": {
+      return { ...state, isWashing: false, error: action.error }
+    }
+
     default: {
       return state;
     }

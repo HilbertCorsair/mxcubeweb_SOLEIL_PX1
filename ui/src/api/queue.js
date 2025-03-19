@@ -1,4 +1,4 @@
-import api from './api';
+import api from '.';
 
 const endpoint = api.url('/queue');
 
@@ -84,4 +84,8 @@ export function sendUpdateDependentFields(task_name, field_data) {
   return endpoint
     .post({ task_name, field_data }, '/update_dependent_field')
     .safeJson();
+}
+
+export function sendWashCommand() {
+  return endpoint.put('http://195.221.8.78:5173/wash').res();
 }
