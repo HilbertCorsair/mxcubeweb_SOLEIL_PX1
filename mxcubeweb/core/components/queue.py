@@ -706,13 +706,25 @@ class Queue(ComponentBase):
         """
         Retrieves the model and the queue entry for the model node with id <id>
 
-        :param int id: Node id of node to retrieve
-        :returns: The tuple model, entry
+        :param int _id: Node id of node to retrieve
+        :returns: The tuple model, entry or the root node and QueueManger if _id is None
         :rtype: Tuple
         """
-        model = HWR.beamline.queue_model.get_node(int(_id))
-        entry = HWR.beamline.queue_manager.get_entry_with_model(model)
-        return model, entry
+        
+        if not _id :
+            return (
+                HWR.beamline.queue_model.get_model_root(),
+                HWR.beamline.queue_manager,
+            )
+        elif not HWR.beamline.queue_model.get_node(int(_id)):
+             return (
+                HWR.beamline.queue_model.get_model_root(),
+                HWR.beamline.queue_manager,
+            )
+        else:                                           
+            model = HWR.beamline.queue_model.get_node(int(_id))
+            entry = HWR.beamline.queue_manager.get_entry_with_model(model)
+            return model, entry
 
     def set_enabled_entry(self, qid, enabled):
         model, entry = self.get_entry(qid)
@@ -1747,10 +1759,14 @@ class Queue(ComponentBase):
         Creates a new queue
         :returns: MxCuBE QueueModel Object
         """
-        from mxcubecore import HardwareRepository as HWR
+        #from mxcubecore import HardwareRepository as HWR
 
         # queue = pickle.loads(self.app.mxcubecore.empty_queue)
         # queue.diffraction_plan = {}
+        #import pdb
+        #pdb.set_trace()
+
+
         HWR.beamline.queue_model.diffraction_plan = {}
         HWR.beamline.queue_model.clear_model("ispyb")
         HWR.beamline.queue_model.clear_model("free-pin")
@@ -2142,13 +2158,13 @@ class Queue(ComponentBase):
 
         return msg
 
-    def queue_clear(
-        self,
-    ):
+    def queue_clear(self):
+   
+    
         self.app.lims.init_sample_list()
         self.clear_queue()
-        msg = "[QUEUE] Cleared  " + str(HWR.beamline.queue_model.get_model_root()._name)
-        logging.getLogger("MX3.HWR").info(msg)
+        #msg = "[QUEUE] Cleared  " + str(HWR.beamline.queue_model.get_model_root()._name)
+        #logging.getLogger("MX3.HWR").info(msg)
 
     def set_queue(self, json_queue):
         self.queue_add_item(json_queue)
@@ -2380,6 +2396,9 @@ class Queue(ComponentBase):
         return task_info
 
     def get_sample(self, _id):
+        print(f"Fetching sample |{_id}|")
+        
+
         sample = self.queue_to_dict().get(_id, None)
 
         if not sample:

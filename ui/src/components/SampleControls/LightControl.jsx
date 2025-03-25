@@ -8,7 +8,8 @@ import styles from './SampleControls.module.css';
 
 function LightControl() {
   const dispatch = useDispatch();
-  const light =  true //useSelector((state) => state.beamline.hardwareObject["diffractometer.backlight"]);
+
+  const light =  true //useSelector((light) => state.beamline.hardwareObject["diffractometer.backlight"]);
   const isActive = false //light ? true :false
 
   return (
@@ -17,7 +18,7 @@ function LightControl() {
       data-default-styles
       active={light == 'OFF' ? true : false}
       title={`VIS phase is ${isActive ? 'ON' : 'OFF'}`}
-      onClick={() => dispatch(setAttribute("diffractometer.phase_switch", isActive ? "OFF" : "ON" ))} >
+      onClick={() => dispatch(setAttribute("diffractometer.backlight.light_switch", isActive ? "OFF" : "ON" ))} >
       <i className={`${styles.controlIcon} fas fa-lightbulb`} />
       <span className={styles.controlLabel}>backlight</span>
     </Button>

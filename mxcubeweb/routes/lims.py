@@ -25,7 +25,8 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @server.restrict
     def proposal_samples():
         try:
-            lims_name = request.get_json().get("lims", None)
+
+            lims_name = "ISPyB"#request.get_json().get("lims", None)
             res = jsonify(app.lims.synch_with_lims(lims_name))
         except Exception:
             logging.getLogger("MX3.HWR").exception("Could not synchronize with Lims")

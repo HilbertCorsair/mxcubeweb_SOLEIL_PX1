@@ -39,6 +39,7 @@ class Lims(ComponentBase):
         return res
 
     def sample_list_sync_sample(self, lims_sample):
+
         lims_code = lims_sample.get("code", None)
         lims_location = lims_sample.get("lims_location")
         sample_to_update = None
@@ -164,7 +165,11 @@ class Lims(ComponentBase):
         return prefix
 
     def get_session_manager(self) -> LimsSessionManager:
-        return HWR.beamline.lims.session_manager
+        if HWR.beamline.lims.session_manager:
+            return HWR.beamline.lims.session_manager
+        else:
+            print("problem")
+            exit()
 
     def is_rescheduled_session(self, session):
         """
@@ -177,6 +182,7 @@ class Lims(ComponentBase):
         HWR.beamline.lims.allow_session(session)
 
     def select_session(self, session_id: str) -> bool:
+        
         """
         param session_id : this is a identifier that could be proposal name or session_id depending of the type of LIMS login type
         """
@@ -184,18 +190,22 @@ class Lims(ComponentBase):
 
         # Selecting the active session in the LIMS object
         try:
-            session = HWR.beamline.lims.set_active_session_by_id(session_id)
+            session = HWR.beamline.lims.session_manager.active_session
+
+
             if session is None:
                 raise "No session selected on LIMS"
+        
         except BaseException as e:
             import traceback
-
+        
             traceback.print_exc(file=sys.stdout)
             logging.getLogger("MX3.HWR").info(
                 "No session candidate. Force signout. e=%s" % str(e)
             )
             self.app.usermanager.signout()
             return False
+        
 
         if (
             HWR.beamline.lims.is_user_login_type()
@@ -205,7 +215,7 @@ class Lims(ComponentBase):
             HWR.beamline.session.set_in_commissioning(self.get_proposal_info())
             logging.getLogger("MX3.HWR").info("[LIMS] Commissioning proposal flag set.")
 
-        if HWR.beamline.session.session_id != HWR.beamline.lims.get_session_id():
+        """if HWR.beamline.session.session_id != HWR.beamline.lims.get_session_id():
             # ruff: noqa: G004
             logging.getLogger("MX3.HWR").info(
                 f"[LIMS] New session, clearing queue and sample list for {session.code}{session.number}"
@@ -234,7 +244,7 @@ class Lims(ComponentBase):
             "[LIMS] Selected session. proposal=%s session_id=%s.",
             session.proposal_name,
             session.session_id,
-        )
+        )"""
 
         if self.is_rescheduled_session(session):
             logging.getLogger("MX3.HWR").info(
@@ -265,6 +275,7 @@ class Lims(ComponentBase):
         return True
 
     def get_default_prefix(self, sample_data, generic_name=False):
+
         if isinstance(sample_data, dict):
             sample = qmo.Sample()
             sample.code = sample_data.get("code", "")
@@ -280,15 +291,35 @@ class Lims(ComponentBase):
     def get_default_subdir(self, sample_data):
         return HWR.beamline.session.get_default_subdir(sample_data)
 
-    def synch_with_lims(self, lims_name):
+    def synch_with_lims(self, lims_name): #(self, proposal_id):
+
         self.app.queue.queue_clear()
         self.app.sample_changer.get_sample_list()
 
+        """print(f"Proposal id is{proposal_id}")
+        if not proposal_id:
+            proposal_id= HWR.beamline.lims.session_manager.active_session.proposal_id
+            print(f"Updated proposal_id in components/lims.py.sync ... {proposal_id}")
+
+        session_id =  HWR.beamline.lims.session_manager.active_session.session_id"""
         samples_info_list = HWR.beamline.lims.get_samples(lims_name)
+        print(f"==========================mxcubeweb core components synch_with_lims {samples_info_list}")
+
+        #samples_info_list = HWR.beamline.sample_changer.get_components()
+
+
+        if not samples_info_list: 
+            samples_info_list = []
+        
+        
         for sample_info in samples_info_list:
-            sample_info["limsID"] = sample_info.pop("sampleId")
+
+
+            sample_info["limsID"] = sample_info["sampleId"]
             sample_info["defaultPrefix"] = self.get_default_prefix(sample_info)
+            print(f"==========================mxcubeweb core component lims.py synch_with_lims {sample_info['defaultPrefix']} ")
             sample_info["defaultSubDir"] = self.get_default_subdir(sample_info)
+            print(f"==========================mxcubeweb core component lims.py synch_with_lims {sample_info['defaultSubDir']} ")
 
             if not VALID_SAMPLE_NAME_REGEXP.match(sample_info["sampleName"]):
                 raise AttributeError(
@@ -299,12 +330,14 @@ class Lims(ComponentBase):
             try:
                 basket = int(sample_info["containerSampleChangerLocation"])
             except (TypeError, ValueError, KeyError):
+                print("Type error")
                 continue
             else:
                 if HWR.beamline.sample_changer.__class__.__TYPE__ in [
                     "Flex Sample Changer",
                     "FlexHCD",
                     "RoboDiff",
+                    "Cryotong"
                 ]:
                     cell = int(math.ceil((basket) / 3.0))
                     puck = basket - 3 * (cell - 1)
