@@ -428,6 +428,24 @@ class BaseUserManager(ComponentBase):
         # sure that the is_anonymous has the correct value.
         # Update operator calls lims.select_session that raises an exception if
         # there are no valid LIMS sessions.
+        if not HWR.beamline.lims.session_manager:
+            print("NO LIMS Session MANAGER")
+            res = {
+            "synchrotronName":"",
+            "beamlineName": "",
+            "loggedIn": False,
+            "loginType": "Proposal",
+            "limsName": "ISPyB",
+            "proposalList": [],
+            "rootPath": "",
+            "user": {},
+            "useSSO": False,
+        }
+            return res
+        else:
+            print(f" _____ Found session manager {HWR.beamline.lims.session_manager}___________")
+
+
         with contextlib.suppress(Exception):
             
             #ssssssssself.update_operator()
@@ -446,6 +464,9 @@ class BaseUserManager(ComponentBase):
         # If no previous session selected and a single session available
         # then it selects automatically the session
         #if not HWR.beamline.lims.session_manager:
+
+
+        print(f"Active session  IS {HWR.beamline.lims.session_manager.active_session}")
 
 
         res = {

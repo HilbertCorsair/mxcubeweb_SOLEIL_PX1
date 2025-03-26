@@ -332,10 +332,10 @@ class Queue(ComponentBase):
 
         queueID = node._node_id
         _, state = self.get_node_state(queueID)
-
-        parameters["subdir"] = os.path.join(
-            *parameters["path"].split(HWR.beamline.session.raw_data_folder_name)[1:]
-        ).lstrip("/")
+        
+        """parameters["subdir"] = os.path.join(
+            parameters["path"].split(HWR.beamline.session.raw_data_folder_name)[1:]
+        ).lstrip("/")"""
 
         pt = node.acquisitions[0].path_template
 
@@ -1082,9 +1082,7 @@ class Queue(ComponentBase):
                 params.get("subdir", "").strip("/").split("/")[0:-1]
             )
 
-        full_path, process_path = HWR.beamline.session.get_full_path(
-            params.get("subdir", ""), self.get_folder_tag(params)
-        )
+        full_path, process_path = HWR.beamline.session.get_full_path()
         acq.path_template.directory = full_path
         acq.path_template.process_directory = process_path
 

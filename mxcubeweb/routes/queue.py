@@ -302,12 +302,12 @@ def init_route(app, server, url_prefix):  # noqa: C901
 
     @bp.route("/available_tasks", methods=["GET"])
     @server.restrict
-    def get_avilable_tasks():
+    def get_available_tasks():
         """
         Returns a list of all available tasks
         """
         resp = jsonify(app.queue.get_available_tasks())
-
+        #print (resp)
         resp.status_code = 200
         return resp
 

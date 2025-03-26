@@ -16,6 +16,7 @@ VALID_SAMPLE_NAME_REGEXP = re.compile("^[a-zA-Z0-9:+_-]+$")
 class Lims(ComponentBase):
     def __init__(self, app, config):
         super().__init__(app, config)
+        self.sl_counter = 0
 
     def new_sample_list(self):
         return {"sampleList": {}, "sampleOrder": []}
@@ -41,20 +42,24 @@ class Lims(ComponentBase):
     def sample_list_sync_sample(self, lims_sample):
 
         lims_code = lims_sample.get("code", None)
-        lims_location = lims_sample.get("lims_location")
+        lims_location = lims_sample.get("lims_location")[2:]
         sample_to_update = None
+        print(f"SLSS 1 {lims_code}, {lims_location}, {sample_to_update}")
 
         # LIMS sample has code, check if the code was read by SC
         if lims_code and self.app.sample_changer.sc_contents_from_code_get(lims_code):
             sample_to_update = self.app.sample_changer.sc_contents_from_code_get(
                 lims_code
             )
+            print(f"SLSS 2  {sample_to_update}")
         elif lims_location:
+
             # Asume that the samples have been put in the right place of the SC
             sample_to_update = self.app.sample_changer.sc_contents_from_location_get(
                 lims_location
             )
 
+            print(f"SLSS 3  {lims_location}, {sample_to_update}")
         if sample_to_update:
             loc = sample_to_update["sampleID"]
             self.sample_list_update_sample(loc, lims_sample)
@@ -279,19 +284,22 @@ class Lims(ComponentBase):
         if isinstance(sample_data, dict):
             sample = qmo.Sample()
             sample.code = sample_data.get("code", "")
-            sample.name = sample_data.get("sampleName", "").replace(":", "-")
+            sample.name = sample_data.get("sampleName", "")
+            sample.name = sample.name.replace(":", "-")
             sample.location = sample_data.get("location", "").split(":")
             sample.lims_id = sample_data.get("limsID", -1)
             sample.crystals[0].protein_acronym = sample_data.get("proteinAcronym", "")
         else:
             sample = sample_data
-
+        #print(f"==========================mxcubeweb core component lims.py get defait prefix  {sample_data} ")
         return HWR.beamline.session.get_default_prefix(sample, generic_name)
 
     def get_default_subdir(self, sample_data):
+        #print(f"==========================mxcubeweb core component lims.py default subdir {sample_data} ")
         return HWR.beamline.session.get_default_subdir(sample_data)
 
     def synch_with_lims(self, lims_name): #(self, proposal_id):
+        self.sl_counter += 1
 
         self.app.queue.queue_clear()
         self.app.sample_changer.get_sample_list()
@@ -303,7 +311,13 @@ class Lims(ComponentBase):
 
         session_id =  HWR.beamline.lims.session_manager.active_session.session_id"""
         samples_info_list = HWR.beamline.lims.get_samples(lims_name)
-        print(f"==========================mxcubeweb core components synch_with_lims {samples_info_list}")
+        #self.check_if_str(samples_info_list)
+
+
+
+        #print(f"==========================mxcubeweb core components synch_with_lims {samples_info_list[0:2]}")
+        #import pdb
+        #pdb.set_trace()
 
         #samples_info_list = HWR.beamline.sample_changer.get_components()
 
@@ -317,28 +331,33 @@ class Lims(ComponentBase):
 
             sample_info["limsID"] = sample_info["sampleId"]
             sample_info["defaultPrefix"] = self.get_default_prefix(sample_info)
-            print(f"==========================mxcubeweb core component lims.py synch_with_lims {sample_info['defaultPrefix']} ")
+            #print(f"==========================mxcubeweb core component lims.py PREFIX synch_with_lims {sample_info['defaultPrefix']} ")
             sample_info["defaultSubDir"] = self.get_default_subdir(sample_info)
-            print(f"==========================mxcubeweb core component lims.py synch_with_lims {sample_info['defaultSubDir']} ")
+            #print(f"==========================mxcubeweb core component lims.py SUBDIR synch_with_lims {sample_info['defaultSubDir']} ")
 
             if not VALID_SAMPLE_NAME_REGEXP.match(sample_info["sampleName"]):
+                #print ("SL1")
                 raise AttributeError(
                     "sample name for sample %s contains an incorrect character"
                     % sample_info
                 )
+            
 
             try:
                 basket = int(sample_info["containerSampleChangerLocation"])
+                #print ("SL2")
             except (TypeError, ValueError, KeyError):
-                print("Type error")
+                #print("SL3")
                 continue
             else:
+                #print("SL4")
                 if HWR.beamline.sample_changer.__class__.__TYPE__ in [
                     "Flex Sample Changer",
                     "FlexHCD",
                     "RoboDiff",
                     "Cryotong"
                 ]:
+                    #print("SL5")
                     cell = int(math.ceil((basket) / 3.0))
                     puck = basket - 3 * (cell - 1)
                     sample_info["containerSampleChangerLocation"] = "%d:%d" % (
@@ -347,17 +366,22 @@ class Lims(ComponentBase):
                     )
 
             try:
+                #print("SL6")
                 lims_location = sample_info[
                     "containerSampleChangerLocation"
                 ] + ":%02d" % int(sample_info["sampleLocation"])
             except Exception:
+                #print("SL7")
                 logging.getLogger("MX3.HWR").info(
                     "[LIMS] Could not parse sample loaction from"
                     " LIMS, (perhaps not set ?)"
                 )
             else:
+                #print("SL8")
                 sample_info["lims_location"] = lims_location
-
+            
                 self.sample_list_sync_sample(sample_info)
+
+        print(f"SL COUNTER = {self.sl_counter}")
 
         return self.sample_list_get()

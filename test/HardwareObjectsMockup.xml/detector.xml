@@ -1,6 +1,6 @@
 <object class = "DetectorMockup">
   <username>detector</username>
-  <object hwrid="detector_distance" role="detector_distance"/>
+  <object hwrid="/detector_distance" role="detector_distance"/>
   <motor_name>detector_distance</motor_name>
   <actuator_name>detector_distance</actuator_name>
   <tempThreshold>33.5</tempThreshold>
