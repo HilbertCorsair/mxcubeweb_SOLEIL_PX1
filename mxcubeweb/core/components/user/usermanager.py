@@ -310,6 +310,7 @@ class BaseUserManager(ComponentBase):
             self.signout()
 
     def login(self, login_id: str, password: str, sso_data: dict = {}) -> None:
+
         """Login the user.
 
         Create new session for the user if it does not exist. Activate user in
@@ -321,6 +322,11 @@ class BaseUserManager(ComponentBase):
             password: The password.
             sso_data: Dictionary containing information from the SSO service used.
         """
+        auth = HWR.beamline.session.px1_authorisation(login_id, password)
+
+        if not all(auth):
+            return
+
         try:
             HWR.beamline.lims.init()
             HWR.beamline.lims.login(login_id)
@@ -428,6 +434,8 @@ class BaseUserManager(ComponentBase):
         # sure that the is_anonymous has the correct value.
         # Update operator calls lims.select_session that raises an exception if
         # there are no valid LIMS sessions.
+
+
         if not HWR.beamline.lims.session_manager:
             print("NO LIMS Session MANAGER")
             res = {
@@ -638,6 +646,9 @@ class UserManager(BaseUserManager):
             LimsSessionManager object with login information.
         """
         self._debug("_login. login_id=%s" % login_id)
+
+        
+
         try:
             HWR.beamline.lims.login(login_id)
 
