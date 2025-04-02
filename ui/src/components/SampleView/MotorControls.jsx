@@ -30,17 +30,9 @@ function MotorControls() {
 
   return (
     <>
-      {motorsProps.slice(0, 3).map(({ role }) => (
+      {motorsProps.slice(0, 1).map(({ role }) => (
         <MotorInput key={role} role={role} />
       ))}
-
-      <div className={motorInputStyles.container}>
-        <p className={`${motorInputStyles.label} mb-1`}>Sample alignment</p>
-        <TwoAxisTranslationControl
-          verticalMotorProps={verticalMotorProps}
-          horizontalMotorProps={horizontalMotorProps}
-        />
-      </div>
 
       <Button
         className={styles.showAllBtn}
@@ -59,7 +51,7 @@ function MotorControls() {
 
       {showAll &&
         motorsProps
-          .slice(3)
+          .slice(1, 3)
           .map(({ role }) => <MotorInput key={role} role={role} />)}
     </>
   );

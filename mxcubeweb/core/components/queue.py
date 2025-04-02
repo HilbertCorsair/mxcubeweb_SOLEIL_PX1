@@ -223,7 +223,8 @@ class Queue(ComponentBase):
             return (True, UNCOLLECTED)
 
         enabled = node.is_enabled()
-        curr_entry = HWR.beamline.queue_manager.get_current_entry()
+        # Hack to bypass broken HWR.beamline.queue_manager.get_current_entry()
+        curr_entry = entry # HWR.beamline.queue_manager.get_current_entry()
         running = HWR.beamline.queue_manager.is_executing() and (
             curr_entry == entry or curr_entry == entry._parent_container
         )
@@ -2386,10 +2387,19 @@ class Queue(ComponentBase):
 
     def get_available_tasks(self):
         task_info = {}
+        #import pdb
+        #pdb.set_trace()
 
         for task, available in HWR.beamline.available_methods.items():
             if available:
                 task_info[task] = self.get_default_task_parameters(task)
+        a_verif_k = task_info[task]["acq_parameters"]["kappa"]
+        a_verif_phi = task_info[task]["acq_parameters"]["kappa_phi"]
+
+        task_info[task]["acq_parameters"]["kappa"] = 0 if not a_verif_k else a_verif_k
+        task_info[task]["acq_parameters"]["kappa_phi"] =  0 if not a_verif_phi else a_verif_phi
+
+
 
         return task_info
 

@@ -324,8 +324,8 @@ class BaseUserManager(ComponentBase):
         """
         auth = HWR.beamline.session.px1_authorisation(login_id, password)
 
-        if not all(auth):
-            return
+        if not ( len(auth)== 2 and all([x == True for x in auth]) ):
+            return {"msg":auth}
 
         try:
             HWR.beamline.lims.init()
@@ -456,7 +456,7 @@ class BaseUserManager(ComponentBase):
 
         with contextlib.suppress(Exception):
             
-            #ssssssssself.update_operator()
+        
             print("no calling OPERATOR UPDATE with new_login ")
         login_type = "Proposal"
 
