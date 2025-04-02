@@ -2387,8 +2387,6 @@ class Queue(ComponentBase):
 
     def get_available_tasks(self):
         task_info = {}
-        #import pdb
-        #pdb.set_trace()
 
         for task, available in HWR.beamline.available_methods.items():
             if available:

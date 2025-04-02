@@ -94,7 +94,7 @@ class SampleChanger(ComponentBase):
             "sampleList": samples,
             "sampleOrder": [samplesByCoords[coords] for coords in order],
         }
-        print(f"===================Sample Changer web get_sample_list{sample_list}")
+        
         self.app.lims.sample_list_set(sample_list)
         
  

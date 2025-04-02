@@ -10,34 +10,33 @@ function LightControl() {
   const dispatch = useDispatch();
 
   const backlightObj = useSelector(
-    (state) => true, // state.beamline.hardwareObject['diffractometer.backlight'],
+    (state) => state.beamline.hardwareObjects['diffractometer.backlight'],
   );
 
   // Add this for debugging
 
   console.log('Backlight object:', backlightObj);
 
-  const { state } = backlightObj;
-  const isActive = !!state;
+  const { value } = backlightObj;
+  const isActive = value === 'ON';
 
   // More logging
-  console.log('Backlight state:', state);
+  console.log('Backlight state:', value);
   console.log('isActive:', isActive);
+
+  const toggleLight = () => {
+    const newState = isActive ? 'OFF' : 'ON';
+    console.log(`Changing backlight state to: ${newState}`);
+    dispatch(setAttribute('diffractometer.backlight.state', newState));
+  };
 
   return (
     <Button
       className={styles.lightBtn}
       data-default-styles
       active={isActive}
-      title={`VIS phase is ${isActive ? 'ON' : 'OFF'}`}
-      onClick={() =>
-        dispatch(
-          setAttribute(
-            'diffractometer.backlight.light_switch',
-            isActive ? 'OFF' : 'ON',
-          ),
-        )
-      }
+      title={`Backlight is ${isActive ? 'ON' : 'OFF'}`}
+      onClick={toggleLight}
     >
       <i className={`${styles.controlIcon} fas fa-lightbulb`} />
       <span className={styles.controlLabel}>backlight</span>
