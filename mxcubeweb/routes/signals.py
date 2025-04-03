@@ -352,7 +352,7 @@ def collect_oscillation_started(*args):
             "queueID": node["queue_id"],
             "sample": node["sample"],
             "state": RUNNING,
-            "progress": 0,
+            "progress": HWR.beamline.collect.progress,
         }
 
         logging.getLogger("HWR").debug("[TASK CALLBACK] " + str(msg))
@@ -370,7 +370,7 @@ def collect_image_taken(frame):
         node = None
 
     if node and not mxcube.queue.is_interleaved(node["node"]):
-        progress = mxcube.queue.get_task_progress(last_queue_node()["node"], frame)
+        progress = HWR.beamline.collect.progress #mxcube.queue.get_task_progress(last_queue_node()["node"], frame)
 
         msg = {
             "Signal": "collectImageTaken",
