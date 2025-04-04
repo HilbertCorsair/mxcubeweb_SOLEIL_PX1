@@ -43,11 +43,11 @@ def init_route(app, server, url_prefix):
 
         try:
             app.usermanager.login(login_id, password)
-        except Exception:
+        except Exception as e:
             msg = "[LOGIN] User %s could not login" % login_id
             logging.getLogger("MX3.HWR").exception(msg)
             res = make_response(
-                jsonify({"msg": "Authentication failed"}),
+                jsonify({"msg": f"{e}"}),
                 200,
             )
         else:

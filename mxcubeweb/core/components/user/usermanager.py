@@ -322,18 +322,8 @@ class BaseUserManager(ComponentBase):
             password: The password.
             sso_data: Dictionary containing information from the SSO service used.
         """
-        auth = HWR.beamline.session.px1_authorisation(login_id, password)
-
-        if not ( len(auth)== 2 and all([x == True for x in auth]) ):
-            msg = {"msg":json.dump(auth)}
-            raise Exception(msg) 
-        
-        
-        HWR.beamline.session.set_user_info(username = login_id, projuser = login_id)
-
+    
         try:
-            HWR.beamline.lims.init()
-            HWR.beamline.lims.login(login_id)
             self._login(login_id, password)
         except Exception as e:
             self._signout(sso_data=sso_data)
@@ -654,9 +644,18 @@ class UserManager(BaseUserManager):
         
 
         try:
-            HWR.beamline.lims.login(login_id)
+            auth = HWR.beamline.session.px1_authorisation(login_id, password)
 
-            print(f"test {HWR.beamline.lims == HWR.beamline.lims}")
+            if not ( len(auth)== 2 and all([x == True for x in auth]) ):
+                msg = {"msg": auth }
+                if not auth[1]:
+                    msg = "Bad Credentials"
+                elif not auth[0]:
+                    msg = "Unauthorised connection! Please contact your LC."
+
+                raise Exception(msg)
+            HWR.beamline.session.set_user_info(username = login_id, projuser = login_id)
+            HWR.beamline.lims.login(login_id)
 
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
