@@ -263,7 +263,7 @@ function beamlineReducer(state = INITIAL_STATE, action = {}) {
     case 'UPDATE_MOTOR_STATE': {
       return {
         ...state,
-        motorInputDisable: action.value !== HW_STATE.READY,
+        motorInputDisable: action.value !== 'STANDBY', // HW_STATE.READY,
         motors: {
           ...state.motors,
           [action.name]: {

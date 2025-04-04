@@ -325,7 +325,11 @@ class BaseUserManager(ComponentBase):
         auth = HWR.beamline.session.px1_authorisation(login_id, password)
 
         if not ( len(auth)== 2 and all([x == True for x in auth]) ):
-            return {"msg":auth}
+            msg = {"msg":json.dump(auth)}
+            raise Exception(msg) 
+        
+        
+        HWR.beamline.session.set_user_info(username = login_id, projuser = login_id)
 
         try:
             HWR.beamline.lims.init()

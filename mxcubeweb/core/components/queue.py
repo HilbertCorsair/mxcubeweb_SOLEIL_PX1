@@ -218,13 +218,13 @@ class Queue(ComponentBase):
                 {'sample': sample, 'idx': index, 'queue_id': node_id}
         """
         try:
+
             node, entry = self.get_entry(node_id)
         except Exception:
             return (True, UNCOLLECTED)
 
         enabled = node.is_enabled()
-        # Hack to bypass broken HWR.beamline.queue_manager.get_current_entry()
-        curr_entry = entry # HWR.beamline.queue_manager.get_current_entry()
+        curr_entry = HWR.beamline.queue_manager.get_current_entry()
         running = HWR.beamline.queue_manager.is_executing() and (
             curr_entry == entry or curr_entry == entry._parent_container
         )

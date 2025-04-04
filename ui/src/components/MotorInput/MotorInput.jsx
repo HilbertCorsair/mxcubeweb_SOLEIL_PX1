@@ -22,14 +22,17 @@ function MotorInput(props) {
     (state) => state.beamline.hardwareObjects[attribute],
   );
 
-  const disabled = useSelector(
-    (state) =>
+  debugger;
+
+  const disabled = useSelector((state) => {
+    return (
       state.beamline.motorInputDisable ||
-      state.queue.queueStatus === QUEUE_RUNNING,
-  );
+      state.queue.queueStatus === QUEUE_RUNNING
+    );
+  });
 
   const { state, value } = motor;
-  const isReady = state === HW_STATE.READY;
+  const isReady = state === 'STANDBY'; // HW_STATE.READY;
   const id = `${idPrefix}_${role}`;
 
   if (Number.isNaN(motor.value)) {
