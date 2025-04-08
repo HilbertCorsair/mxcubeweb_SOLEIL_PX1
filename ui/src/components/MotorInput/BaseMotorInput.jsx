@@ -51,7 +51,7 @@ function BaseMotorInput(props) {
     }
   }
 
-  const isReady = state === HW_STATE.READY;
+  const isReady = state === 'STANDBY'; // HW_STATE.READY;
   const isBusy = state === HW_STATE.BUSY;
   const isWarning = state === HW_STATE.WARNING;
   const isFault =

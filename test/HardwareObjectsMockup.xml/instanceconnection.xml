@@ -1,8 +1,0 @@
-<procedure class="InstanceServer">
-  <port>14001</port>
-  <check_method>display</check_method>
-  <remote_auth_users>com-proxima1,chavas,lener,montaville,legrand</remote_auth_users>
-  <!-- check_method>ssh</check_method -->
-  <!-- ssh_host>collect1</ssh_host -->
-  <ssh_host>collect2,collect2.exp.synchrotron-soleil.fr,collect1,proxima1-4.exp.synchrotron-soleil.fr,proxima1-20.exp.synchrotron-soleil.fr</ssh_host>
-</procedure>

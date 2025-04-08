@@ -10,23 +10,23 @@ function LightControl() {
   const dispatch = useDispatch();
 
   const backlightObj = useSelector(
-    (state) => state.beamline.hardwareObjects['diffractometer.backlight'],
+    (state) => true, // state.beamline.hardwareObjects['diffractometer.backlight'],
   );
 
   // Add this for debugging
 
-  console.log('Backlight object:', backlightObj);
+  // console.log('Backlight object:', backlightObj);
 
   const { value } = backlightObj;
   const isActive = value === 'ON';
 
   // More logging
-  console.log('Backlight state:', value);
-  console.log('isActive:', isActive);
+  // console.log('Backlight state:', value);
+  // console.log('isActive:', isActive);
 
   const toggleLight = () => {
     const newState = isActive ? 'OFF' : 'ON';
-    console.log(`Changing backlight state to: ${newState}`);
+    // console.log(`Changing backlight state to: ${newState}`);
     dispatch(setAttribute('diffractometer.backlight.state', newState));
   };
 

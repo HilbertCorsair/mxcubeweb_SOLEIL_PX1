@@ -6,6 +6,7 @@ from flask import (
     Response,
     jsonify,
     request,
+    session,
 )
 from mxcubecore import HardwareRepository as HWR
 
@@ -135,6 +136,16 @@ def init_route(app, server, url_prefix):  # noqa: C901
         resp = jsonify(app.queue.get_queue_state())
         resp.status_code = 200
         return resp
+    
+    @bp.route('/wash', methods=['PUT'])
+    @server.restrict
+    def wash():
+        try:
+            HWR.beamline.sample_changer.wash()  # This triggers the wash command on PX1CatsCryotong
+            return jsonify({"message": "Wash command executed successfully"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
 
     @bp.route("/<sid>/<tindex>/execute", methods=["PUT"])
     @server.require_control

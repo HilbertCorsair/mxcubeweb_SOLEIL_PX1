@@ -22,8 +22,6 @@ function MotorInput(props) {
     (state) => state.beamline.hardwareObjects[attribute],
   );
 
-  debugger;
-
   const disabled = useSelector((state) => {
     return (
       state.beamline.motorInputDisable ||

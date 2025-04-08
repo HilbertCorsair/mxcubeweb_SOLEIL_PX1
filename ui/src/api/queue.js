@@ -80,6 +80,10 @@ export function sendSetQueueSettings(name, value) {
   return endpoint.post({ name, value }, '/setting').res();
 }
 
+export function sendWashCommand() {
+  return endpoint.put('/wash').res();
+}
+
 export function sendUpdateDependentFields(task_name, field_data) {
   return endpoint
     .post({ task_name, field_data }, '/update_dependent_field')

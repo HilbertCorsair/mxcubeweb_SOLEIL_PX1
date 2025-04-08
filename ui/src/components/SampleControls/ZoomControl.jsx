@@ -1,8 +1,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-
 import { HW_STATE } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './SampleControls.module.css';
@@ -16,6 +15,37 @@ function ZoomControl() {
     (state) => state.beamline.hardwareObjects[ZOOM_HWO_ID],
   );
 
+  // Find the index of the current zoom value in the commands array
+  const zoomIndex = commands.indexOf(value);
+
+  // Local state to track slider position during dragging
+  const [sliderPosition, setSliderPosition] = useState(zoomIndex);
+
+  // Update local state when Redux state changes
+  useEffect(() => {
+    setSliderPosition(zoomIndex);
+  }, [zoomIndex]);
+
+  // Handle slider movement without dispatching action
+  const handleSliderMove = (evt) => {
+    const position = Number.parseInt(evt.target.value, 10);
+    setSliderPosition(position);
+  };
+
+  // Handle slider release - only now dispatch the action
+  const handleSliderRelease = () => {
+    dispatch(setAttribute(ZOOM_HWO_ID, commands[sliderPosition]));
+  };
+
+  // Handle direct click on a tick mark
+  const handleTickClick = (position) => {
+    setSliderPosition(position);
+    dispatch(setAttribute(ZOOM_HWO_ID, commands[position]));
+  };
+
+  // Create an array of indices for the 7 zoom positions
+  const zoomPositions = Array.from({ length: 7 }, (_, i) => i);
+
   return (
     <OverlayTrigger
       trigger="click"
@@ -23,24 +53,37 @@ function ZoomControl() {
       placement="bottom"
       overlay={
         <Popover id="ZoomControl_popover" className={styles.popover} body>
-          <input
-            type="range"
-            list="ZoomControl_commands"
-            min={0}
-            max={commands.length - 1}
-            value={commands.indexOf(value)}
-            disabled={state !== HW_STATE.READY}
-            onChange={(evt) => {
-              const cmdIndex = Number.parseFloat(evt.target.value);
-              dispatch(setAttribute(ZOOM_HWO_ID, commands[cmdIndex]));
-            }}
-          />
+          <div className={styles.zoomSliderContainer}>
+            <input
+              type="range"
+              className={styles.zoomSlider}
+              min={0}
+              max={6}
+              step={1}
+              value={sliderPosition}
+              disabled={state !== HW_STATE.READY}
+              onChange={handleSliderMove}
+              onMouseUp={handleSliderRelease}
+              onTouchEnd={handleSliderRelease}
+            />
 
-          <datalist id="ZoomControl_commands">
-            {commands.map((cmd, index) => (
-              <option key={cmd} value={index} />
-            ))}
-          </datalist>
+            {/* Tick marks container */}
+            <div className={styles.tickMarksContainer}>
+              {zoomPositions.map((pos) => (
+                <div
+                  key={pos}
+                  className={`${styles.tickMark} ${
+                    zoomIndex === pos ? styles.activeTick : ''
+                  }`}
+                  onClick={() => handleTickClick(pos)}
+                >
+                  <span className={styles.tickLabel}>
+                    {commands[pos].slice(-1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </Popover>
       }
     >

@@ -106,6 +106,17 @@ function queueReducer(state = INITIAL_STATE, action = {}) {
     case 'QUEUE_STATE': {
       return Object.assign({}, state, ...action.queueState);
     }
+
+    case 'WASH_COMMAND_REQUEST': {
+      return { ...state, isWashing: true };
+    }
+    case 'WASH_COMMAND_SUCCESS': {
+      return { ...state, isWashing: false, lastWashed: Date.now() };
+    }
+    case 'WASH_COMMAND_FAILURE': {
+      return { ...state, isWashing: false, error: action.error };
+    }
+
     case 'SET_INITIAL_STATE': {
       return {
         ...state,

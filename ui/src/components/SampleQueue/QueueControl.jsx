@@ -10,15 +10,17 @@ import {
   QUEUE_STARTED,
 } from '../../constants';
 
+import { washCommand } from '../../actions/queue';
 import QueueSettings from '../../containers/QueueSettings';
 import loader from '../../img/busy-indicator.gif';
+import { connect } from 'react-redux';
 
-export default class QueueControl extends React.Component {
+class QueueControl extends React.Component {
   constructor(props) {
     super(props);
 
     this.nextSample = this.nextSample.bind(this);
-
+    this.handleWashClick = this.handleWashClick.bind(this);
     this.state = {
       options: {
         [QUEUE_STARTED]: [
@@ -118,6 +120,10 @@ export default class QueueControl extends React.Component {
     }
   }
 
+  handleWashClick() {
+    this.props.washCommand();
+  }
+
   renderOption(option) {
     return (
       <Button
@@ -190,6 +196,15 @@ export default class QueueControl extends React.Component {
             <span>
               {sampleQueueOptions.map((option) => this.renderOption(option))}
             </span>
+            {/* Add the Wash Sample button here */}
+            <Button
+              className="btn-info"
+              variant=""
+              size="sm"
+              onClick={this.handleWashClick}
+            >
+              Wash Sample
+            </Button>
           </Nav.Item>
           <Nav.Item>
             <img
@@ -204,3 +219,5 @@ export default class QueueControl extends React.Component {
     );
   }
 }
+const mapDispatchToProps = { washCommand };
+export default connect(null, mapDispatchToProps)(QueueControl);

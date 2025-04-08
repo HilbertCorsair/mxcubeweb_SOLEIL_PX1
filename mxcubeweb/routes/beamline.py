@@ -57,8 +57,17 @@ def create_set_route(app, server, bp, adapter, attr, name):
             Replies with status code 200 on success and 400 on exceptions.
             """
             rd = _th["value"].parse_raw(request.data)
+            
+            print(f"==========\n=========\nRD {type(rd)}, {rd}\nTH {type(_th)}, {_th}")
+            print(f'TH >value {_th["value"]}')
+            print(f'Req Data: {request.data}')
+            print(f'ATTR: {attr}')
+            print(f"RD_VALUE : {rd.value}, {type(rd.value)}\n==========================\n")
+            
+
             try:
                 getattr(app.mxcubecore.get_adapter(rd.name.lower()), attr)(rd)
+                
                 return "Value set successfully"
             except Exception:
                 logging.getLogger("user_level_log").error(

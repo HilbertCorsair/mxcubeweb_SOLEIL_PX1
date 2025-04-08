@@ -22,6 +22,7 @@ import {
   sendStopQueue,
   sendToggleCheckBox,
   sendUpdateQueueItem,
+  sendWashCommand,
 } from '../api/queue';
 import { sendSetCentringMethod } from '../api/sampleview';
 
@@ -538,5 +539,21 @@ export function getQueue() {
     } catch (error) {
       console.log(error); // eslint-disable-line no-console
     }
+  };
+}
+
+export const WASH_COMMAND_REQUEST = 'WASH_COMMAND_REQUEST';
+export const WASH_COMMAND_SUCCESS = 'WASH_COMMAND_SUCCESS';
+export const WASH_COMMAND_FAILURE = 'WASH_COMMAND_FAILURE';
+export function washCommand() {
+  return (dispatch) => {
+    dispatch({ type: WASH_COMMAND_REQUEST });
+    return sendWashCommand()
+      .then(() => {
+        dispatch({ type: WASH_COMMAND_SUCCESS });
+      })
+      .catch((error) => {
+        dispatch({ type: WASH_COMMAND_FAILURE, error });
+      });
   };
 }

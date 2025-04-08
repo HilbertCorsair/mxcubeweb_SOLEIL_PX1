@@ -120,3 +120,45 @@
 .dropdownItem:global(.active):hover {
   background-color: var(--bs-dropdown-link-hover-bg);
 }
+
+.zoomSliderContainer {
+  width: 100%;
+  padding: 10px 10px 30px 10px;
+  position: relative;
+}
+
+.zoomSlider {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.tickMarksContainer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  margin-top: 5px;
+}
+
+.tickMark {
+  position: relative;
+  width: 2px;
+  height: 10px;
+  background-color: #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.activeTick {
+  background-color: #007bff;
+}
+
+.tickLabel {
+  position: absolute;
+  top: 12px;
+  font-size: 0.75rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
