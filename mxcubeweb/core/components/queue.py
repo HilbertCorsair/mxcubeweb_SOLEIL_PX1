@@ -43,6 +43,7 @@ class Queue(ComponentBase):
     def __init__(self, app, config):
         super().__init__(app, config)
         self.init_queue_settings()
+        self.counter = 0
 
     def build_prefix_path_dict(self, path_list):
         prefix_path_dict = {}
@@ -228,15 +229,22 @@ class Queue(ComponentBase):
         running = HWR.beamline.queue_manager.is_executing() and (
             curr_entry == entry or curr_entry == entry._parent_container
         )
-
-        if entry.status == QUEUE_ENTRY_STATUS.FAILED:
+        # Check point
+        print(self.counter)
+        try:
+            if entry.status == QUEUE_ENTRY_STATUS.FAILED:
+                state = FAILED
+            elif node.is_executed() or entry.status == QUEUE_ENTRY_STATUS.SUCCESS:
+                state = COLLECTED
+            elif running or entry.status == QUEUE_ENTRY_STATUS.RUNNING:
+                state = RUNNING
+            else:
+                state = UNCOLLECTED
+        except:
+            print("There was and error in mxcubeweb/core/components/queue.py but it got cought. Line 235 in get_node_state()")
+            print("This error is most likely causes by calling .status on the wrong oject class")
             state = FAILED
-        elif node.is_executed() or entry.status == QUEUE_ENTRY_STATUS.SUCCESS:
-            state = COLLECTED
-        elif running or entry.status == QUEUE_ENTRY_STATUS.RUNNING:
-            state = RUNNING
-        else:
-            state = UNCOLLECTED
+            return(enabled, state)
 
         return (enabled, state)
 
@@ -711,7 +719,6 @@ class Queue(ComponentBase):
         :returns: The tuple model, entry or the root node and QueueManger if _id is None
         :rtype: Tuple
         """
-        
         if not _id :
             return (
                 HWR.beamline.queue_model.get_model_root(),
@@ -725,7 +732,7 @@ class Queue(ComponentBase):
         else:                                           
             model = HWR.beamline.queue_model.get_node(int(_id))
             entry = HWR.beamline.queue_manager.get_entry_with_model(model)
-            return model, entry
+            return model, entry   
 
     def set_enabled_entry(self, qid, enabled):
         model, entry = self.get_entry(qid)

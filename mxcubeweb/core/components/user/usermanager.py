@@ -410,8 +410,6 @@ class BaseUserManager(ComponentBase):
             self.app.server.emit("forceSignout", room=socketio_sid, namespace="/hwr")
 
     def login_info(self) -> dict:
-        print ("============================usermanager.py LOGIN_INFO ====================================================================================")
-
         """Get the login information to be displayed in the application.
 
         Login information to be displayed in the application such as:
@@ -444,9 +442,6 @@ class BaseUserManager(ComponentBase):
             "useSSO": False,
         }
             return res
-        else:
-            print(f" _____ Found session manager {HWR.beamline.lims.session_manager}___________")
-
 
         with contextlib.suppress(Exception):
             

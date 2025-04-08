@@ -352,7 +352,8 @@ def collect_oscillation_started(*args):
             "queueID": node["queue_id"],
             "sample": node["sample"],
             "state": RUNNING,
-            "progress": HWR.beamline.collect.progress,
+            # Hack to avoid error by None.progress 
+            "progress": 0 #HWR.beamline.collect.progress,
         }
 
         logging.getLogger("HWR").debug("[TASK CALLBACK] " + str(msg))

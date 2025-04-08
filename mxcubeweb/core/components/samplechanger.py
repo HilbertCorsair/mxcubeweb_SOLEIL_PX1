@@ -48,11 +48,8 @@ class SampleChanger(ComponentBase):
         samplesByCoords = {}
         order = []
         current_sample = {}
-        #print(f"===========================mxcubeweb SampleChanger.py    get_sample_list  print sample list  {samples_list[0:10]} ")
-
-
         loaded_sample = HWR.beamline.sample_changer.get_loaded_sample()
-        #print(f"===========================mxcubeweb SampleChanger.py    get_sample_list print LOADED SAMPLE {loaded_sample} ")
+
         for s in samples_list:
             if not s.is_present():
                 continue
@@ -150,7 +147,6 @@ class SampleChanger(ComponentBase):
                     _addElement(contents, element)
         else:
             contents = {"name": "OFFLINE"}
-        print(f"===================Sample Changer web get_sc_contents{contents}")
         return contents
 
     def sc_contents_init(self):
