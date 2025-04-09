@@ -15,7 +15,7 @@ function MotorControls() {
     state.uiproperties.sample_view.components.filter(
       ({ value_type }) => value_type === 'MOTOR',
     ),
-  ).filter((_, index) => index === 1 || index === 2 || index === 10);
+  ); // .filter((_, index) => index === 0 || index === 2 || index === 10);
 
   const verticalMotorProps = motorsProps.find(
     (c) => c.role === 'sample_vertical',
@@ -30,7 +30,7 @@ function MotorControls() {
 
   return (
     <>
-      {motorsProps.map(({ role }) => (
+      {motorsProps.slice(0, 1).map(({ role }) => (
         <MotorInput key={role} role={role} />
       ))}
 
@@ -50,7 +50,9 @@ function MotorControls() {
       </Button>
 
       {showAll &&
-        motorsProps.map(({ role }) => <MotorInput key={role} role={role} />)}
+        motorsProps
+          .slice(1, 3)
+          .map(({ role }) => <MotorInput key={role} role={role} />)}
     </>
   );
 }
