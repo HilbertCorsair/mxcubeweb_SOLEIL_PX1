@@ -7,7 +7,7 @@ import {
   saveMotorPosition,
   updateMotorState,
   setBeamInfo,
-  startClickCentringAction,
+  startClickCentringAction, // startAutoCentringAction,
   updateShapesAction,
   setPixelsPerMm,
   videoMessageOverlay,
@@ -93,12 +93,12 @@ class ServerIO {
 
   connectHwr() {
     const serverUrl = 'http://195.221.8.78:5173'; // Based on the URLs in your error messages
-    
+
     this.hwrSocket = io(`${serverUrl}/hwr`, {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
     });
 
     this.hwrSocket.on('connect', () => {
@@ -110,7 +110,7 @@ class ServerIO {
       console.log('Detailed connection error:', {
         message: error.message,
         type: error.type,
-        description: error.description
+        description: error.description,
       });
     });
 
@@ -325,6 +325,7 @@ class ServerIO {
           '3-Click Centring: <br /> Select centered position or center';
         dispatch(videoMessageOverlay(true, msg));
       } else {
+        // dispatch(startAutoCentringAction());
         const msg = 'Auto loop centring: <br /> Save position or re-center';
         dispatch(videoMessageOverlay(true, msg));
       }
@@ -456,18 +457,18 @@ class ServerIO {
 
   connectLogging() {
     const serverUrl = 'http://195.221.8.78:5173';
-    
+
     this.loggingSocket = io(`${serverUrl}/logging`, {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
     });
 
     this.loggingSocket.on('connect', () => {
       console.log('loggingSocket connected!'); // eslint-disable-line no-console
     });
-  
+
     this.loggingSocket.on('disconnect', (reason) => {
       console.log('loggingSocket disconnected!'); // eslint-disable-line no-console
     });

@@ -11,7 +11,7 @@ import {
   sendRecordCentringClick,
   sendAcceptCentring,
   sendMoveToBeam,
-  sendStartClickCentring,
+  sendStartClickCentring, // sendAutoCentring,
   sendAbortCentring,
   sendMoveToPoint,
 } from '../api/sampleview';
@@ -78,6 +78,12 @@ export function addDistancePoint(x, y) {
 export function startClickCentringAction() {
   return { type: 'START_CLICK_CENTRING' };
 }
+
+/**
+ * export function startAutoCentringAction() {
+ *   return { type; 'START_AUTO_CENTRING' };
+ * }
+ */
 
 export function stopClickCentring() {
   return { type: 'STOP_CLICK_CENTRING' };
@@ -283,6 +289,8 @@ export function unselectShapes(shapes) {
   };
 }
 
+// Maybe needs addon for Auto Centring
+
 export function toggleCentring() {
   return async (dispatch, getState) => {
     const { sampleview } = getState();
@@ -299,6 +307,12 @@ export function toggleCentring() {
     }
   };
 }
+
+/**
+ * export function startAutoCentring() {
+ *   ...
+ * }
+ */
 
 export function startClickCentring() {
   return async (dispatch, getState) => {
