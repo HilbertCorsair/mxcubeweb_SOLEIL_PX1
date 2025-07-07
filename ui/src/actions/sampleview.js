@@ -11,7 +11,8 @@ import {
   sendRecordCentringClick,
   sendAcceptCentring,
   sendMoveToBeam,
-  sendStartClickCentring, // sendAutoCentring,
+  sendStartAutoCentring,
+  sendStartClickCentring,
   sendAbortCentring,
   sendMoveToPoint,
 } from '../api/sampleview';
@@ -78,12 +79,6 @@ export function addDistancePoint(x, y) {
 export function startClickCentringAction() {
   return { type: 'START_CLICK_CENTRING' };
 }
-
-/**
- * export function startAutoCentringAction() {
- *   return { type; 'START_AUTO_CENTRING' };
- * }
- */
 
 export function stopClickCentring() {
   return { type: 'STOP_CLICK_CENTRING' };
@@ -308,11 +303,27 @@ export function toggleCentring() {
   };
 }
 
-/**
- * export function startAutoCentring() {
- *   ...
- * }
- */
+export function startAutoCentring() {
+  return async (dispatch, getState) => {
+    const { queue, shapes } = getState();
+
+    dispatch(clearSelectedShapes());
+    dispatch(unselectShapes(shapes));
+
+    if (!queue.currentSampleID) {
+      dispatch(
+        showErrorPanel(true, 'There is no sample mounted for auto centring'),
+      );
+      return;
+    }
+
+    await sendStartAutoCentring();
+
+    const msg = 'Starting automatic centring';
+
+    dispatch(videoMessageOverlay(true, msg));
+  };
+}
 
 export function startClickCentring() {
   return async (dispatch, getState) => {

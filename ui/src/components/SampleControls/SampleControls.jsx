@@ -2,6 +2,7 @@ import React from 'react';
 
 import SnapshotControl from './SnapshotControl';
 import GridControl from './GridControl';
+import AutoCentringControl from './AutoCentringControl';
 import CentringControl from './CentringControl';
 import FocusControl from './FocusControl';
 import ZoomControl from './ZoomControl';
@@ -18,6 +19,7 @@ function SampleControls(props) {
     <div className={styles.controls}>
       {useShowControl('snapshot') && <SnapshotControl canvas={canvas} />}
       {useShowControl('draw_grid') && <GridControl />}
+      {useShowControl('auto_centring') && <AutoCentringControl />}
       {useShowControl('3_click_centring') && <CentringControl />}
       {useShowControl('focus') && <FocusControl />}
       {useShowControl('zoom') && <ZoomControl />}

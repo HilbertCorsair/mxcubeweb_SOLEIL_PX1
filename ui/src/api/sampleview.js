@@ -30,6 +30,10 @@ export function sendSetCentringMethod(centringMethod) {
   return endpoint.put({ centringMethod }, '/centring/centring_method').res();
 }
 
+export function sendStartAutoCentring() {
+  return endpoint.get('centring/startauto').safeJson();
+}
+
 export function sendStartClickCentring() {
   return endpoint.put(undefined, '/centring/start3click').safeJson();
 }

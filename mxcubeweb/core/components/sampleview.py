@@ -368,7 +368,7 @@ class SampleView(ComponentBase):
             logging.getLogger("user_level_log").info(msg)
 
             HWR.beamline.diffractometer.start_centring_method(
-                HWR.beamline.diffractometer.C3D_MODE
+                HWR.beamline.diffractometer.CENTRING_METHOD_AUTO
             )
         else:
             msg = "Could not starting automatic centring, already centring."
