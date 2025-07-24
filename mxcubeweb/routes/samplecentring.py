@@ -231,7 +231,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @server.restrict
     def centre_auto():
         """
-        Start automatic (lucid) centring procedure.
+        Start automatic (murko) centring procedure.
             :statuscode: 200: no error
             :statuscode: 409: error
         """

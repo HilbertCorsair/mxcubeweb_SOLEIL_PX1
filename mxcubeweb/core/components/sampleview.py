@@ -359,7 +359,7 @@ class SampleView(ComponentBase):
 
     def start_auto_centring(self):
         """
-        Start automatic (lucid) centring procedure.
+        Start automatic (murko) centring procedure.
             :statuscode: 200: no error
             :statuscode: 409: error
         """

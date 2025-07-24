@@ -31,7 +31,7 @@ export function sendSetCentringMethod(centringMethod) {
 }
 
 export function sendStartAutoCentring() {
-  return endpoint.get('centring/startauto').safeJson();
+  return endpoint.get('/centring/startauto').safeJson();
 }
 
 export function sendStartClickCentring() {
