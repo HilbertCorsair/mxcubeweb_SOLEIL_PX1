@@ -284,8 +284,6 @@ export function unselectShapes(shapes) {
   };
 }
 
-// Maybe needs addon for Auto Centring
-
 export function toggleCentring() {
   return async (dispatch, getState) => {
     const { sampleview } = getState();
@@ -317,8 +315,13 @@ export function startAutoCentring() {
       return;
     }
 
-    await sendStartAutoCentring();
-
+    try {
+      await sendStartAutoCentring();
+    } catch {
+      dispatch(
+        showErrorPanel(true, 'Murko is not running, please restart murko server')
+      )
+    }
     const msg = 'Starting automatic centring';
 
     dispatch(videoMessageOverlay(true, msg));
