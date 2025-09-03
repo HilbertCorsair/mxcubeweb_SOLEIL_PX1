@@ -250,7 +250,7 @@
           <xs:element minOccurs="0" name="holderLength" type="xs:double"/>
           <xs:element minOccurs="0" name="isInSampleChanger" type="xs:byte"/>
           <xs:element minOccurs="0" name="lastImageURL" type="xs:string"/>
-          <xs:element minOccurs="0" name="lastKnownCenteringPosition" type="xs:string"/>
+          <xs:element minOccurs="0" name="lastKnownCentringPosition" type="xs:string"/>
           <xs:element minOccurs="0" name="location" type="xs:string"/>
           <xs:element minOccurs="0" name="loopLength" type="xs:double"/>
           <xs:element minOccurs="0" name="loopType" type="xs:string"/>
@@ -466,7 +466,7 @@
     <xs:complexContent>
       <xs:extension base="tns:isPyBValueObject">
         <xs:sequence>
-          <xs:element minOccurs="0" name="actualCenteringPosition" type="xs:string"/>
+          <xs:element minOccurs="0" name="actualCentringPosition" type="xs:string"/>
           <xs:element maxOccurs="unbounded" minOccurs="0" name="autoProcIntegrationVOs" nillable="true" type="tns:autoProcIntegration3VO"/>
           <xs:element minOccurs="0" name="averageTemperature" type="xs:double"/>
           <xs:element minOccurs="0" name="axisEnd" type="xs:double"/>
@@ -477,7 +477,7 @@
           <xs:element minOccurs="0" name="beamSizeAtSampleY" type="xs:double"/>
           <xs:element minOccurs="0" name="bestWilsonPlotPath" type="xs:string"/>
           <xs:element minOccurs="0" name="blSubSampleVO" type="tns:blSubSample3VO"/>
-          <xs:element minOccurs="0" name="centeringMethod" type="xs:string"/>
+          <xs:element minOccurs="0" name="centringMethod" type="xs:string"/>
           <xs:element minOccurs="0" name="comments" type="xs:string"/>
           <xs:element minOccurs="0" name="dataCollectionGroupVO" type="tns:dataCollectionGroup3VO"/>
           <xs:element minOccurs="0" name="dataCollectionId" type="xs:int"/>

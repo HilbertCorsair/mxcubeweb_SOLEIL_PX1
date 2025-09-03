@@ -171,7 +171,7 @@ We strongly encourage the usage of type hints
 - UK English should be used for the spelling in documentation and code.
   Relevant examples for the mxcubeweb code base are for instance
   the words _centring_ and _characterisation_ that are the preferred spelling
-  to _centering_ and _characterization_.
+  to _centring_ and _characterization_.
 
 
 #### Functions

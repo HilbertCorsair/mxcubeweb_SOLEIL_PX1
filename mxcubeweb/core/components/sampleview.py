@@ -194,7 +194,7 @@ class SampleView(ComponentBase):
         if self.app.sample_changer.get_current_sample().get("sampleID", "") == "":
             return
 
-        # If centering is valid add the point, otherwise remove it
+        # If centring is valid add the point, otherwise remove it
         if centring_status["valid"]:
             motor_positions = centring_status["motors"]
             motor_positions.pop("zoom", None)
@@ -399,9 +399,9 @@ class SampleView(ComponentBase):
             self.centring_reset_click_count()
         else:
             logging.getLogger("user_level_log").warning(
-                "Diffracomter is busy, cannot start centering"
+                "Diffracomter is busy, cannot start centring"
             )
-            msg = "Diffracomter is busy, cannot start centering"
+            msg = "Diffracomter is busy, cannot start centring"
             raise RuntimeError(msg)
 
         return {"clicksLeft": self.centring_clicks_left()}
