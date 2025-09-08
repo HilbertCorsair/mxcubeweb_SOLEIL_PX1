@@ -1135,6 +1135,11 @@ class SampleGridTableContainer extends React.Component {
     this.props.unmountSample();
   }
 
+  methodToCreate() {
+    // this method has to call for a entire sequence based on queue
+    return;
+  }
+
   renderTaskContextMenuItems() {
     return (
       <>
@@ -1147,6 +1152,9 @@ class SampleGridTableContainer extends React.Component {
         </Dropdown.Item>
         <Dropdown.Item onClick={this.props.showCharacterisationForm}>
           Characterisation
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.methodToCreate}>
+          PX1Testing smth
         </Dropdown.Item>
         {this.renderWorkflowMenuOptions()}
         <Dropdown.Divider />

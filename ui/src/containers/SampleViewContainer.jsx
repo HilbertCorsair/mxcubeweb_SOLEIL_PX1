@@ -97,6 +97,7 @@ class SampleViewContainer extends Component {
       });
     }
 
+
     return (
       <Container fluid>
         <Row

@@ -141,6 +141,11 @@ export default class ContextMenu extends React.Component {
           key: 'energy_scan',
         },
         {
+          text: 'Add X-ray Centring',
+          action: () => this.showModal('XrayCentring'),
+          key: "xray_centring",
+        },
+        {
           text: 'Go to Point',
           action: () => {
             this.props.sampleViewActions.moveToPoint(this.props.shape.id);
@@ -176,6 +181,16 @@ export default class ContextMenu extends React.Component {
           action: () => this.showModal('energy_scan'),
           key: 'energy_scan',
         },
+        {
+          text: 'Add X-ray Centring',
+          action: () => this.showModal('XrayCentring'),
+          key: "xray_centring",
+        },
+        {
+          text: 'Add Test Task',
+          action: () => this.showModal('TestTask'),
+          key: 'testtask',
+        },
         { text: 'divider', key: 5 },
         ...genericTasks.point,
         genericTasks.point.length > 0 ? { text: 'divider', key: 6 } : {},
@@ -192,6 +207,11 @@ export default class ContextMenu extends React.Component {
           text: 'Add Characterisations',
           action: () => this.showModal('Characterisation'),
           key: 'characterisation',
+        },
+        {
+          text: 'Add Test Task',
+          action: () => this.showModal('TestTask'),
+          key: 'testtask',
         },
         ...genericTasks.point,
       ],
@@ -303,7 +323,17 @@ export default class ContextMenu extends React.Component {
         ...genericTasks.none,
       ],
     };
+    Object.keys(options).forEach((k) => {
+      options[k] = options[k].filter((e) => {
+        // If the key exists in availableMethods and its values is false
+        // then filter out, otherwise keep it
+        return !(Object.keys(this.props.availableMethods).includes(e.key) && !this.props.availableMethods[e.key]);
+      });
+    });
 
+    return options;
+  }
+/**
     Object.keys(this.props.availableMethods).forEach((key) => {
       if (!this.props.availableMethods[key]) {
         Object.keys(options).forEach((k) => {
@@ -320,6 +350,7 @@ export default class ContextMenu extends React.Component {
 
     return options;
   }
+*/
 
   showModal(modalName, extraParams = {}, _shape = null) {
     const { sampleID, shape, sampleData, defaultParameters } = this.props;

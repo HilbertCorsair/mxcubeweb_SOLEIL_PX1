@@ -10,6 +10,7 @@ import Interleaved from '../components/Tasks/Interleaved';
 import XRFScan from '../components/Tasks/XRFScan';
 import EnergyScan from '../components/Tasks/EnergyScan';
 import GenericTaskForm from '../components/Tasks/GenericTaskForm';
+import TestTask from '../components/Tasks/TestTask';
 
 import { hideTaskParametersForm } from '../actions/taskForm';
 
@@ -214,6 +215,17 @@ function TaskContainer() {
           availableElements={energyScanElements}
           rootPath={path}
           defaultParameters={defaultParameters}
+        />
+      );
+    }
+    case 'TestTask': {
+      return (
+        <TestTask
+          show
+          addTask={doAddTask}
+          pointID={pointID}
+          taskData={taskData}
+          hide={() => dispatch(hideTaskParametersForm())}
         />
       );
     }

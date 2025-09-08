@@ -84,6 +84,7 @@ class _BeamlineAdapter:
         Returns:
             (list): The methods.
         """
+        logging.getLogger("MX3.HWR").info(f"Available methods from beamline: {self._bl.available_methods}")
         return self._bl.available_methods
 
     def get_available_elements(self):

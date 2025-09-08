@@ -964,6 +964,8 @@ class Queue(ComponentBase):
                 self.add_xrf_scan(sample_node_id, item)
             elif item_t == "energy_scan":
                 self.add_energy_scan(sample_node_id, item)
+            elif item_t == "TestTask":
+                self.add_test_task(sample_node_id, item)
             elif item_t == "Sample":
                 pass
             else:
@@ -1759,6 +1761,16 @@ class Queue(ComponentBase):
         group_entry.enqueue(escan_entry)
 
         return escan_model._node_id
+    
+    def add_test_task(self, node_id, task):
+        """
+        Adds a test task to the sample with id: <id>
+
+        :param int id: id of the sample to which teh task belongs
+        :param dict task: task data
+        """
+
+        print("testing tasks")
 
     def clear_queue(self):
         """
@@ -2374,6 +2386,9 @@ class Queue(ComponentBase):
         }
 
     def get_task_schema(self, data_model):
+        if not hasattr(data_model, '__signature__'):
+            return {}
+        
         return {
             "path_parameters": data_model.__signature__.parameters[
                 "path_parameters"
@@ -2405,7 +2420,7 @@ class Queue(ComponentBase):
         task_info[task]["acq_parameters"]["kappa_phi"] =  0 if not a_verif_phi else a_verif_phi
 
 
-
+        # logging.getLogger("MX3.HWR").info(f"Task parameters for {task}: {task_info}")
         return task_info
 
     def get_sample(self, _id):
