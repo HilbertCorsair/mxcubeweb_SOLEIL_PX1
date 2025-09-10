@@ -377,7 +377,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
         resp.status_code = 200
 
         return resp
-
+    
     @bp.route("/auto_add_diffplan", methods=["POST"])
     @server.require_control
     @server.restrict

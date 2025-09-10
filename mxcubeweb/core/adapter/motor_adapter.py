@@ -78,3 +78,4 @@ class MotorAdapter(ActuatorAdapterBase):
         except (AttributeError, TypeError):
             msg = "Could not get limits"
             raise ValueError(msg)
+        
