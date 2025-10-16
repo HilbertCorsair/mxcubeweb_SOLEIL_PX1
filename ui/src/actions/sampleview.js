@@ -315,6 +315,9 @@ export function startAutoCentring() {
       return;
     }
 
+    await sendStartAutoCentring();
+
+    /*
     try {
       await sendStartAutoCentring();
     } catch {
@@ -322,6 +325,7 @@ export function startAutoCentring() {
         showErrorPanel(true, 'Murko is not running, please restart murko server')
       )
     }
+      */
     const msg = 'Starting automatic centring';
 
     dispatch(videoMessageOverlay(true, msg));

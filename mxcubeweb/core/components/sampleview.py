@@ -363,7 +363,7 @@ class SampleView(ComponentBase):
             :statuscode: 200: no error
             :statuscode: 409: error
         """
-        if not HWR.beamline.diffracotmeter.is_murko_available():
+        if not HWR.beamline.diffractometer.is_murko_available():
             raise RuntimeError("Murko is not available")
         
         if not HWR.beamline.diffractometer.current_centring_procedure:
