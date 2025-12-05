@@ -8,6 +8,7 @@ export default defineConfig({
     { ...eslintPlugin(), apply: 'serve' }, // dev only to reduce build time
   ],
   server: {
+    allowedHosts: ['mxcubeweb-proxima1.exp.synchrotron-soleil.fr'],
     host: '195.221.8.78',
     port: 5173,
     watch: {
@@ -16,8 +17,8 @@ export default defineConfig({
     open: true, // open default browser on start
     strictPort: true, // fail if port already in use (must be 5173 to match server's CORS config)
     proxy: {
-      '/mxcube/api': 'http://195.221.8.78:8081',
-      '/socket.io/': { target: 'ws://195.221.8.78:8081', ws: true },
+      '/mxcube/api': 'http://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081',
+      '/socket.io/': { target: 'ws://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081', ws: true },
     },
   },
   build: {
