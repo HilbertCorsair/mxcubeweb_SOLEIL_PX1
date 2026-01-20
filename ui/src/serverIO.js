@@ -92,8 +92,7 @@ class ServerIO {
   }
 
   connectHwr() {
-    const serverUrl = 'http://195.221.8.78:5173'; // Based on the URLs in your error messages
-
+    const serverUrl = window.location.origin; //'http://195.221.8.78:8081';
     this.hwrSocket = io(`${serverUrl}/hwr`, {
       transports: ['websocket', 'polling'],
       path: '/socket.io',
@@ -456,7 +455,7 @@ class ServerIO {
   }
 
   connectLogging() {
-    const serverUrl = 'http://195.221.8.78:5173';
+    const serverUrl = window.location.origin;//'https://195.221.8.78:5173';
 
     this.loggingSocket = io(`${serverUrl}/logging`, {
       transports: ['websocket', 'polling'],

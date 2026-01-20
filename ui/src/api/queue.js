@@ -81,7 +81,7 @@ export function sendSetQueueSettings(name, value) {
 }
 
 export function sendWashCommand() {
-  return endpoint.put('/wash').res();
+  return endpoint.put(undefined, '/wash').res();
 }
 
 export function sendUpdateDependentFields(task_name, field_data) {

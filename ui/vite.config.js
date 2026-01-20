@@ -17,8 +17,9 @@ export default defineConfig({
     open: true, // open default browser on start
     strictPort: true, // fail if port already in use (must be 5173 to match server's CORS config)
     proxy: {
-      '/mxcube/api': 'http://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081',
-      '/socket.io/': { target: 'ws://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081', ws: true },
+      '/mxcube/api': 'https://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081', //'195.221.8.78:8081'
+      '/socket.io/': { target: 'wss://mxcubeweb-proxima1.exp.synchrotron-soleil.fr:8081', ws: true },
+      '/video/': '195.221.8.78:8000',
     },
   },
   build: {
