@@ -23,6 +23,11 @@ fabric.Group.prototype.hasBorders = false;
 // Fix: Override fabric.Text default textBaseline to use 'alphabetic' instead of 'alphabetical'
 if (fabric.Text && fabric.Text.prototype) {
   const originalInitialize = fabric.Text.prototype.initialize;
+  const originalSet = fabric.Text.prototype.set;
+  const originalRender = fabric.Text.prototype._render;
+  const originalFromObject = fabric.Text.fromObject;
+  
+  // Override initialize to fix textBaseline at creation
   fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
     // Create a new options object to avoid reassigning the parameter
     const options = optionsParam || {};
@@ -37,8 +42,50 @@ if (fabric.Text && fabric.Text.prototype) {
       options.textBaseline = 'alphabetic';
     }
     
-    return originalInitialize.call(this, text, options);
+    const result = originalInitialize.call(this, text, options);
+    
+    // Ensure textBaseline is set correctly after initialization
+    if (this.textBaseline === 'alphabetical') {
+      this.textBaseline = 'alphabetic';
+    }
+    
+    return result;
   };
+  
+  // Override set method to catch when textBaseline is set via set()
+  fabric.Text.prototype.set = function setTextProperty(key, value) {
+    if (key === 'textBaseline' && value === 'alphabetical') {
+      value = 'alphabetic';
+    }
+    if (typeof key === 'object') {
+      // If key is an object, fix all textBaseline values
+      const options = { ...key }; // Create a copy to avoid mutating the original
+      if (options.textBaseline === 'alphabetical') {
+        options.textBaseline = 'alphabetic';
+      }
+      return originalSet.call(this, options);
+    }
+    return originalSet.call(this, key, value);
+  };
+  
+  // Override _render to fix textBaseline before rendering (catches line 375 issue)
+  fabric.Text.prototype._render = function renderText(ctx) {
+    // Fix textBaseline if it's set to 'alphabetical' before rendering
+    if (this.textBaseline === 'alphabetical') {
+      this.textBaseline = 'alphabetic';
+    }
+    return originalRender.call(this, ctx);
+  };
+  
+  // Override fromObject to fix textBaseline when loading from JSON
+  if (originalFromObject) {
+    fabric.Text.fromObject = function fromObjectText(object, callback) {
+      if (object && object.textBaseline === 'alphabetical') {
+        object.textBaseline = 'alphabetic';
+      }
+      return originalFromObject.call(this, object, callback);
+    };
+  }
 }
 
 // eslint-disable-next-line react/no-unsafe
