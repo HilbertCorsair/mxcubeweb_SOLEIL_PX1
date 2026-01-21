@@ -22,66 +22,73 @@ fabric.Group.prototype.hasControls = false;
 fabric.Group.prototype.hasBorders = false;
 // Fix: Override fabric.Text default textBaseline to use 'alphabetic' instead of 'alphabetical'
 if (fabric.Text && fabric.Text.prototype) {
-  const originalInitialize = fabric.Text.prototype.initialize;
-  const originalSet = fabric.Text.prototype.set;
-  const originalRender = fabric.Text.prototype._render;
-  const originalFromObject = fabric.Text.fromObject;
-  
   // Override initialize to fix textBaseline at creation
-  fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
-    // Create a new options object to avoid reassigning the parameter
-    const options = optionsParam || {};
-    
-    // Fix 'alphabetical' typo to 'alphabetic'
-    if (options.textBaseline === 'alphabetical') {
-      options.textBaseline = 'alphabetic';
-    }
-    
-    // Set default textBaseline if not provided
-    if (!options.textBaseline) {
-      options.textBaseline = 'alphabetic';
-    }
-    
-    const result = originalInitialize.call(this, text, options);
-    
-    // Ensure textBaseline is set correctly after initialization
-    if (this.textBaseline === 'alphabetical') {
-      this.textBaseline = 'alphabetic';
-    }
-    
-    return result;
-  };
-  
-  // Override set method to catch when textBaseline is set via set()
-  fabric.Text.prototype.set = function setTextProperty(key, value) {
-    if (key === 'textBaseline' && value === 'alphabetical') {
-      value = 'alphabetic';
-    }
-    if (typeof key === 'object') {
-      // If key is an object, fix all textBaseline values
-      const options = { ...key }; // Create a copy to avoid mutating the original
+  if (fabric.Text.prototype.initialize) {
+    const originalInitialize = fabric.Text.prototype.initialize;
+    fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
+      // Create a new options object to avoid reassigning the parameter
+      const options = optionsParam ? Object.assign({}, optionsParam) : {};
+      
+      // Fix 'alphabetical' typo to 'alphabetic'
       if (options.textBaseline === 'alphabetical') {
         options.textBaseline = 'alphabetic';
       }
-      return originalSet.call(this, options);
-    }
-    return originalSet.call(this, key, value);
-  };
+      
+      // Set default textBaseline if not provided
+      if (!options.textBaseline) {
+        options.textBaseline = 'alphabetic';
+      }
+      
+      const result = originalInitialize.call(this, text, options);
+      
+      // Ensure textBaseline is set correctly after initialization
+      if (this.textBaseline === 'alphabetical') {
+        this.textBaseline = 'alphabetic';
+      }
+      
+      return result;
+    };
+  }
+  
+  // Override set method to catch when textBaseline is set via set()
+  if (fabric.Text.prototype.set) {
+    const originalSet = fabric.Text.prototype.set;
+    fabric.Text.prototype.set = function setTextProperty(key, value) {
+      if (key === 'textBaseline' && value === 'alphabetical') {
+        value = 'alphabetic';
+      }
+      if (typeof key === 'object' && key !== null) {
+        // If key is an object, fix all textBaseline values
+        const options = Object.assign({}, key); // Create a copy to avoid mutating the original
+        if (options.textBaseline === 'alphabetical') {
+          options.textBaseline = 'alphabetic';
+        }
+        return originalSet.call(this, options);
+      }
+      return originalSet.call(this, key, value);
+    };
+  }
   
   // Override _render to fix textBaseline before rendering (catches line 375 issue)
-  fabric.Text.prototype._render = function renderText(ctx) {
-    // Fix textBaseline if it's set to 'alphabetical' before rendering
-    if (this.textBaseline === 'alphabetical') {
-      this.textBaseline = 'alphabetic';
-    }
-    return originalRender.call(this, ctx);
-  };
+  if (fabric.Text.prototype._render) {
+    const originalRender = fabric.Text.prototype._render;
+    fabric.Text.prototype._render = function renderText(ctx) {
+      // Fix textBaseline if it's set to 'alphabetical' before rendering
+      if (this.textBaseline === 'alphabetical') {
+        this.textBaseline = 'alphabetic';
+      }
+      return originalRender.call(this, ctx);
+    };
+  }
   
   // Override fromObject to fix textBaseline when loading from JSON
-  if (originalFromObject) {
+  if (fabric.Text.fromObject && typeof fabric.Text.fromObject === 'function') {
+    const originalFromObject = fabric.Text.fromObject;
     fabric.Text.fromObject = function fromObjectText(object, callback) {
       if (object && object.textBaseline === 'alphabetical') {
-        object.textBaseline = 'alphabetic';
+        const fixedObject = Object.assign({}, object);
+        fixedObject.textBaseline = 'alphabetic';
+        return originalFromObject.call(this, fixedObject, callback);
       }
       return originalFromObject.call(this, object, callback);
     };
