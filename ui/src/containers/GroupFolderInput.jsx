@@ -42,7 +42,8 @@ class GroupFolderInput extends React.Component {
         >
           <Form.Group
             className="d-flex"
-            validationState={this.state.validationState}
+            isValid={this.state.validationState === 'success'}
+            isInvalid={this.state.validationState === 'warning'}
           >
             <Form.Control
               size="sm"

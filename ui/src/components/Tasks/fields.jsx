@@ -244,7 +244,7 @@ export function CheckboxField({ propName, label, disabled }) {
           className="mb-2"
           as={Row}
           controlId={prop.input.name}
-          validationState={prop.meta.error ? 'error' : null}
+          isInvalid={!!prop.meta.error}
         >
           <Form.Label column sm={prop.col1 || 8} style={{ textAlign: 'left' }}>
             {label}
@@ -273,7 +273,7 @@ export function SelectField({ propName, label, list, col1, col2 }) {
         <Form.Group
           as={Row}
           controlId={prop.input.name}
-          validationState={prop.meta.error ? 'error' : null}
+          isInvalid={!!prop.meta.error}
         >
           <Form.Label column sm={col1 || 6} style={{ textAlign: 'left' }}>
             {label}
