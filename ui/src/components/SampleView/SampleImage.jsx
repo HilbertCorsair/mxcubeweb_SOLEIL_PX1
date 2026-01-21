@@ -27,7 +27,7 @@ if (fabric.Text && fabric.Text.prototype) {
     const originalInitialize = fabric.Text.prototype.initialize;
     fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
       // Create a new options object to avoid reassigning the parameter
-      const options = optionsParam ? Object.assign({}, optionsParam) : {};
+      const options = optionsParam ? { ...optionsParam } : {};
       
       // Fix 'alphabetical' typo to 'alphabetic'
       if (options.textBaseline === 'alphabetical') {
@@ -53,13 +53,15 @@ if (fabric.Text && fabric.Text.prototype) {
   // Override set method to catch when textBaseline is set via set()
   if (fabric.Text.prototype.set) {
     const originalSet = fabric.Text.prototype.set;
-    fabric.Text.prototype.set = function setTextProperty(key, value) {
+    fabric.Text.prototype.set = function setTextProperty(key, valueParam) {
+      // Fix parameter reassignment by creating a new variable
+      let value = valueParam;
       if (key === 'textBaseline' && value === 'alphabetical') {
         value = 'alphabetic';
       }
       if (typeof key === 'object' && key !== null) {
         // If key is an object, fix all textBaseline values
-        const options = Object.assign({}, key); // Create a copy to avoid mutating the original
+        const options = { ...key }; // Use object spread
         if (options.textBaseline === 'alphabetical') {
           options.textBaseline = 'alphabetic';
         }
@@ -86,7 +88,7 @@ if (fabric.Text && fabric.Text.prototype) {
     const originalFromObject = fabric.Text.fromObject;
     fabric.Text.fromObject = function fromObjectText(object, callback) {
       if (object && object.textBaseline === 'alphabetical') {
-        const fixedObject = Object.assign({}, object);
+        const fixedObject = { ...object };
         fixedObject.textBaseline = 'alphabetic';
         return originalFromObject.call(this, fixedObject, callback);
       }
