@@ -231,6 +231,7 @@ export default class SSXChip extends React.Component {
           lockRotation: true,
           hoverCursor: 'pointer',
           type: 'BLOCK',
+          textBaseline: 'alphabetic',
         }),
       );
     }
@@ -247,6 +248,7 @@ export default class SSXChip extends React.Component {
           top: ri * (blockSizeY + spacing) + offset + blockSizeY,
           left: offset / 2,
           fontSize: blockSizeX * 0.7,
+          textBaseline: 'alphabetic',
           fontFamily: 'arial',
           fill: '#f55',
           objectCaching: false,

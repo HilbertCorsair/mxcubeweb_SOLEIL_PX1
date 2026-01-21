@@ -20,6 +20,20 @@ import { JSMpeg } from './jsmpeg.min.js';
 const { fabric } = window;
 fabric.Group.prototype.hasControls = false;
 fabric.Group.prototype.hasBorders = false;
+// Fix: Override fabric.Text default textBaseline to use 'alphabetic' instead of 'alphabetical'
+if (fabric.Text && fabric.Text.prototype) {
+  const originalInitialize = fabric.Text.prototype.initialize;
+  fabric.Text.prototype.initialize = function(text, options) {
+    if (options && options.textBaseline === 'alphabetical') {
+      options.textBaseline = 'alphabetic';
+    }
+    if (!options) options = {};
+    if (!options.textBaseline) {
+      options.textBaseline = 'alphabetic';
+    }
+    return originalInitialize.call(this, text, options);
+  };
+}
 
 // eslint-disable-next-line react/no-unsafe
 export default class SampleImage extends React.Component {

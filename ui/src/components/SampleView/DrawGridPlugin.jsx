@@ -577,6 +577,7 @@ export default class DrawGridPlugin {
                     fill: 'rgba(0, 0, 200, 1)',
                     fontFamily: 'Helvetica',
                     fontSize: 18,
+                    textBaseline: 'alphabetic',
                   }),
                 );
               }
@@ -617,6 +618,7 @@ export default class DrawGridPlugin {
           fill: color,
           fontFamily: 'Helvetica',
           fontSize: 18,
+          textBaseline: 'alphabetic',
         }),
       );
     }
@@ -685,6 +687,7 @@ export default class DrawGridPlugin {
                 originY: 'center',
                 fill: 'rgba(200, 0, 0, 1)',
                 fontFamily: 'Helvetica',
+                textBaseline: 'alphabetic',
                 fontSize: 18,
                 hasControls: false,
                 selectable: false,
