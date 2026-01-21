@@ -170,6 +170,7 @@ export function makeText(x, y, fontSize, color, text) {
     hoverCursor: 'crosshair',
     hasBorders: false,
     fontFamily: 'Arial',
+    textBaseline: 'alphabetic', // Fix: use correct spelling instead of 'alphabetical'
   });
 }
 

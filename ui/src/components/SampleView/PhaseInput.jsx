@@ -18,7 +18,7 @@ function PhaseInput() {
     <Form.Select
       id="PhaseInput"
       className={styles.select}
-      value={value}
+      value={value ?? ''}
       data-busy={state === 'BUSY' || undefined}
       onChange={(evt) => {
         if (evt.target.value !== 'Unknown') {
