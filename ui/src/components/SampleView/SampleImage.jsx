@@ -23,14 +23,20 @@ fabric.Group.prototype.hasBorders = false;
 // Fix: Override fabric.Text default textBaseline to use 'alphabetic' instead of 'alphabetical'
 if (fabric.Text && fabric.Text.prototype) {
   const originalInitialize = fabric.Text.prototype.initialize;
-  fabric.Text.prototype.initialize = function(text, options) {
-    if (options && options.textBaseline === 'alphabetical') {
+  fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
+    // Create a new options object to avoid reassigning the parameter
+    const options = optionsParam || {};
+    
+    // Fix 'alphabetical' typo to 'alphabetic'
+    if (options.textBaseline === 'alphabetical') {
       options.textBaseline = 'alphabetic';
     }
-    if (!options) options = {};
+    
+    // Set default textBaseline if not provided
     if (!options.textBaseline) {
       options.textBaseline = 'alphabetic';
     }
+    
     return originalInitialize.call(this, text, options);
   };
 }
