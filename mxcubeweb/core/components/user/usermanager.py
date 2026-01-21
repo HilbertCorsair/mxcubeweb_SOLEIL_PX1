@@ -129,38 +129,76 @@ class BaseUserManager(ComponentBase):
         """Check if any users have been inactive for longer than session lifetime.
         If so, deactivate the user in datastore and emit the relevant signals
         ``userChanged`` and ``observersChanged`` to the client.
+
+        THis method is optimized to minimize database queries and handle
+        connection pool exhaustion gracefully.
         """
         try:
             # Calculate the cutoff time for inactive users
             cutoff_time = datetime.datetime.now() - flask.current_app.permanent_session_lifetime
             
-            # Query only active users with last_request_timestamp older than the cutoff
+            # Use a single query to get inactive users and process them efficiently
+            # This reduces the number of database round trips
             inactive_users = User.query.filter(
                 User.active == True,
                 User.last_request_timestamp.isnot(None),
                 User.last_request_timestamp < cutoff_time
             ).all()
             
-            # Process only the inactive users that need to be deactivated
-            for _u in inactive_users:
-                logging.getLogger("MX3.HWR").info(
-                    "Logged out inactive user %s", _u.username
-                )
-                self.app.server.user_datastore.delete_user(_u)
-                self.app.server.user_datastore.commit()
-
-                self.app.server.emit(
-                    "userChanged", room=_u.socketio_session_id, namespace="/hwr"
-                )
-                
-            # Only emit observersChanged if we actually deactivated any users
+            # Batch process inactive users to reduce database commits
             if inactive_users:
-                self.app.server.emit("observersChanged", namespace="/hwr")
+                socketio_session_ids = []
+                
+                for _u in inactive_users:
+                    logging.getLogger("MX3.HWR").info(
+                        "Logged out inactive user %s", _u.username
+                    )
+                    # Store socketio session id before deleting user
+                    if hasattr(_u, 'socketio_session_id') and _u.socketio_session_id:
+                        socketio_session_ids.append(_u.socketio_session_id)
+                    
+                    # Delete user from datastore
+                    self.app.server.user_datastore.delete_user(_u)
+                
+                # Single commit for all deletions (more efficient)
+                try:
+                    self.app.server.user_datastore.commit()
+                except Exception as commit_error:
+                    logging.getLogger("MX3.HWR").error(
+                        "Error committing user deletions: %s", str(commit_error)
+                    )
+                    # Rollback on error
+                    self.app.server.user_datastore.rollback()
+                    return
+                
+                # Emit signals after successful commit
+                for session_id in socketio_session_ids:
+                    try:
+                        self.app.server.emit(
+                            "userChanged", room=session_id, namespace="/hwr"
+                        )
+                    except Exception as emit_error:
+                        logging.getLogger("MX3.HWR").warning(
+                            "Error emitting userChanged signal: %s", str(emit_error)
+                        )
+                
+                # Emit observersChanged once after all users are processed
+                try:
+                    self.app.server.emit("observersChanged", namespace="/hwr")
+                except Exception as emit_error:
+                    logging.getLogger("MX3.HWR").warning(
+                        "Error emitting observersChanged signal: %s", str(emit_error)
+                    )
                 
         except Exception as e:
             logging.getLogger("MX3.HWR").error(
                 "Error updating active users: %s", str(e)
-        )
+            )
+            # Ensure we don't leave the session in a bad state
+            try:
+                self.app.server.user_datastore.rollback()
+            except Exception:
+                pass  # Ignore rollback errors
             
     def update_operator(self, new_login: bool = False) -> None:
         if new_login:

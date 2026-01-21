@@ -128,8 +128,16 @@ def init_route(app, server, url_prefix):
     def refresh_session():
         # Since default value of `SESSION_REFRESH_EACH_REQUEST` config setting is `True`
         # there is no need to do anything to refresh the session.
-        app.usermanager.update_active_users()
-        app.usermanager.handle_sso_logout()
+        # Flask-Security/Flask-Login will automatically refresh the session via
+        # the @server.restrict decorator which calls auth_required.
+        try:
+            app.usermanager.update_active_users()
+            app.usermanager.handle_sso_logout()
+        except Exception as e:
+            # Log error but don't fail the request - session refresh should still work
+            logging.getLogger("MX3.HWR").error(
+                "Error in refresh_session: %s", str(e)
+            )
         return make_response("", 200)
 
     return bp

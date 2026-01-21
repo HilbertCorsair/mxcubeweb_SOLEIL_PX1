@@ -12,7 +12,24 @@ Base = declarative_base()
 
 
 def init_db(path):
-    engine = create_engine(f"sqlite:///{path}")
+
+# Configure connection pool to handle concurrent requests 
+# pool_size: number of connections to maintain persistently 
+# max_overflow: additional connections that can be created on demand 
+# pool_timeout: seconds to wait before giving up on getting a connection 
+# pool_pre_ping: verify connections before using them 
+# connect_args: SQLite-specific settings for better concurrency 
+    engine = create_engine( 
+        f"sqlite:///{path}", pool_size=20, # Increased from default 5
+        max_overflow=30, # Increased from default 10 
+        pool_timeout=60, # Increased from default 30 
+        pool_pre_ping=True, # Verify connections before using 
+        connect_args={ 
+            "check_same_thread": False, # Allow multi-threaded access
+            "timeout": 20, # SQLite connection timeout in seconds
+            }, echo=False, # Set to True for SQL query logging (debug only)
+            )
+
     db_session = scoped_session(
         sessionmaker(autocommit=False, autoflush=False, bind=engine)
     )
