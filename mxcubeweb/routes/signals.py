@@ -343,6 +343,8 @@ def queue_execution_failed(entry):
 
 def collect_oscillation_started(*args):
     node = last_queue_node()
+    if not node:
+        return
 
     if not mxcube.queue.is_interleaved(node["node"]):
         msg = {
@@ -371,7 +373,8 @@ def collect_image_taken(frame):
         node = None
 
     if node and not mxcube.queue.is_interleaved(node["node"]):
-        progress = HWR.beamline.collect.progress #mxcube.queue.get_task_progress(last_queue_node()["node"], frame)
+        progress = HWR.beamline.collect.progress
+        #mxcube.queue.get_task_progress(last_queue_node()["node"], frame)
 
         msg = {
             "Signal": "collectImageTaken",
@@ -403,6 +406,8 @@ def collect_oscillation_failed(
     params=None,
 ):
     node = last_queue_node()
+    if not node:
+        return
 
     mxcube.NODE_ID_TO_LIMS_ID[node["queue_id"]] = lims_id
 
@@ -430,6 +435,9 @@ def collect_oscillation_failed(
 
 def collect_oscillation_finished(owner, status, state, lims_id, osc_id, params):
     node = last_queue_node()
+    if not node:
+        return
+
     mxcube.NODE_ID_TO_LIMS_ID[node["queue_id"]] = lims_id
 
     if not mxcube.queue.is_interleaved(node["node"]):
@@ -453,6 +461,9 @@ def collect_oscillation_finished(owner, status, state, lims_id, osc_id, params):
 
 def collect_ended(owner, success, message):
     node = last_queue_node()
+    if not node:
+        return
+
 
     if not mxcube.queue.is_interleaved(node["node"]):
         state = COLLECTED if success else WARNING
@@ -513,6 +524,8 @@ def energy_scan_finished(pk, ip, rm, sample):
 
 def queue_interleaved_started():
     node = last_queue_node()
+    if not node:
+        return
 
     msg = {
         "Signal": "queue_interleaved_started",
@@ -534,6 +547,8 @@ def queue_interleaved_started():
 
 def queue_interleaved_finished():
     node = last_queue_node()
+    if not node:
+        return
 
     msg = {
         "Signal": "queue_interleaved_finished",
@@ -555,6 +570,8 @@ def queue_interleaved_finished():
 
 def queue_interleaved_sw_done(data):
     node = last_queue_node()
+    if not node:
+        return
     progress = mxcube.queue.get_task_progress(node["node"], data)
 
     msg = {

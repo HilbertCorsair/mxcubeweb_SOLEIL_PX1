@@ -17,8 +17,6 @@ from mxcubeweb.core.util import networkutils
 
 def init_route(app, server, url_prefix):
     bp = Blueprint("login", __name__, url_prefix=url_prefix)
-    print(" *******  SENDING POST requst for LOGIN")
-
     @bp.route("/", methods=["POST"])
     def login():
         """
@@ -38,11 +36,9 @@ def init_route(app, server, url_prefix):
         200: On success
         409: Error, could not log in
         """
-        print(" *******  SENDING POST requst for LOGIN 1")
         params = request.get_json()
         login_id = params.get("proposal", "")
         password = params.get("password", "")
-        print(f" *******  SENDING POST requst for LOGIN 2 ::: {login_id}, {password}")
 
         try:
             app.usermanager.login(login_id, password)

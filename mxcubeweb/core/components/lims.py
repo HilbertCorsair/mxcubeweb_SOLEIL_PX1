@@ -310,7 +310,7 @@ class Lims(ComponentBase):
             print(f"Updated proposal_id in components/lims.py.sync ... {proposal_id}")
 
         session_id =  HWR.beamline.lims.session_manager.active_session.session_id"""
-        samples_info_list = HWR.beamline.lims.get_samples(lims_name)
+        samples_info_list = HWR.beamline.lims.get_samples()
         #self.check_if_str(samples_info_list)
 
 

@@ -1092,7 +1092,9 @@ class Queue(ComponentBase):
                 params.get("subdir", "").strip("/").split("/")[0:-1]
             )
 
-        full_path, process_path = HWR.beamline.session.get_full_path()
+        full_path, process_path = HWR.beamline.session.get_full_path(
+            params.get("subdir", ""), self.get_folder_tag(params)
+        )
         acq.path_template.directory = full_path
         acq.path_template.process_directory = process_path
 

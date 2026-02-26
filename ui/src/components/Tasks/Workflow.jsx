@@ -53,7 +53,7 @@ function Workflow(props) {
         <Modal.Title>{props.wfname}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form>
+        <Form onSubmit = {(e)=> e.preventDefault()}>
           <StaticField label="Path" data={props.path} />
           <StaticField label="Filename" data={props.filename} />
           <Row className="mt-3">

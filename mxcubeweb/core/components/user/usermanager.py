@@ -104,12 +104,11 @@ class BaseUserManager(ComponentBase):
 
     def get_user(self, username: str) -> User | None:
         """Return user model instance based on username."""
-        try:
+        try: 
             user = User.query.filter_by(username=username).first()
             return user
         except Exception:
             return None
-
 
 
     def set_operator(self, username: str) -> User | None:
@@ -201,8 +200,6 @@ class BaseUserManager(ComponentBase):
                 pass  # Ignore rollback errors
             
     def update_operator(self, new_login: bool = False) -> None:
-        if new_login:
-            print("NEW LOGIN TRUE")
         """Sets the operator based on the logged in users.nnn
 
         If no user is currently in control, the first logged in user is set.
@@ -220,10 +217,7 @@ class BaseUserManager(ComponentBase):
                 User.is_authenticated == True,
                 User.in_control == True
             ).first()
-            print (f"C1 in control {user_in_control}")
             active_in_control = user_in_control is not None
-            print("C2 -> ", active_in_control)
-
             # Reset control status for users not in control
             if active_in_control:
                 # Only reset users that have in_control set to True
@@ -231,35 +225,21 @@ class BaseUserManager(ComponentBase):
                     User.id != user_in_control.id,
                     User.in_control == True
                 ).all()
-                print('C3 users to reset', users_to_reset)
                 
                 for _u in users_to_reset:
                     self.db_set_in_control(_u, False)
-            else:
-                print ('C4 No users to reset')
-            # If new login and new observer login, clear nickname
+
             if new_login:
-                print("C5 - New login detected")
                 current_user.nickname = ""
 
-            print("C6 -- still in the try block")
             # If no user is currently in control, set this user to be in control
             if not active_in_control:
-                print("C7 -- not active in control ")
 
-                if not HWR.beamline.lims.is_user_login_type(): 
-                    print("C8 bbis Avant get_full_uer name")
-              
+                if not HWR.beamline.lims.is_user_login_type():               
                     current_user.fullname =  HWR.beamline.lims.get_full_user_name()
                     current_user.nickname =  HWR.beamline.lims.get_user_name()
-                    print("C8 -- is is_user_login_type ")
-                    print(f"C8bis -{current_user}, contains : {dir(current_user)} ")
                 else:
-                    print("C9  -- else : not user logintype ")
                     current_user.nickname = current_user.username
-                    
-                    print(f"C9bis -{current_user}, contains : {dir(current_user)}")
-                  
                 self.db_set_in_control(current_user, True)
                 user_in_control = current_user
             
@@ -273,21 +253,6 @@ class BaseUserManager(ComponentBase):
                         )  # The username is the proposal
                     elif _u.selected_proposal is not None:
                         self.app.lims.select_session(_u.selected_proposal)
-
-
-            # Set active proposal based on the controlling user
-            """if user_in_control:
-                print("C10 user in control ")
-                if not HWR.beamline.lims.is_user_login_type():
-                    # Get the active session's proposal name
-
-                    active_session = HWR.beamline.lims.session_manager.active_session
-                    if active_session:
-                   
-                        self.app.lims.select_session(active_session.session_id)
-                elif user_in_control.selected_proposal is not None:
-                    self.app.lims.select_session(user_in_control.selected_proposal)"""
-                    
         except Exception as e:
             logging.getLogger("MX3.HWR").error(
                 "Error updating operator: %s", str(e)
@@ -309,7 +274,6 @@ class BaseUserManager(ComponentBase):
                 f"{code}{number}" 
                 for (code, number) in HWR.beamline.session.in_house_users
             ]
-        print(f"--------------------------inhouse_user_id_list{self._inhouse_user_id_list}")
         return user_id in self._inhouse_user_id_list
 
 
@@ -389,9 +353,7 @@ class BaseUserManager(ComponentBase):
             if not self.app.sample_changer.get_current_sample() and address:
                 self.app.sample_changer.get_sample_list()
             """
-            print("Updating operator with new_login = true")
             self.update_operator(new_login=True)
-            print(f"OPERATOR UPDATE with new_login ")
 
             msg = "User %s signed in" % user.username
             logging.getLogger("MX3.HWR").info(msg)
@@ -467,7 +429,6 @@ class BaseUserManager(ComponentBase):
 
 
         if not HWR.beamline.lims.session_manager:
-            print("NO LIMS Session MANAGER")
             res = {
             "synchrotronName":"",
             "beamlineName": "",
@@ -481,12 +442,8 @@ class BaseUserManager(ComponentBase):
         }
             return res
 
-        with contextlib.suppress(Exception):
-            
-        
-            print("no calling OPERATOR UPDATE with new_login ")
+        # !!! replace hardcoded with value from config file
         login_type = "Proposal"
-
         if current_user.is_anonymous:
             self._signout()
             logging.getLogger("MX3.HWR").info("Logged out")
@@ -501,7 +458,6 @@ class BaseUserManager(ComponentBase):
         #if not HWR.beamline.lims.session_manager:
 
 
-        print(f"Active session  IS {HWR.beamline.lims.session_manager.active_session}")
 
 
         res = {
@@ -693,32 +649,6 @@ class UserManager(BaseUserManager):
         except Exception as e:
             logging.getLogger("MX3.HWR").error(e)
             raise e
-
-            print("LOGIN SUCCESSFUL!: retunning session manager")
-        """    
-        if login_id in self.active_logged_in_users():
-            if current_user.is_anonymous:
-                self.force_signout_user(login_id)
-            else:
-                if current_user.username == login_id:
-                    msg = "You are already logged in"
-                    raise Exception(msg)
-                msg = (
-                    "Login rejected, you are already logged in"
-                    " somewhere else\nand Another user is already"
-                    " logged in"
-                )
-                raise Exception(msg)
-
-        # Only allow in-house log-in from local host
-        if self.is_inhouse_user(login_id) and not is_local_host():
-            msg = "In-house only allowed from localhost"
-            raise Exception(msg)
-        # Only allow local login when remote is disabled
-        if not self.app.ALLOW_REMOTE and not is_local_host():
-            msg = "Remote access disabled"
-            raise Exception(msg)
-        """
 
         return HWR.beamline.lims.session_manager
 
