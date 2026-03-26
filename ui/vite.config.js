@@ -8,7 +8,7 @@ export default defineConfig({
     { ...eslintPlugin(), apply: 'serve' }, // dev only to reduce build time
   ],
   server: {
-    allowedHosts: ['mxcubeweb-proxima1.exp.synchrotron-soleil.fr'],
+    allowedHosts: ['mxcubeweb-proxima1.exp.synchrotron-soleil.fr','mxcubeweb-px1.synchrotron-soleil.fr' ],
     host: '195.221.8.78',
     port: 5173,
     watch: {
