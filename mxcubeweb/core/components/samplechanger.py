@@ -189,8 +189,6 @@ class SampleChanger(ComponentBase):
 
         sc = HWR.beamline.sample_changer
 
-        res = False
-
         try:
             signals.sc_load(sample["location"])
 
@@ -204,25 +202,33 @@ class SampleChanger(ComponentBase):
                 )
                 logging.getLogger("user_level_log").info(msg)
 
-                if (
+                need_load = (
                     not sc.get_loaded_sample()
                     or sc.get_loaded_sample().get_address() != sample["location"]
-                ):
-                    res = sc.load(sample["sampleID"], wait=True)
+                )
+                if need_load:
+                    beamline_setup = HWR.beamline.queue_manager.get_object_by_role(
+                        "beamline_setup"
+                    )
+                    if beamline_setup is None:
+                        raise RuntimeError("beamline_setup is not configured on Queue")
+                    data_model = queue_entry.sample_data_model_from_web_sample(sample)
+                    async_result = gevent.event.AsyncResult()
 
-                if (
-                    res
-                    and HWR.beamline.queue_manager.centring_method
-                    == queue_entry.CENTRING_METHOD.LOOP
-                    and not HWR.beamline.diffractometer.in_plate_mode()
-                    and not self.app.harvester.mount_from_harvester()
-                ):
-                    HWR.beamline.diffractometer.reject_centring()
-                    msg = "Starting autoloop centring ..."
-                    logging.getLogger("MX3.HWR").info(msg)
-                    C3D_MODE = HWR.beamline.diffractometer.C3D_MODE
-                    HWR.beamline.diffractometer.start_centring_method(C3D_MODE)
+                    def _centring_done(_success, centring_info):
+                        async_result.set(centring_info)
+
+                    queue_entry.mount_sample_core(
+                        beamline_setup,
+                        data_model,
+                        HWR.beamline.queue_manager.centring_method,
+                        _centring_done,
+                        async_result,
+                        wash=False,
+                        view=None,
+                    )
                 elif HWR.beamline.diffractometer.in_plate_mode():
+                    # Already on this crystal: plate mode still runs autoloop focus.
                     msg = "Starting autoloop Focusing ..."
                     logging.getLogger("MX3.HWR").info(msg)
                     sc.move_to_crystal_position(None)
@@ -232,29 +238,23 @@ class SampleChanger(ComponentBase):
                 logging.getLogger("user_level_log").info(msg)
 
                 self.set_current_sample(sample["sampleID"])
-                res = True
 
         except Exception as ex:
             logging.getLogger("MX3.HWR").exception("[SC] sample could not be mounted")
 
             raise RuntimeError(str(ex)) from ex
         else:
-            # Clean up if the new sample was mounted or the current sample was
-            # unmounted and the new one, for some reason, failed to mount
-            if res or (not res and not sc.get_loaded_sample()):
-                HWR.beamline.sample_view.clear_all()
+            # Only runs if try completed without exception (mount succeeded).
+            HWR.beamline.sample_view.clear_all()
 
-                # We remove the current sample from the queue, if we are moving
-                # from one sample to another and the current sample is in the queue
-
-                if sid and current_queue.get(sid, False):
-                    node_id = current_queue[sid]["queueID"]
-                    self.app.queue.set_enabled_entry(node_id, False)
-                    signals.queue_toggle_sample(self.app.queue.get_entry(node_id)[1])
+            if sid and current_queue.get(sid, False):
+                node_id = current_queue[sid]["queueID"]
+                self.app.queue.set_enabled_entry(node_id, False)
+                signals.queue_toggle_sample(self.app.queue.get_entry(node_id)[1])
         finally:
             signals.sc_load_ready(sample["location"])
 
-        return res
+        return True
 
     def unmount_sample_clean_up(self, sample):
         from mxcubeweb.routes import signals

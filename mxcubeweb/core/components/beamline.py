@@ -220,8 +220,10 @@ class Beamline(ComponentBase):
         try:
             HWR.beamline.beamline_actions.execute_command(name, params)
         except Exception as ex:
-            msg = "Action cannot run: command '%s' does not exist" % name
-            raise Exception(msg) from ex
+            inner = (str(ex) or repr(ex)).strip()
+            if not inner:
+                inner = "Action '%s' failed" % name
+            raise Exception(inner) from ex
 
     def get_beam_info(self):
         """
