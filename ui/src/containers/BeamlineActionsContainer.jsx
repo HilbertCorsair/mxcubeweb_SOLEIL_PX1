@@ -8,7 +8,12 @@ import {
 import { Dropdown } from 'react-bootstrap';
 import BeamlineActionControl from '../components/BeamlineActions/BeamlineActionControl';
 import BeamlineActionDialog from '../components/BeamlineActions/BeamlineActionDialog';
-import { RUNNING } from '../constants';
+import {
+  RUNNING,
+  QUEUE_RUNNING,
+  QUEUE_STARTED,
+  UNATTENDED_COLLECT_QUEUE_ACTION,
+} from '../constants';
 
 function BeamlineActionsContainer(props) {
   const { actionsList } = props;
@@ -17,6 +22,13 @@ function BeamlineActionsContainer(props) {
   const currentAction = useSelector(
     (state) => state.beamline.currentBeamlineAction,
   );
+  const queueSampleOrder = useSelector((state) => state.queue.queue);
+  const queueStatus = useSelector((state) => state.queue.queueStatus);
+
+  const queueHasSamples =
+    Array.isArray(queueSampleOrder) && queueSampleOrder.length > 0;
+  const queueExecutorActive =
+    queueStatus === QUEUE_RUNNING || queueStatus === QUEUE_STARTED;
 
   const [plotIdByAction, setPlotIdByAction] = useState({});
 
@@ -75,8 +87,17 @@ function BeamlineActionsContainer(props) {
         <Dropdown.Menu>
           {actionsList.map((cmd, i) => {
             const cmdName = cmd.name;
-            const disabled =
+            const otherActionRunning =
               currentActionRunning && currentActionName !== cmdName;
+            const unattendedBlocked =
+              cmdName === UNATTENDED_COLLECT_QUEUE_ACTION &&
+              (!queueHasSamples ||
+                (queueExecutorActive &&
+                  !(
+                    currentActionRunning &&
+                    currentActionName === UNATTENDED_COLLECT_QUEUE_ACTION
+                  )));
+            const disabled = otherActionRunning || unattendedBlocked;
 
             return (
               <Dropdown.Item

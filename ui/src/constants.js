@@ -6,6 +6,9 @@
 export const QUEUE_STARTED = 'QueueStarted';
 export const QUEUE_RUNNING = 'QueueRunning';
 export const QUEUE_STOPPED = 'QueueStopped';
+
+/** BeamlineActions command name; must match PX1BeamlineActions ControllerCommand id. */
+export const UNATTENDED_COLLECT_QUEUE_ACTION = 'UnattendedCollectQueuedSamples';
 export const QUEUE_PAUSED = 'QueuePaused';
 export const QUEUE_FAILED = 'QueueFailed';
 

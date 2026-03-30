@@ -137,7 +137,7 @@ class Beamline(ComponentBase):
             actions.append(
                 {
                     "name": cmd.name(),
-                    "username": cmd.name(),
+                    "username": cmd.userName(),
                     "state": READY,
                     "arguments": args,
                     "argument_type": cmd.argument_type,

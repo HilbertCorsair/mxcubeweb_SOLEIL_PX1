@@ -1,4 +1,5 @@
 import logging
+import re
 from enum import Enum
 
 from mxcubeweb.core.adapter.adapter_base import ActuatorAdapterBase
@@ -7,6 +8,11 @@ from mxcubeweb.core.models.adaptermodels import (
     NStateModel,
     StrValueModel,
 )
+
+
+def _norm_label(s):
+    """Compare user-facing labels case/spacing-insensitively (e.g. zoom2 vs Zoom 2)."""
+    return re.sub(r"\s+", "", str(s).lower())
 
 
 class NStateAdapter(ActuatorAdapterBase):
@@ -21,51 +27,69 @@ class NStateAdapter(ActuatorAdapterBase):
         ho.connect("valueChanged", self._value_change)
         ho.connect("stateChanged", self.state_change)
 
-    def _value_change(self, value):
-        v = value.name if isinstance(value, Enum) else value
+    @staticmethod
+    def _enum_token(ev):
+        """String sent to the web UI as `value` / listed in `commands`."""
+        if isinstance(ev, Enum):
+            if isinstance(ev.value, str):
+                return ev.value
+            return ev.name
+        return str(ev)
 
+    def _state_token_from_ho(self):
+        gv = self._ho.get_value()
+        return self._enum_token(gv)
+
+    def _value_change(self, value):
+        v = self._enum_token(value) if isinstance(value, Enum) else value
         self.value_change(v)
 
     def _get_valid_states(self):
-        state_names = [v.name for v in self._ho.VALUES]
-        if "UNKNOWN" in state_names:
-            state_names.remove("UNKNOWN")
-
-        return state_names
+        out = []
+        for v in self._ho.VALUES:
+            if v.name == "UNKNOWN":
+                continue
+            out.append(self._enum_token(v))
+        return out
 
     def _get_available_states(self):
         state_names = self._get_valid_states()
-        state_names.remove(self._ho.get_value().name)
-
+        cur = self._state_token_from_ho()
+        if cur in state_names:
+            state_names.remove(cur)
         return state_names
 
     def commands(self):
         return self._get_valid_states()
 
+    def _matches_token(self, ev, target: str):
+        if self._enum_token(ev) == target or ev.name == target:
+            return True
+        return _norm_label(self._enum_token(ev)) == _norm_label(target)
+
     def _set_value(self, value: HOActuatorValueChangeModel):
-        self._ho.set_value(self._ho.VALUES[value.value])
+        target = value.value
+        for ev in self._ho.VALUES:
+            if ev.name == "UNKNOWN":
+                continue
+            if self._matches_token(ev, target):
+                self._ho.set_value(ev)
+                return
+        raise ValueError(
+            "Unknown N-state value %r for %s" % (target, self._name)
+        )
 
     def _get_value(self) -> StrValueModel:
-        
-        #Hack to accomodate PX1 zoom_motor
-        if self._ho.name() in ["/zoom", "/backlight"]:
-            return StrValueModel( ** {"value":self._ho.get_value()} )
-        
-        return StrValueModel(**{"value": self._ho.get_value().name})
+        return StrValueModel(value=self._state_token_from_ho())
 
     def msg(self):
         try:
-            msg = self._ho.get_value().name
-        except AttributeError:
-            msg = self._ho.get_value()
-            import re
-            msg = str(re.search(r'\d+', msg))
-        except:
-            msg = "---"
-            logging.getLogger("MX3.HWR").error(
-                "ERROR in nstate adapter : Failed to get beamline attribute message"
+            return self._state_token_from_ho()
+        except Exception:
+            logging.getLogger("MX3.HWR").exception(
+                "nstate adapter msg() failed for %s", self._name
             )
-        return msg
+            return "---"
 
     def data(self) -> NStateModel:
         return NStateModel(**self._dict_repr())
