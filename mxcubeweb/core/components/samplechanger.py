@@ -2,7 +2,6 @@ import logging
 
 import gevent
 from mxcubecore import HardwareRepository as HWR
-from mxcubecore import queue_entry
 
 from mxcubeweb.core.components.component_base import ComponentBase
 from mxcubeweb.core.components.queue import (
@@ -207,26 +206,7 @@ class SampleChanger(ComponentBase):
                     or sc.get_loaded_sample().get_address() != sample["location"]
                 )
                 if need_load:
-                    beamline_setup = HWR.beamline.queue_manager.get_object_by_role(
-                        "beamline_setup"
-                    )
-                    if beamline_setup is None:
-                        raise RuntimeError("beamline_setup is not configured on Queue")
-                    data_model = queue_entry.sample_data_model_from_web_sample(sample)
-                    async_result = gevent.event.AsyncResult()
-
-                    def _centring_done(_success, centring_info):
-                        async_result.set(centring_info)
-
-                    queue_entry.mount_sample_core(
-                        beamline_setup,
-                        data_model,
-                        HWR.beamline.queue_manager.centring_method,
-                        _centring_done,
-                        async_result,
-                        wash=False,
-                        view=None,
-                    )
+                    sc.load(sample["sampleID"], wait=True)
                 elif HWR.beamline.diffractometer.in_plate_mode():
                     # Already on this crystal: plate mode still runs autoloop focus.
                     msg = "Starting autoloop Focusing ..."
