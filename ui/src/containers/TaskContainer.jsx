@@ -11,6 +11,7 @@ import XRFScan from '../components/Tasks/XRFScan';
 import EnergyScan from '../components/Tasks/EnergyScan';
 import GenericTaskForm from '../components/Tasks/GenericTaskForm';
 import TestTask from '../components/Tasks/TestTask';
+import UnattendedCollect from '../components/Tasks/UnattendedCollect';
 
 import { hideTaskParametersForm } from '../actions/taskForm';
 
@@ -224,6 +225,18 @@ function TaskContainer() {
           show
           addTask={doAddTask}
           pointID={pointID}
+          taskData={taskData}
+          hide={() => dispatch(hideTaskParametersForm())}
+        />
+      );
+    }
+    case 'UnattendedCollect': {
+      return (
+        <UnattendedCollect
+          show
+          addTask={doAddTask}
+          pointID={pointID}
+          sampleIds={sampleIds}
           taskData={taskData}
           hide={() => dispatch(hideTaskParametersForm())}
         />

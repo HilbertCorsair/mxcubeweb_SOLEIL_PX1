@@ -38,7 +38,6 @@ import {
   deleteSamplesFromQueue,
   setEnabledSample,
   addSamplesToQueue,
-  addTask,
   stopQueue,
   deleteTask,
   deleteTaskList,
@@ -88,6 +87,11 @@ class SampleListViewContainer extends React.Component {
     );
     this.showWorkflowForm = this.showTaskForm.bind(this, 'Workflow');
     this.showAddSampleForm = this.showTaskForm.bind(this, 'AddSample');
+    this.showUnattendedCollectForm = this.showTaskForm.bind(
+      this,
+      'UnattendedCollect',
+      {},
+    );
     this.inQueue = this.inQueue.bind(this);
     this.inQueueDeleteElseAddSamples =
       this.inQueueDeleteElseAddSamples.bind(this);
@@ -618,27 +622,28 @@ class SampleListViewContainer extends React.Component {
   }
 
   /**
-   * Adds one UnattendedCollect task per selected sample. No form is shown:
-   * the per-sample parameters are derived from LIMS at execute time on the
-   * backend (PX1XrayCentring.unattended_collect_single). The samples must
-   * also be enqueued, so we first ensure they are added to the queue, then
-   * append one UnattendedCollect task to each.
+   * Opens the Unattended-collect modal for the currently-selected samples.
+   * Samples must be in the queue before the form's submit dispatches addTask
+   * (which reads each sample's queueID from Redux). We await the
+   * addSamplesToQueue thunk before opening the modal so the user can never
+   * click "Add to Queue" faster than the sample-queueing roundtrip.
    */
-  addUnattendedCollectToSelectedSamples() {
+  async addUnattendedCollectToSelectedSamples() {
     const sampleIDs = Object.keys(this.props.selected);
     if (sampleIDs.length === 0) {
       return;
     }
-    this.addSamplesToQueue(sampleIDs);
-    this.props.addTask(
-      sampleIDs,
-      {
-        type: 'UnattendedCollect',
-        label: 'Unattended collect',
-        shape: -1,
-      },
-      false,
-    );
+    const samplesToAdd = sampleIDs
+      .filter((sampleID) => !this.inQueue(sampleID))
+      .map((sampleID) => ({
+        ...this.props.sampleList[sampleID],
+        checked: true,
+        tasks: [],
+      }));
+    if (samplesToAdd.length > 0) {
+      await this.props.addSamplesToQueue(samplesToAdd);
+    }
+    this.showUnattendedCollectForm();
   }
 
   /**
@@ -1049,8 +1054,6 @@ function mapDispatchToProps(dispatch) {
     deleteTask: (qid, taskIndex) => dispatch(deleteTask(qid, taskIndex)),
     deleteTaskList: (sampleIDList) => dispatch(deleteTaskList(sampleIDList)),
     addSamplesToQueue: (sampleData) => dispatch(addSamplesToQueue(sampleData)),
-    addTask: (sampleIDs, parameters, runNow) =>
-      dispatch(addTask(sampleIDs, parameters, runNow)),
     stopQueue: () => dispatch(stopQueue()),
     showConfirmClearQueueDialog: bindActionCreators(
       showConfirmClearQueueDialog,

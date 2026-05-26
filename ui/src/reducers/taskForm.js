@@ -13,6 +13,9 @@ const INITIAL_STATE = {
     xrf_spectrum: {},
     energy_scan: {},
     interleaved: { sub_wedge_size: 10 },
+    unattendedcollect: {
+      acq_parameters: { prefixTemplate: '', subDirTemplate: '' },
+    },
   },
 };
 
