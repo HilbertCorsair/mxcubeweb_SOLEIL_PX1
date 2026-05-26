@@ -38,6 +38,7 @@ import {
   deleteSamplesFromQueue,
   setEnabledSample,
   addSamplesToQueue,
+  addTask,
   stopQueue,
   deleteTask,
   deleteTaskList,
@@ -94,6 +95,8 @@ class SampleListViewContainer extends React.Component {
     this.removeSamplesFromQueue = this.removeSamplesFromQueue.bind(this);
     this.removeSelectedSamples = this.removeSelectedSamples.bind(this);
     this.removeSelectedTasks = this.removeSelectedTasks.bind(this);
+    this.addUnattendedCollectToSelectedSamples =
+      this.addUnattendedCollectToSelectedSamples.bind(this);
     this.getSamplesFromSC = this.getSamplesFromSC.bind(this);
     this.renderCollectButton = this.renderCollectButton.bind(this);
     this.startCollect = this.startCollect.bind(this);
@@ -615,6 +618,30 @@ class SampleListViewContainer extends React.Component {
   }
 
   /**
+   * Adds one UnattendedCollect task per selected sample. No form is shown:
+   * the per-sample parameters are derived from LIMS at execute time on the
+   * backend (PX1XrayCentring.unattended_collect_single). The samples must
+   * also be enqueued, so we first ensure they are added to the queue, then
+   * append one UnattendedCollect task to each.
+   */
+  addUnattendedCollectToSelectedSamples() {
+    const sampleIDs = Object.keys(this.props.selected);
+    if (sampleIDs.length === 0) {
+      return;
+    }
+    this.addSamplesToQueue(sampleIDs);
+    this.props.addTask(
+      sampleIDs,
+      {
+        type: 'UnattendedCollect',
+        label: 'Unattended collect',
+        shape: -1,
+      },
+      false,
+    );
+  }
+
+  /**
    * Start collection
    */
   startCollect() {
@@ -962,6 +989,9 @@ class SampleListViewContainer extends React.Component {
               removeSamplesFromQueue={this.removeSamplesFromQueue}
               removeSelectedSamples={this.removeSelectedSamples}
               removeSelectedTasks={this.removeSelectedTasks}
+              addUnattendedCollectToSelectedSamples={
+                this.addUnattendedCollectToSelectedSamples
+              }
               setViewMode={this.setViewMode}
               filterSampleByKey={this.filter}
               type={this.props.type}
@@ -1019,6 +1049,8 @@ function mapDispatchToProps(dispatch) {
     deleteTask: (qid, taskIndex) => dispatch(deleteTask(qid, taskIndex)),
     deleteTaskList: (sampleIDList) => dispatch(deleteTaskList(sampleIDList)),
     addSamplesToQueue: (sampleData) => dispatch(addSamplesToQueue(sampleData)),
+    addTask: (sampleIDs, parameters, runNow) =>
+      dispatch(addTask(sampleIDs, parameters, runNow)),
     stopQueue: () => dispatch(stopQueue()),
     showConfirmClearQueueDialog: bindActionCreators(
       showConfirmClearQueueDialog,

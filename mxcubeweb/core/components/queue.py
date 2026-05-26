@@ -966,6 +966,8 @@ class Queue(ComponentBase):
                 self.add_energy_scan(sample_node_id, item)
             elif item_t == "TestTask":
                 self.add_test_task(sample_node_id, item)
+            elif item_t == "UnattendedCollect":
+                self.add_unattended_collect(sample_node_id, item)
             elif item_t == "Sample":
                 pass
             else:
@@ -1561,6 +1563,36 @@ class Queue(ComponentBase):
         group_entry.enqueue(dc_entry)
 
         return dc_model._node_id
+
+    def add_unattended_collect(self, node_id, task):
+        """Adds an UnattendedCollect task to the sample with id <node_id>.
+
+        v1 carries no user-editable parameters; PX1XrayCentring derives
+        per-sample parameters from LIMS at execute time. Iteration across
+        samples is handled by the queue (one task per Sample node).
+        """
+        sample_model, sample_entry = self.get_entry(node_id)
+        enabled = task.get("checked", True)
+
+        uc_model = qmo.UnattendedCollect()
+        uc_model.set_origin(ORIGIN_MX3)
+        uc_model.set_enabled(enabled)
+
+        uc_entry = qe.UnattendedCollectQueueEntry(Mock(), uc_model)
+        uc_entry.set_enabled(enabled)
+
+        group_model = qmo.TaskGroup()
+        group_model.set_origin(ORIGIN_MX3)
+        group_model.set_enabled(True)
+        HWR.beamline.queue_model.add_child(sample_model, group_model)
+        HWR.beamline.queue_model.add_child(group_model, uc_model)
+
+        group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
+        group_entry.set_enabled(True)
+        sample_entry.enqueue(group_entry)
+        group_entry.enqueue(uc_entry)
+
+        return uc_model._node_id
 
     def add_queue_entry(self, node_id, task, task_name):
         """Adds a queue entry to the sample with id <node_id>

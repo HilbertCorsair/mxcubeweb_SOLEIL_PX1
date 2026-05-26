@@ -1153,6 +1153,11 @@ class SampleGridTableContainer extends React.Component {
         <Dropdown.Item onClick={this.props.showCharacterisationForm}>
           Characterisation
         </Dropdown.Item>
+        <Dropdown.Item
+          onClick={this.props.addUnattendedCollectToSelectedSamples}
+        >
+          Unattended collect
+        </Dropdown.Item>
         <Dropdown.Item onClick={this.methodToCreate}>
           PX1Testing smth
         </Dropdown.Item>
