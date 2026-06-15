@@ -327,10 +327,16 @@ export class ConfirmCollectDialog extends React.Component {
                         {sampleName} ({sample.location})
                       </td>
                       <td>
-                        <b style={{ color: '#337ab7' }}>
-                          ...
-                          {parameters.fullPath.split(this.props.login.rootPath)}
-                        </b>
+                        {parameters.fullPath ? (
+                          <b style={{ color: '#337ab7' }}>
+                            ...
+                            {parameters.fullPath.split(
+                              this.props.login.rootPath,
+                            )}
+                          </b>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td>{parameters.num_images || '-'}</td>
                     </tr>
