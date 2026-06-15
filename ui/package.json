@@ -8,6 +8,7 @@
     "pnpm": "9.x"
   },
   "scripts": {
+    "prestart": "fuser -k 5173/tcp 2>/dev/null; true",
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",

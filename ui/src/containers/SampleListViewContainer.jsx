@@ -87,11 +87,6 @@ class SampleListViewContainer extends React.Component {
     );
     this.showWorkflowForm = this.showTaskForm.bind(this, 'Workflow');
     this.showAddSampleForm = this.showTaskForm.bind(this, 'AddSample');
-    this.showUnattendedCollectForm = this.showTaskForm.bind(
-      this,
-      'UnattendedCollect',
-      {},
-    );
     this.inQueue = this.inQueue.bind(this);
     this.inQueueDeleteElseAddSamples =
       this.inQueueDeleteElseAddSamples.bind(this);
@@ -628,22 +623,37 @@ class SampleListViewContainer extends React.Component {
    * addSamplesToQueue thunk before opening the modal so the user can never
    * click "Add to Queue" faster than the sample-queueing roundtrip.
    */
-  async addUnattendedCollectToSelectedSamples() {
+  addUnattendedCollectToSelectedSamples() {
     const sampleIDs = Object.keys(this.props.selected);
     if (sampleIDs.length === 0) {
       return;
     }
-    const samplesToAdd = sampleIDs
-      .filter((sampleID) => !this.inQueue(sampleID))
-      .map((sampleID) => ({
-        ...this.props.sampleList[sampleID],
-        checked: true,
-        tasks: [],
-      }));
-    if (samplesToAdd.length > 0) {
-      await this.props.addSamplesToQueue(samplesToAdd);
-    }
-    this.showUnattendedCollectForm();
+    // Attach one UnattendedCollect task to every selected sample in a single
+    // payload. The backend builds Sample -> TaskGroup -> UnattendedCollect per
+    // sample; the Sample node mounts the pin and unattended_collect_single
+    // skips its internal load (is_mounted_sample guard) then unmounts at the
+    // end. Samples already in the queue are reused (their queueID is set) and
+    // the task is appended. The task carries no user-editable parameters, so
+    // there is no parameters modal.
+    const samples = sampleIDs.map((sampleID) => ({
+      ...this.props.sampleList[sampleID],
+      checked: true,
+      tasks: [
+        {
+          type: 'UnattendedCollect',
+          label: 'Unattended collect',
+          checked: true,
+          sampleID,
+          sampleQueueID: this.props.sampleList[sampleID].queueID,
+          parameters: {
+            type: 'UnattendedCollect',
+            label: 'Unattended collect',
+            shape: -1,
+          },
+        },
+      ],
+    }));
+    this.props.addSamplesToQueue(samples);
   }
 
   /**
