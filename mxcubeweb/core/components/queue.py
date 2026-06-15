@@ -525,6 +525,28 @@ class Queue(ComponentBase):
             "state": state,
         }
 
+    def _handle_unattended_collect(self, sample_node, node):
+        """Serialise an UnattendedCollect task for the client.
+
+        The task carries no user-editable parameters (PX1XrayCentring derives
+        them at execute time), so we emit just the metadata the queue UI needs
+        to render the task chip ("UC") under its sample.
+        """
+        queueID = node._node_id
+        _, state = self.get_node_state(queueID)
+
+        return {
+            "label": "Unattended collect",
+            "type": "UnattendedCollect",
+            "parameters": {"shape": -1},
+            "sampleID": sample_node.loc_str,
+            "sampleQueueID": sample_node._node_id,
+            "taskIndex": self.node_index(node)["idx"],
+            "queueID": queueID,
+            "checked": node.is_enabled(),
+            "state": state,
+        }
+
     def _handle_char(self, parent_node, node, include_lims_data=False):
         sample_node = parent_node.get_sample_node()
         parameters = node.characterisation_parameters.as_dict()
@@ -687,6 +709,8 @@ class Queue(ComponentBase):
                 result.append(self._handle_xrf(sample_node, node))
             elif isinstance(node, qmo.EnergyScan):
                 result.append(self._handle_energy_scan(sample_node, node))
+            elif isinstance(node, qmo.UnattendedCollect):
+                result.append(self._handle_unattended_collect(sample_node, node))
             elif isinstance(node, qmo.TaskGroup) and node.interleave_num_images:
                 result.append(self._handle_interleaved(sample_node, node))
             elif isinstance(node, qmo.TaskNode) and node.task_data:
