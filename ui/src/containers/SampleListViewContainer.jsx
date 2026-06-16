@@ -94,8 +94,7 @@ class SampleListViewContainer extends React.Component {
     this.removeSamplesFromQueue = this.removeSamplesFromQueue.bind(this);
     this.removeSelectedSamples = this.removeSelectedSamples.bind(this);
     this.removeSelectedTasks = this.removeSelectedTasks.bind(this);
-    this.addUnattendedCollectToSelectedSamples =
-      this.addUnattendedCollectToSelectedSamples.bind(this);
+    this.showUnattendedCollectForm = this.showUnattendedCollectForm.bind(this);
     this.getSamplesFromSC = this.getSamplesFromSC.bind(this);
     this.renderCollectButton = this.renderCollectButton.bind(this);
     this.startCollect = this.startCollect.bind(this);
@@ -617,43 +616,26 @@ class SampleListViewContainer extends React.Component {
   }
 
   /**
-   * Opens the Unattended-collect modal for the currently-selected samples.
+   * Opens the Unattended-collect parameters form for the selected samples.
+   *
    * Samples must be in the queue before the form's submit dispatches addTask
-   * (which reads each sample's queueID from Redux). We await the
-   * addSamplesToQueue thunk before opening the modal so the user can never
-   * click "Add to Queue" faster than the sample-queueing roundtrip.
+   * (which reads each sample's queueID from Redux), so we queue any not-yet-
+   * queued selected samples first, then open the form. The user editing and
+   * submitting the form takes far longer than the addSamplesToQueue roundtrip,
+   * and addTask re-reads each queueID at submit time, so the values are in
+   * place by then. One UnattendedCollect task carrying the edited acquisition
+   * subset is then attached to each selected sample.
    */
-  addUnattendedCollectToSelectedSamples() {
+  showUnattendedCollectForm() {
     const sampleIDs = Object.keys(this.props.selected);
     if (sampleIDs.length === 0) {
       return;
     }
-    // Attach one UnattendedCollect task to every selected sample in a single
-    // payload. The backend builds Sample -> TaskGroup -> UnattendedCollect per
-    // sample; the Sample node mounts the pin and unattended_collect_single
-    // skips its internal load (is_mounted_sample guard) then unmounts at the
-    // end. Samples already in the queue are reused (their queueID is set) and
-    // the task is appended. The task carries no user-editable parameters, so
-    // there is no parameters modal.
-    const samples = sampleIDs.map((sampleID) => ({
-      ...this.props.sampleList[sampleID],
-      checked: true,
-      tasks: [
-        {
-          type: 'UnattendedCollect',
-          label: 'Unattended collect',
-          checked: true,
-          sampleID,
-          sampleQueueID: this.props.sampleList[sampleID].queueID,
-          parameters: {
-            type: 'UnattendedCollect',
-            label: 'Unattended collect',
-            shape: -1,
-          },
-        },
-      ],
-    }));
-    this.props.addSamplesToQueue(samples);
+    const notQueued = sampleIDs.filter((sampleID) => !this.inQueue(sampleID));
+    if (notQueued.length > 0) {
+      this.addSamplesToQueue(notQueued);
+    }
+    this.showTaskForm('UnattendedCollect', {});
   }
 
   /**
@@ -1004,9 +986,7 @@ class SampleListViewContainer extends React.Component {
               removeSamplesFromQueue={this.removeSamplesFromQueue}
               removeSelectedSamples={this.removeSelectedSamples}
               removeSelectedTasks={this.removeSelectedTasks}
-              addUnattendedCollectToSelectedSamples={
-                this.addUnattendedCollectToSelectedSamples
-              }
+              showUnattendedCollectForm={this.showUnattendedCollectForm}
               setViewMode={this.setViewMode}
               filterSampleByKey={this.filter}
               type={this.props.type}

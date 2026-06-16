@@ -528,9 +528,11 @@ class Queue(ComponentBase):
     def _handle_unattended_collect(self, sample_node, node):
         """Serialise an UnattendedCollect task for the client.
 
-        The task carries no user-editable parameters (PX1XrayCentring derives
-        them at execute time), so we emit just the metadata the queue UI needs
-        to render the task chip ("UC") under its sample.
+        The task carries the user-edited acquisition subset (osc_start,
+        osc_range, exp_time, num_images, transmission, resolution) entered in
+        the Unattended collect form; the rest of the collection parameters are
+        derived per sample by PX1XrayCentring at execute time. We emit the
+        stored params so they round-trip to the queue UI / ConfirmCollectDialog.
         """
         queueID = node._node_id
         _, state = self.get_node_state(queueID)
@@ -538,7 +540,7 @@ class Queue(ComponentBase):
         return {
             "label": "Unattended collect",
             "type": "UnattendedCollect",
-            "parameters": {"shape": -1},
+            "parameters": {"shape": -1, **node.get_parameters()},
             "sampleID": sample_node.loc_str,
             "sampleQueueID": sample_node._node_id,
             "taskIndex": self.node_index(node)["idx"],
@@ -1591,9 +1593,11 @@ class Queue(ComponentBase):
     def add_unattended_collect(self, node_id, task):
         """Adds an UnattendedCollect task to the sample with id <node_id>.
 
-        v1 carries no user-editable parameters; PX1XrayCentring derives
-        per-sample parameters from LIMS at execute time. Iteration across
-        samples is handled by the queue (one task per Sample node).
+        The task carries the user-edited acquisition subset entered in the
+        Unattended collect form; PX1XrayCentring derives the remaining
+        per-sample parameters from LIMS at execute time and applies these
+        overrides on top. Iteration across samples is handled by the queue
+        (one task per Sample node).
         """
         sample_model, sample_entry = self.get_entry(node_id)
         enabled = task.get("checked", True)
@@ -1601,6 +1605,7 @@ class Queue(ComponentBase):
         uc_model = qmo.UnattendedCollect()
         uc_model.set_origin(ORIGIN_MX3)
         uc_model.set_enabled(enabled)
+        uc_model.set_parameters(task.get("parameters", {}))
 
         uc_entry = qe.UnattendedCollectQueueEntry(Mock(), uc_model)
         uc_entry.set_enabled(enabled)
@@ -2465,6 +2470,78 @@ class Queue(ComponentBase):
             ].annotation.schema(),
         }
 
+    # Same paramCollect.xml that PX1XrayCentring.prepareParamList consumes at
+    # collect time. Lives on the beamline; may be absent on dev / other hosts.
+    UNATTENDED_PARAM_XML = (
+        "/home/experiences/proxima1/com-proxima1/arthur_mxcube/"
+        "WebApp/config/paramCollect.xml"
+    )
+
+    def _unattended_collect_defaults(self):
+        """Acquisition-subset defaults for the Unattended collect form.
+
+        Read from the same paramCollect.xml the collect path consumes, so the
+        form shows the real beamline defaults. The file may be absent and its
+        exact element names are reconciled against the real file, so every
+        field falls back to a sane default and any parse failure is logged,
+        never fatal. The returned dict also carries prefixTemplate /
+        subDirTemplate, which SampleListViewContainer.showTaskForm requires.
+        """
+        defaults = {
+            "osc_start": 0.0,
+            "osc_range": 0.1,
+            "exp_time": 0.025,
+            "num_images": 3600,
+            "transmission": 100.0,
+            "resolution": 2.0,
+            "prefixTemplate": "{PREFIX}_{POSITION}",
+            "subDirTemplate": "{ACRONYM}/{ACRONYM}-{NAME}",
+        }
+
+        try:
+            import xmltodict
+
+            with open(self.UNATTENDED_PARAM_XML) as fd:
+                raw = xmltodict.parse(fd.read())
+
+            # Reuse the HW object's own typed-XML converter when available so
+            # the parsed structure matches what prepareParamList sees.
+            xc = getattr(HWR.beamline, "xray_centring", None)
+            if xc is not None and hasattr(xc, "convert_xml_dict"):
+                root = xc.convert_xml_dict(raw).get("root", {})
+            else:
+                root = raw.get("root", {})
+
+            osc_seq = root.get("oscillation_sequence")
+            if isinstance(osc_seq, list) and osc_seq:
+                osc = osc_seq[0]
+                osc_map = {
+                    "osc_start": "start",
+                    "osc_range": "range",
+                    "exp_time": "exposure_time",
+                    "num_images": "number_of_images",
+                }
+                for ui_key, xml_key in osc_map.items():
+                    if xml_key in osc and osc[xml_key] not in (None, ""):
+                        defaults[ui_key] = osc[xml_key]
+
+            for key in ("transmission", "resolution"):
+                if root.get(key) not in (None, ""):
+                    defaults[key] = root[key]
+        except FileNotFoundError:
+            logging.getLogger("MX3.HWR").warning(
+                "paramCollect.xml not found at %s; using built-in Unattended "
+                "collect defaults",
+                self.UNATTENDED_PARAM_XML,
+            )
+        except Exception:
+            logging.getLogger("MX3.HWR").exception(
+                "Failed to parse paramCollect.xml; using built-in Unattended "
+                "collect defaults"
+            )
+
+        return defaults
+
     def get_available_tasks(self):
         task_info = {}
 
@@ -2477,6 +2554,17 @@ class Queue(ComponentBase):
         task_info[task]["acq_parameters"]["kappa"] = 0 if not a_verif_k else a_verif_k
         task_info[task]["acq_parameters"]["kappa_phi"] =  0 if not a_verif_phi else a_verif_phi
 
+        # Unattended collect defaults come from paramCollect.xml (not the
+        # generic available_methods schema machinery).
+        task_info["unattendedcollect"] = {
+            "acq_parameters": self._unattended_collect_defaults(),
+            "limits": HWR.beamline.acquisition_limit_values,
+            "requires": [],
+            "name": "Unattended collect",
+            "queue_entry": "unattendedcollect",
+            "schema": {},
+            "ui_schema": {},
+        }
 
         # logging.getLogger("MX3.HWR").info(f"Task parameters for {task}: {task_info}")
         return task_info
