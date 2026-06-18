@@ -203,6 +203,21 @@ def set_current_sample(sample_id):
     server.emit("set_current_sample", sample, namespace="/hwr")
 
 
+def clear_loaded_sample():
+    """Optimistically tell clients that no sample is loaded.
+
+    Used by the unmount handler, where the physical unload is asynchronous
+    (wait=False), so we cannot read the settled state from the sample changer
+    in time. Mirrors the empty payload emitted by loaded_sample_changed() so
+    the Samples-tab "mounted" marker clears without a manual refresh.
+    """
+    server.emit(
+        "loaded_sample_changed",
+        {"address": "", "barcode": ""},
+        namespace="/hwr",
+    )
+
+
 def sc_contents_update():
     server.emit("sc_contents_update", {}, namespace="/hwr")
 

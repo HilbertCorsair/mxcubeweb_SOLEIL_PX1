@@ -1599,8 +1599,27 @@ class Queue(ComponentBase):
         overrides on top. Iteration across samples is handled by the queue
         (one task per Sample node).
         """
+        log = logging.getLogger("HWR")
         sample_model, sample_entry = self.get_entry(node_id)
         enabled = task.get("checked", True)
+
+        # Diagnostic: confirm we are attaching the UC entry to the *executing*
+        # sample entry (the one reachable from the queue manager root), not a
+        # detached/duplicate one. See unattended-collect troubleshooting.
+        qm = HWR.beamline.queue_manager
+        sample_entry_on_manager = (
+            qm.get_entry_with_model(sample_model) is not None
+        )
+        log.info(
+            "[UC] add_unattended_collect node_id=%s -> sample_model=%s loc=%s "
+            "entry=%s on_manager=%s enabled=%s",
+            node_id,
+            getattr(sample_model, "_node_id", None),
+            getattr(sample_model, "loc_str", None),
+            type(sample_entry).__name__,
+            sample_entry_on_manager,
+            enabled,
+        )
 
         uc_model = qmo.UnattendedCollect()
         uc_model.set_origin(ORIGIN_MX3)
@@ -1620,6 +1639,19 @@ class Queue(ComponentBase):
         group_entry.set_enabled(True)
         sample_entry.enqueue(group_entry)
         group_entry.enqueue(uc_entry)
+
+        # Diagnostic: verify the UC entry is now reachable from the manager root
+        # and the sample entry actually carries the new TaskGroup child.
+        uc_reachable = qm.get_entry_with_model(uc_model) is not None
+        log.info(
+            "[UC] enqueued group+uc: sample_entry children=%d uc_reachable=%s "
+            "sample_enabled=%s group_enabled=%s uc_enabled=%s",
+            len(sample_entry._queue_entry_list),
+            uc_reachable,
+            sample_entry.is_enabled(),
+            group_entry.is_enabled(),
+            uc_entry.is_enabled(),
+        )
 
         return uc_model._node_id
 

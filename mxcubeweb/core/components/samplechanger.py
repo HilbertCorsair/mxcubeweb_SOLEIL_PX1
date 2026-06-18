@@ -227,6 +227,14 @@ class SampleChanger(ComponentBase):
             # Only runs if try completed without exception (mount succeeded).
             HWR.beamline.sample_view.clear_all()
 
+            # Push the freshly-loaded sample to the clients so the Samples-tab
+            # "mounted" marker updates immediately. For SC samples the marker
+            # otherwise depends on the sample changer's asynchronous
+            # loadedSampleChanged signal, which can lag behind load(wait=True)
+            # and leave the UI stale until a manual refresh.
+            if sample["location"] != "Manual":
+                signals.loaded_sample_changed(sc.get_loaded_sample())
+
             if sid and current_queue.get(sid, False):
                 node_id = current_queue[sid]["queueID"]
                 self.app.queue.set_enabled_entry(node_id, False)
@@ -257,6 +265,14 @@ class SampleChanger(ComponentBase):
         else:
             HWR.beamline.queue_model.mounted_sample = ""
             HWR.beamline.sample_view.clear_all()
+
+            # Clear the "mounted" marker in the UI right away. The physical
+            # unload above is asynchronous (wait=False), so we optimistically
+            # tell the clients no sample is loaded rather than waiting for the
+            # sample changer's loadedSampleChanged signal.
+            if sample["location"] != "Manual":
+                self.set_current_sample(None)
+                signals.clear_loaded_sample()
 
     def mount_sample(self, sample):
         gevent.spawn(self.mount_sample_clean_up, sample)
