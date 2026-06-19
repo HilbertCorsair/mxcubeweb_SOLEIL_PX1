@@ -1709,57 +1709,83 @@ class Queue(ComponentBase):
         phase nodes are not shown in the UI.
         """
         log = logging.getLogger("HWR")
+
         sample_model, sample_entry = self.get_entry(node_id)
+        if sample_model is None or sample_entry is None:
+            raise ValueError(
+                f"[UC] add_unattended_collect: no sample entry for node_id={node_id}"
+            )
+
         enabled = task.get("checked", True)
         params = task.get("parameters", {})
 
-        group_model = qmo.TaskGroup()
-        group_model.set_origin(ORIGIN_MX3)
-        group_model.set_enabled(True)
-        # Tag so the serializer collapses the whole pipeline into one umbrella
-        # row, and so deletion targets the group as a unit.
-        group_model.is_unattended = True
-        HWR.beamline.queue_model.add_child(sample_model, group_model)
+        group_model = None
+        group_entry = None
+        try:
+            group_model = qmo.TaskGroup()
+            group_model.set_origin(ORIGIN_MX3)
+            group_model.set_enabled(True)
+            # Tag so the serializer collapses the whole pipeline into one
+            # umbrella row, and so deletion targets the group as a unit.
+            group_model.is_unattended = True
+            HWR.beamline.queue_model.add_child(sample_model, group_model)
 
-        group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
-        group_entry.set_enabled(True)
-        sample_entry.enqueue(group_entry)
+            group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
+            group_entry.set_enabled(True)
+            sample_entry.enqueue(group_entry)
 
-        # Ordered phase pipeline: (model, entry class). Only the phases that
-        # consume the acquisition subset get the params.
-        oc1 = qmo.OpticalCentring()
-        oc1.zoom = "zoom1"
-        oc1.zoom_settle = 10
-        oc2 = qmo.OpticalCentring()
-        oc2.zoom = "zoom2"
-        oc2.zoom_settle = 6
-        grid = qmo.GridScan()
-        grid.set_parameters(params)
-        line0 = qmo.LineScan(index=0)
-        line1 = qmo.LineScan(index=1)
-        finalize = qmo.FinalizeCentring()
-        collect = qmo.UnattendedDataCollection()
-        collect.set_parameters(params)
-        unmount = qmo.Unmount()
+            # Ordered phase pipeline: (model, entry class). Only the phases
+            # that consume the acquisition subset get the params.
+            oc1 = qmo.OpticalCentring()
+            oc1.zoom = "zoom1"
+            oc1.zoom_settle = 10
+            oc2 = qmo.OpticalCentring()
+            oc2.zoom = "zoom2"
+            oc2.zoom_settle = 6
+            grid = qmo.GridScan()
+            grid.set_parameters(params)
+            line0 = qmo.LineScan(index=0)
+            line1 = qmo.LineScan(index=1)
+            finalize = qmo.FinalizeCentring()
+            collect = qmo.UnattendedDataCollection()
+            collect.set_parameters(params)
+            unmount = qmo.Unmount()
 
-        phases = [
-            (oc1, qe.OpticalCentringQueueEntry),
-            (oc2, qe.OpticalCentringQueueEntry),
-            (grid, qe.GridScanQueueEntry),
-            (line0, qe.LineScanQueueEntry),
-            (line1, qe.LineScanQueueEntry),
-            (finalize, qe.FinalizeCentringQueueEntry),
-            (collect, qe.UnattendedDataCollectionQueueEntry),
-            (unmount, qe.UnmountQueueEntry),
-        ]
+            phases = [
+                (oc1, qe.OpticalCentringQueueEntry),
+                (oc2, qe.OpticalCentringQueueEntry),
+                (grid, qe.GridScanQueueEntry),
+                (line0, qe.LineScanQueueEntry),
+                (line1, qe.LineScanQueueEntry),
+                (finalize, qe.FinalizeCentringQueueEntry),
+                (collect, qe.UnattendedDataCollectionQueueEntry),
+                (unmount, qe.UnmountQueueEntry),
+            ]
 
-        for phase_model, entry_cls in phases:
-            phase_model.set_origin(ORIGIN_MX3)
-            phase_model.set_enabled(enabled)
-            HWR.beamline.queue_model.add_child(group_model, phase_model)
-            phase_entry = entry_cls(Mock(), phase_model)
-            phase_entry.set_enabled(enabled)
-            group_entry.enqueue(phase_entry)
+            for phase_model, entry_cls in phases:
+                phase_model.set_origin(ORIGIN_MX3)
+                phase_model.set_enabled(enabled)
+                HWR.beamline.queue_model.add_child(group_model, phase_model)
+                phase_entry = entry_cls(Mock(), phase_model)
+                phase_entry.set_enabled(enabled)
+                group_entry.enqueue(phase_entry)
+        except Exception:
+            # Never leave a half-built pipeline dangling under the sample:
+            # roll the group back out of both the entry and model trees, log a
+            # full traceback, and re-raise so the route returns an error (the
+            # client shows the error panel) instead of silently committing a
+            # broken / mount-only sample.
+            log.exception(
+                "[UC] add_unattended_collect failed for node_id=%s; rolling back",
+                node_id,
+            )
+            with contextlib.suppress(Exception):
+                if group_entry is not None:
+                    sample_entry.dequeue(group_entry)
+            with contextlib.suppress(Exception):
+                if group_model is not None:
+                    HWR.beamline.queue_model.del_child(sample_model, group_model)
+            raise
 
         log.info(
             "[UC] add_unattended_collect node_id=%s group=%s phases=%d enabled=%s",

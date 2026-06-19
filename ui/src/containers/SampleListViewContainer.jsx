@@ -94,7 +94,15 @@ class SampleListViewContainer extends React.Component {
     this.removeSamplesFromQueue = this.removeSamplesFromQueue.bind(this);
     this.removeSelectedSamples = this.removeSelectedSamples.bind(this);
     this.removeSelectedTasks = this.removeSelectedTasks.bind(this);
-    this.showUnattendedCollectForm = this.showUnattendedCollectForm.bind(this);
+    // Unattended collect uses the generic task-form flow, exactly like every
+    // other task: opening the form fans out a single atomic add per selected
+    // sample (Sample + is_unattended TaskGroup + the 8 phase nodes), carrying
+    // the form's parameters (or the untouched defaults). No bare-sample pre-add.
+    this.showUnattendedCollectForm = this.showTaskForm.bind(
+      this,
+      'UnattendedCollect',
+      {},
+    );
     // Standalone unattended-collect phase tasks (one per pipeline step). Each
     // opens the generic UCPhase form; OpticalCentring/LineScan carry the fixed
     // zoom/index via extraParams so the phase is self-contained.
@@ -644,29 +652,6 @@ class SampleListViewContainer extends React.Component {
    */
   addSelectedSamplesToQueue() {
     this.addSamplesToQueue(Object.keys(this.props.selected));
-  }
-
-  /**
-   * Opens the Unattended-collect parameters form for the selected samples.
-   *
-   * Samples must be in the queue before the form's submit dispatches addTask
-   * (which reads each sample's queueID from Redux), so we queue any not-yet-
-   * queued selected samples first, then open the form. The user editing and
-   * submitting the form takes far longer than the addSamplesToQueue roundtrip,
-   * and addTask re-reads each queueID at submit time, so the values are in
-   * place by then. One UnattendedCollect task carrying the edited acquisition
-   * subset is then attached to each selected sample.
-   */
-  showUnattendedCollectForm() {
-    const sampleIDs = Object.keys(this.props.selected);
-    if (sampleIDs.length === 0) {
-      return;
-    }
-    const notQueued = sampleIDs.filter((sampleID) => !this.inQueue(sampleID));
-    if (notQueued.length > 0) {
-      this.addSamplesToQueue(notQueued);
-    }
-    this.showTaskForm('UnattendedCollect', {});
   }
 
   /**
