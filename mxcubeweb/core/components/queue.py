@@ -40,6 +40,17 @@ ORIGIN_MX3 = "MX3"
 
 
 class Queue(ComponentBase):
+    # Standalone unattended-collect phase task types (one queue row each).
+    # Mirrors the umbrella pipeline phases so each step can be queued manually.
+    UC_PHASE_TYPES = (
+        "OpticalCentring",
+        "GridScan",
+        "LineScan",
+        "FinalizeCentring",
+        "UnattendedDataCollection",
+        "Unmount",
+    )
+
     def __init__(self, app, config):
         super().__init__(app, config)
         self.init_queue_settings()
@@ -108,7 +119,12 @@ class Queue(ComponentBase):
             tlist = []
 
             for group in task_groups:
-                if group.interleave_num_images:
+                if group.interleave_num_images or getattr(
+                    group, "is_unattended", False
+                ):
+                    # Interleaved and unattended groups serialize as a single
+                    # umbrella row, so they occupy one slot in the task list
+                    # rather than being flattened into their children.
                     tlist.append(group)
                 else:
                     tlist.extend(group.get_children())
@@ -525,26 +541,94 @@ class Queue(ComponentBase):
             "state": state,
         }
 
-    def _handle_unattended_collect(self, sample_node, node):
-        """Serialise an UnattendedCollect task for the client.
+    def _rollup_state(self, children):
+        """Aggregate a single state from a list of child task nodes.
 
-        The task carries the user-edited acquisition subset (osc_start,
-        osc_range, exp_time, num_images, transmission, resolution) entered in
-        the Unattended collect form; the rest of the collection parameters are
-        derived per sample by PX1XrayCentring at execute time. We emit the
-        stored params so they round-trip to the queue UI / ConfirmCollectDialog.
+        Mirrors the precedence used in _handle_sample: running wins, then
+        failed, then all-collected, otherwise uncollected.
         """
-        queueID = node._node_id
-        _, state = self.get_node_state(queueID)
+        states = [self.get_node_state(c._node_id)[1] for c in children]
+        if RUNNING in states:
+            return RUNNING
+        if FAILED in states:
+            return FAILED
+        if states and all(s == COLLECTED for s in states):
+            return COLLECTED
+        return UNCOLLECTED
+
+    def _handle_unattended_collect(self, sample_node, node):
+        """Serialise an unattended collect as a single umbrella row.
+
+        Two node shapes are accepted:
+          * the decomposed pipeline TaskGroup (tagged is_unattended) whose
+            children are the phase tasks — state is rolled up from those phases
+            and the acquisition params are read from the GridScan phase;
+          * a legacy single UnattendedCollect task node (kept for backward
+            compatibility).
+
+        The acquisition subset (osc_start, osc_range, exp_time, num_images,
+        transmission, resolution) round-trips to the queue UI /
+        ConfirmCollectDialog; the rest of the collection parameters are derived
+        per sample by PX1XrayCentring at execute time.
+        """
+        if isinstance(node, qmo.TaskGroup):
+            phases = node.get_children()
+            params = {}
+            for child in phases:
+                if isinstance(child, qmo.GridScan):
+                    params = child.get_parameters()
+                    break
+            state = self._rollup_state(phases)
+        else:
+            params = node.get_parameters()
+            _, state = self.get_node_state(node._node_id)
 
         return {
             "label": "Unattended collect",
             "type": "UnattendedCollect",
-            "parameters": {"shape": -1, **node.get_parameters()},
+            "parameters": {"shape": -1, **params},
             "sampleID": sample_node.loc_str,
             "sampleQueueID": sample_node._node_id,
             "taskIndex": self.node_index(node)["idx"],
-            "queueID": queueID,
+            "queueID": node._node_id,
+            "checked": node.is_enabled(),
+            "state": state,
+        }
+
+    def _handle_uc_phase(self, sample_node, node):
+        """Serialise a standalone unattended-collect phase task as one row.
+
+        Handles any _UnattendedPhase subclass (GridScan, LineScan,
+        FinalizeCentring, UnattendedDataCollection, Unmount) as well as a
+        zoom-tagged OpticalCentring auto-centring step. The emitted ``type``
+        round-trips back to add_uc_phase via _queue_add_item_rec, so a phase
+        added manually re-serialises and re-submits identically.
+        """
+        _, state = self.get_node_state(node._node_id)
+
+        if isinstance(node, qmo.OpticalCentring):
+            zoom = getattr(node, "zoom", None)
+            label = "Auto centring" + (f" ({zoom})" if zoom else "")
+            item_t = "OpticalCentring"
+            params = {
+                "zoom": zoom,
+                "zoom_settle": getattr(node, "zoom_settle", 10),
+            }
+        else:
+            label = node.get_display_name()
+            item_t = type(node).__name__
+            params = dict(node.get_parameters())
+            if isinstance(node, qmo.LineScan):
+                params["index"] = getattr(node, "index", 0)
+
+        return {
+            "label": label,
+            "type": item_t,
+            "parameters": {"shape": -1, **params},
+            "sampleID": sample_node.loc_str,
+            "sampleQueueID": sample_node._node_id,
+            "taskIndex": self.node_index(node)["idx"],
+            "queueID": node._node_id,
             "checked": node.is_enabled(),
             "state": state,
         }
@@ -713,6 +797,17 @@ class Queue(ComponentBase):
                 result.append(self._handle_energy_scan(sample_node, node))
             elif isinstance(node, qmo.UnattendedCollect):
                 result.append(self._handle_unattended_collect(sample_node, node))
+            elif isinstance(node, qmo.TaskGroup) and getattr(
+                node, "is_unattended", False
+            ):
+                # The decomposed unattended pipeline lives as phase children of
+                # this TaskGroup; collapse it into a single umbrella row instead
+                # of recursing into (and flattening) the individual phases.
+                result.append(self._handle_unattended_collect(sample_node, node))
+            elif isinstance(node, (qmo._UnattendedPhase, qmo.OpticalCentring)):
+                # Standalone phase task (added via the per-phase menu); each
+                # lives in its own plain TaskGroup and shows as its own row.
+                result.append(self._handle_uc_phase(sample_node, node))
             elif isinstance(node, qmo.TaskGroup) and node.interleave_num_images:
                 result.append(self._handle_interleaved(sample_node, node))
             elif isinstance(node, qmo.TaskNode) and node.task_data:
@@ -994,6 +1089,8 @@ class Queue(ComponentBase):
                 self.add_test_task(sample_node_id, item)
             elif item_t == "UnattendedCollect":
                 self.add_unattended_collect(sample_node_id, item)
+            elif item_t in self.UC_PHASE_TYPES:
+                self.add_uc_phase(sample_node_id, item)
             elif item_t == "Sample":
                 pass
             else:
@@ -1591,69 +1688,163 @@ class Queue(ComponentBase):
         return dc_model._node_id
 
     def add_unattended_collect(self, node_id, task):
-        """Adds an UnattendedCollect task to the sample with id <node_id>.
+        """Adds a full unattended-collect pipeline under the sample <node_id>.
 
-        The task carries the user-edited acquisition subset entered in the
-        Unattended collect form; PX1XrayCentring derives the remaining
-        per-sample parameters from LIMS at execute time and applies these
-        overrides on top. Iteration across samples is handled by the queue
-        (one task per Sample node).
+        Selecting "Unattended collect" builds, under a single TaskGroup tagged
+        ``is_unattended``, the ordered phase sub-tasks the queue executes in
+        sequence::
+
+            OpticalCentring(zoom1) -> OpticalCentring(zoom2) -> GridScan
+            -> LineScan(0) -> LineScan(1) -> FinalizeCentring
+            -> UnattendedDataCollection -> Unmount
+
+        Mounting is handled by the parent SampleQueueEntry, so no mount task is
+        added. Each phase entry calls a public phase method on
+        HWR.beamline.xray_centring; they share centring state on that singleton.
+        The user-edited acquisition subset is carried on the phases that consume
+        it (GridScan applies it once into current_dc_parameters).
+
+        The group is serialized as a single "Unattended collect" umbrella row
+        (see _handle_unattended_collect / queue_to_dict_rec), so the individual
+        phase nodes are not shown in the UI.
         """
         log = logging.getLogger("HWR")
         sample_model, sample_entry = self.get_entry(node_id)
         enabled = task.get("checked", True)
+        params = task.get("parameters", {})
 
-        # Diagnostic: confirm we are attaching the UC entry to the *executing*
-        # sample entry (the one reachable from the queue manager root), not a
-        # detached/duplicate one. See unattended-collect troubleshooting.
-        qm = HWR.beamline.queue_manager
-        sample_entry_on_manager = (
-            qm.get_entry_with_model(sample_model) is not None
-        )
+        group_model = qmo.TaskGroup()
+        group_model.set_origin(ORIGIN_MX3)
+        group_model.set_enabled(True)
+        # Tag so the serializer collapses the whole pipeline into one umbrella
+        # row, and so deletion targets the group as a unit.
+        group_model.is_unattended = True
+        HWR.beamline.queue_model.add_child(sample_model, group_model)
+
+        group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
+        group_entry.set_enabled(True)
+        sample_entry.enqueue(group_entry)
+
+        # Ordered phase pipeline: (model, entry class). Only the phases that
+        # consume the acquisition subset get the params.
+        oc1 = qmo.OpticalCentring()
+        oc1.zoom = "zoom1"
+        oc1.zoom_settle = 10
+        oc2 = qmo.OpticalCentring()
+        oc2.zoom = "zoom2"
+        oc2.zoom_settle = 6
+        grid = qmo.GridScan()
+        grid.set_parameters(params)
+        line0 = qmo.LineScan(index=0)
+        line1 = qmo.LineScan(index=1)
+        finalize = qmo.FinalizeCentring()
+        collect = qmo.UnattendedDataCollection()
+        collect.set_parameters(params)
+        unmount = qmo.Unmount()
+
+        phases = [
+            (oc1, qe.OpticalCentringQueueEntry),
+            (oc2, qe.OpticalCentringQueueEntry),
+            (grid, qe.GridScanQueueEntry),
+            (line0, qe.LineScanQueueEntry),
+            (line1, qe.LineScanQueueEntry),
+            (finalize, qe.FinalizeCentringQueueEntry),
+            (collect, qe.UnattendedDataCollectionQueueEntry),
+            (unmount, qe.UnmountQueueEntry),
+        ]
+
+        for phase_model, entry_cls in phases:
+            phase_model.set_origin(ORIGIN_MX3)
+            phase_model.set_enabled(enabled)
+            HWR.beamline.queue_model.add_child(group_model, phase_model)
+            phase_entry = entry_cls(Mock(), phase_model)
+            phase_entry.set_enabled(enabled)
+            group_entry.enqueue(phase_entry)
+
         log.info(
-            "[UC] add_unattended_collect node_id=%s -> sample_model=%s loc=%s "
-            "entry=%s on_manager=%s enabled=%s",
+            "[UC] add_unattended_collect node_id=%s group=%s phases=%d enabled=%s",
             node_id,
-            getattr(sample_model, "_node_id", None),
-            getattr(sample_model, "loc_str", None),
-            type(sample_entry).__name__,
-            sample_entry_on_manager,
+            group_model._node_id,
+            len(group_entry._queue_entry_list),
             enabled,
         )
 
-        uc_model = qmo.UnattendedCollect()
-        uc_model.set_origin(ORIGIN_MX3)
-        uc_model.set_enabled(enabled)
-        uc_model.set_parameters(task.get("parameters", {}))
+        return group_model._node_id
 
-        uc_entry = qe.UnattendedCollectQueueEntry(Mock(), uc_model)
-        uc_entry.set_enabled(enabled)
+    def _uc_phase_factory(self, item_t):
+        """Return the (model class, entry class) pair for a UC phase type.
+
+        Built lazily so the lookup uses the live qmo/qe module attributes that
+        are only populated after import_queue_entries() has run.
+        """
+        return {
+            "GridScan": (qmo.GridScan, qe.GridScanQueueEntry),
+            "LineScan": (qmo.LineScan, qe.LineScanQueueEntry),
+            "FinalizeCentring": (qmo.FinalizeCentring, qe.FinalizeCentringQueueEntry),
+            "UnattendedDataCollection": (
+                qmo.UnattendedDataCollection,
+                qe.UnattendedDataCollectionQueueEntry,
+            ),
+            "Unmount": (qmo.Unmount, qe.UnmountQueueEntry),
+            "OpticalCentring": (qmo.OpticalCentring, qe.OpticalCentringQueueEntry),
+        }[item_t]
+
+    def add_uc_phase(self, node_id, task):
+        """Add a single unattended-collect phase task standalone under a sample.
+
+        Mirrors add_data_collection: the phase lives in its own plain TaskGroup
+        (NOT tagged is_unattended) so it serialises as an individual row via
+        _handle_uc_phase. Used by the per-phase right-click menu items so each
+        pipeline step (auto centring, grid scan, line scan, finalize, data
+        collection, unmount) can be queued independently. They share the same
+        public phase methods on HWR.beamline.xray_centring as the umbrella
+        pipeline, so a manually assembled sequence behaves identically.
+        """
+        log = logging.getLogger("HWR")
+        sample_model, sample_entry = self.get_entry(node_id)
+        item_t = task["type"]
+        params = task.get("parameters", {})
+        enabled = task.get("checked", True)
+
+        model_cls, entry_cls = self._uc_phase_factory(item_t)
+
+        if item_t == "LineScan":
+            phase_model = model_cls(index=int(params.get("index", 0) or 0))
+        else:
+            phase_model = model_cls()
+
+        if item_t == "OpticalCentring":
+            phase_model.zoom = params.get("zoom") or "zoom1"
+            phase_model.zoom_settle = params.get("zoom_settle", 10)
+        elif hasattr(phase_model, "set_parameters"):
+            phase_model.set_parameters(params)
+
+        phase_model.set_origin(ORIGIN_MX3)
+        phase_model.set_enabled(enabled)
 
         group_model = qmo.TaskGroup()
         group_model.set_origin(ORIGIN_MX3)
         group_model.set_enabled(True)
         HWR.beamline.queue_model.add_child(sample_model, group_model)
-        HWR.beamline.queue_model.add_child(group_model, uc_model)
+        HWR.beamline.queue_model.add_child(group_model, phase_model)
 
         group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
         group_entry.set_enabled(True)
         sample_entry.enqueue(group_entry)
-        group_entry.enqueue(uc_entry)
 
-        # Diagnostic: verify the UC entry is now reachable from the manager root
-        # and the sample entry actually carries the new TaskGroup child.
-        uc_reachable = qm.get_entry_with_model(uc_model) is not None
+        phase_entry = entry_cls(Mock(), phase_model)
+        phase_entry.set_enabled(enabled)
+        group_entry.enqueue(phase_entry)
+
         log.info(
-            "[UC] enqueued group+uc: sample_entry children=%d uc_reachable=%s "
-            "sample_enabled=%s group_enabled=%s uc_enabled=%s",
-            len(sample_entry._queue_entry_list),
-            uc_reachable,
-            sample_entry.is_enabled(),
-            group_entry.is_enabled(),
-            uc_entry.is_enabled(),
+            "[UC] add_uc_phase type=%s node_id=%s phase=%s enabled=%s",
+            item_t,
+            node_id,
+            phase_model._node_id,
+            enabled,
         )
 
-        return uc_model._node_id
+        return phase_model._node_id
 
     def add_queue_entry(self, node_id, task, task_name):
         """Adds a queue entry to the sample with id <node_id>
@@ -2286,14 +2477,50 @@ class Queue(ComponentBase):
         model, entry = self.get_entry(tqid)
         sample_model, _ = self.get_entry(sqid)
 
-        if data["type"] == "DataCollection":
+        item_t = data["type"]
+        if item_t == "DataCollection":
             self.set_dc_params(model, entry, data, sample_model)
-        elif data["type"] == "Characterisation":
+        elif item_t == "Characterisation":
             self.set_char_params(model, entry, data, sample_model)
+        elif item_t == "UnattendedCollect":
+            self._update_unattended_collect(model, data)
+        elif item_t in self.UC_PHASE_TYPES:
+            self._update_uc_phase(model, data)
 
         logging.getLogger("MX3.HWR").info("[QUEUE] is:\n%s " % self.queue_to_json())
 
         return model
+
+    def _update_unattended_collect(self, model, data):
+        """Re-apply edited acquisition params to an unattended-collect row.
+
+        Accepts either the decomposed pipeline TaskGroup (push the params onto
+        the GridScan and UnattendedDataCollection phase children, which consume
+        them) or a legacy single UnattendedCollect node.
+        """
+        params = data.get("parameters", {})
+        if isinstance(model, qmo.TaskGroup):
+            for child in model.get_children():
+                if isinstance(
+                    child, (qmo.GridScan, qmo.UnattendedDataCollection)
+                ):
+                    child.set_parameters(params)
+        elif hasattr(model, "set_parameters"):
+            model.set_parameters(params)
+
+    def _update_uc_phase(self, model, data):
+        """Re-apply edited params to a standalone unattended-collect phase row."""
+        params = data.get("parameters", {})
+        if isinstance(model, qmo.OpticalCentring):
+            if params.get("zoom"):
+                model.zoom = params["zoom"]
+            if params.get("zoom_settle") is not None:
+                model.zoom_settle = params["zoom_settle"]
+        else:
+            if hasattr(model, "set_parameters"):
+                model.set_parameters(params)
+            if isinstance(model, qmo.LineScan) and params.get("index") is not None:
+                model.index = int(params["index"])
 
     def queue_enable_item(self, qid_list, enabled):
         for qid in qid_list:
@@ -2597,6 +2824,28 @@ class Queue(ComponentBase):
             "schema": {},
             "ui_schema": {},
         }
+
+        # Standalone unattended-collect phase tasks. The form's showTaskForm()
+        # indexes defaultParameters by the lowercased form name, so register a
+        # default-parameter block per phase (sharing the UC acquisition subset).
+        uc_phase_defaults = self._unattended_collect_defaults()
+        for _key, _name in (
+            ("opticalcentring", "Auto centring"),
+            ("gridscan", "Grid scan"),
+            ("linescan", "Line scan"),
+            ("finalizecentring", "Finalize centring"),
+            ("unattendeddatacollection", "Data collection"),
+            ("unmount", "Unmount"),
+        ):
+            task_info[_key] = {
+                "acq_parameters": dict(uc_phase_defaults),
+                "limits": HWR.beamline.acquisition_limit_values,
+                "requires": [],
+                "name": _name,
+                "queue_entry": _key,
+                "schema": {},
+                "ui_schema": {},
+            }
 
         # logging.getLogger("MX3.HWR").info(f"Task parameters for {task}: {task_info}")
         return task_info

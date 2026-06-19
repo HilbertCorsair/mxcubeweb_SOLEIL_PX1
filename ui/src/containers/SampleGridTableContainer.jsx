@@ -1162,6 +1162,34 @@ class SampleGridTableContainer extends React.Component {
         {this.renderWorkflowMenuOptions()}
         <Dropdown.Divider />
         <Dropdown.Header>
+          <i className="fas fa-plus" /> Add UC phase{' '}
+        </Dropdown.Header>
+        <Dropdown.Item onClick={this.props.showAutoCentringZoom1Form}>
+          Auto centring (zoom1)
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showAutoCentringZoom2Form}>
+          Auto centring (zoom2)
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showGridScanForm}>
+          Grid scan
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showLineScan0Form}>
+          Line scan #1
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showLineScan1Form}>
+          Line scan #2
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showFinalizeCentringForm}>
+          Finalize centring
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showUCDataCollectionForm}>
+          Data collection
+        </Dropdown.Item>
+        <Dropdown.Item onClick={this.props.showUnmountForm}>
+          Unmount
+        </Dropdown.Item>
+        <Dropdown.Divider />
+        <Dropdown.Header>
           <MdRemove glyph="minus" /> Remove
         </Dropdown.Header>
         <Dropdown.Item onClick={this.props.removeSelectedSamples}>

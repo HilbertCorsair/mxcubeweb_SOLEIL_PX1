@@ -12,6 +12,7 @@ import EnergyScan from '../components/Tasks/EnergyScan';
 import GenericTaskForm from '../components/Tasks/GenericTaskForm';
 import TestTask from '../components/Tasks/TestTask';
 import UnattendedCollect from '../components/Tasks/UnattendedCollect';
+import UCPhase from '../components/Tasks/UCPhase';
 
 import { hideTaskParametersForm } from '../actions/taskForm';
 
@@ -234,6 +235,25 @@ function TaskContainer() {
       return (
         <UnattendedCollect
           show
+          addTask={doAddTask}
+          pointID={pointID}
+          sampleIds={sampleIds}
+          taskData={taskData}
+          hide={() => dispatch(hideTaskParametersForm())}
+          defaultParameters={defaultParameters}
+        />
+      );
+    }
+    case 'OpticalCentring':
+    case 'GridScan':
+    case 'LineScan':
+    case 'FinalizeCentring':
+    case 'UnattendedDataCollection':
+    case 'Unmount': {
+      return (
+        <UCPhase
+          show
+          phaseType={showForm}
           addTask={doAddTask}
           pointID={pointID}
           sampleIds={sampleIds}
