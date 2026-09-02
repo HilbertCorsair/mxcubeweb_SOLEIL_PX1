@@ -12,6 +12,7 @@ import {
   TASK_COLLECTED,
   TASK_COLLECT_FAILED,
   TASK_RUNNING,
+  formatNumber as num,
 } from '../../constants';
 import TooltipTrigger from '../TooltipTrigger';
 
@@ -142,7 +143,9 @@ export default class TaskItem extends Component {
 
   wedgePath(wedge) {
     const { parameters } = wedge;
-    const value = parameters.fileName;
+    // Tasks whose file paths are derived at execute time (the unattended
+    // phases) carry neither fileName nor path.
+    const value = parameters.fileName || '';
     const path = parameters.path || '';
     const pathEndPart = path.slice(-40);
 
@@ -166,41 +169,44 @@ export default class TaskItem extends Component {
 
   wedgeParameters(wedge) {
     const { parameters } = wedge;
+
+    // Values are formatted through formatNumber: not every task carries the
+    // full acquisition set, and toFixed() on a missing value throws.
     return (
       <tr>
         {parameters.osc_start !== null && (
           <td>
-            <a>{parameters.osc_start.toFixed(2)}</a>
+            <a>{num(parameters.osc_start, 2)}</a>
           </td>
         )}
         {parameters.osc_range !== null && (
           <td>
-            <a>{parameters.osc_range.toFixed(2)}</a>
+            <a>{num(parameters.osc_range, 2)}</a>
           </td>
         )}
         <td>
-          <a>{parameters.exp_time.toFixed(6)}</a>
+          <a>{num(parameters.exp_time, 6)}</a>
         </td>
         <td>
-          <a>{parameters.num_images}</a>
+          <a>{parameters.num_images ?? '-'}</a>
         </td>
         <td>
-          <a>{parameters.transmission.toFixed(2)}</a>
+          <a>{num(parameters.transmission, 2)}</a>
         </td>
         <td>
-          <a>{parameters.resolution.toFixed(3)}</a>
+          <a>{num(parameters.resolution, 3)}</a>
         </td>
         <td>
-          <a>{parameters.energy.toFixed(4)}</a>
+          <a>{num(parameters.energy, 4)}</a>
         </td>
         {parameters.kappa_phi !== null && (
           <td>
-            <a>{parameters.kappa_phi.toFixed(2)}</a>
+            <a>{num(parameters.kappa_phi, 2)}</a>
           </td>
         )}
         {parameters.kappa !== null && (
           <td>
-            <a>{parameters.kappa.toFixed(2)}</a>
+            <a>{num(parameters.kappa, 2)}</a>
           </td>
         )}
       </tr>

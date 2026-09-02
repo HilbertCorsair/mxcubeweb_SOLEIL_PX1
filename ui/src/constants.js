@@ -27,6 +27,93 @@ export const CLICK_CENTRING = 0;
 
 export const TWO_STATE_ACTUATOR = 'INOUT';
 
+/**
+ * Task types of the unattended-collect pipeline phases.
+ * Kept in step with Queue.UC_PHASE_TYPES on the backend.
+ */
+export const UC_PHASE_TYPES = [
+  'OpticalCentring',
+  'GridScan',
+  'LineScan',
+  'FinalizeCentring',
+  'UnattendedDataCollection',
+  'Unmount',
+];
+
+export function isUCPhase(task) {
+  return UC_PHASE_TYPES.includes(task.type);
+}
+
+/**
+ * True for a phase row belonging to a decomposed pipeline, as opposed to a
+ * phase added on its own from the "Add UC phase" menu. The backend tags the
+ * former with the owning TaskGroup's node id.
+ */
+export function isUCPipelinePhase(task) {
+  return (
+    isUCPhase(task) && task.ucGroupID !== null && task.ucGroupID !== undefined
+  );
+}
+
+/**
+ * Short badge tag for a task, as shown in the samples table. Returns null for a
+ * type with no defined tag so the caller decides the fallback.
+ */
+export function taskTagName(task) {
+  switch (task.type) {
+    case 'DataCollection': {
+      return 'DC';
+    }
+    case 'Characterisation': {
+      return 'C';
+    }
+    case 'Workflow': {
+      return 'WF';
+    }
+    case 'xrf_spectrum': {
+      return 'XRF';
+    }
+    case 'energy_scan': {
+      return 'ESCAN';
+    }
+    case 'UnattendedCollect': {
+      return 'UC';
+    }
+    case 'OpticalCentring': {
+      return task.parameters?.zoom === 'zoom2' ? 'AC2' : 'AC1';
+    }
+    case 'GridScan': {
+      return 'GS';
+    }
+    case 'LineScan': {
+      return `LS${Number(task.parameters?.index ?? 0) + 1}`;
+    }
+    case 'FinalizeCentring': {
+      return 'FC';
+    }
+    case 'UnattendedDataCollection': {
+      return 'DC';
+    }
+    case 'Unmount': {
+      return 'UM';
+    }
+    default: {
+      return null;
+    }
+  }
+}
+
+/**
+ * Fixed-point format for a value that may be absent: not every task carries the
+ * full DataCollection acquisition set (the unattended phases carry a subset),
+ * so a missing number must render as a dash rather than throw on toFixed().
+ */
+export function formatNumber(value, digits) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value.toFixed(digits)
+    : '-';
+}
+
 export function isCollected(task) {
   return (task.state & TASK_COLLECTED) === TASK_COLLECTED; // eslint-disable-line no-bitwise
 }

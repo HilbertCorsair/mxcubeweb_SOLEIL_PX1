@@ -11,6 +11,7 @@ import {
   TASK_COLLECT_WARNING,
   TASK_RUNNING,
   isUnCollected,
+  taskTagName,
 } from '../../constants';
 
 import loader from '../../img/busy-indicator.gif';
@@ -29,44 +30,11 @@ export class TaskItem extends React.Component {
   }
 
   tagName() {
-    const { type } = this.props.taskData;
-    let res = 'DC';
+    const task = this.props.taskData;
 
-    switch (type) {
-      case 'DataCollection': {
-        res = 'DC';
-
-        break;
-      }
-      case 'Characterisation': {
-        res = 'C';
-
-        break;
-      }
-      case 'Workflow': {
-        res = 'WF';
-
-        break;
-      }
-      case 'xrf_spectrum': {
-        res = 'XRF';
-
-        break;
-      }
-      case 'energy_scan': {
-        res = 'ESCAN';
-
-        break;
-      }
-      case 'UnattendedCollect': {
-        res = 'UC';
-
-        break;
-      }
-      // No default
-    }
-
-    return res;
+    // Falls back to the task type rather than to 'DC': labelling an unknown
+    // task 'DC' is how every unattended-collect phase ended up mislabelled.
+    return taskTagName(task) || task.type || '?';
   }
 
   summary() {

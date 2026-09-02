@@ -241,6 +241,24 @@ export function setEnabledSample(sampleIDList, value) {
   };
 }
 
+/**
+ * Every row of the unattended-collect pipeline <task> belongs to: the group
+ * header plus its phase rows. Empty for anything else, including a phase added
+ * standalone from the "Add UC phase" menu, which owns its TaskGroup.
+ */
+function unattendedGroupRows(tasks, task) {
+  const groupID =
+    task.type === 'UnattendedCollect' && task.ucGroup
+      ? task.queueID
+      : task.ucGroupID;
+
+  if (groupID === null || groupID === undefined) {
+    return [];
+  }
+
+  return tasks.filter((t) => t.queueID === groupID || t.ucGroupID === groupID);
+}
+
 export function deleteTask(sampleID, taskIndex) {
   return async (dispatch, getState) => {
     const state = getState();
@@ -252,9 +270,28 @@ export function deleteTask(sampleID, taskIndex) {
 
     dispatch(queueLoading(true));
 
+    // An unattended-collect pipeline is one TaskGroup spread over a header row
+    // and one row per phase. The server removes the group as a unit whichever
+    // of those rows was targeted, so drop them all locally too rather than
+    // leaving the other rows behind as ghosts.
+    const groupRows = unattendedGroupRows(
+      state.sampleGrid.sampleList[sampleID].tasks,
+      task,
+    );
+
     try {
       await sendDeleteQueueItem([[sampleID, taskIndex]]);
-      dispatch(removeTaskAction(sampleID, taskIndex, task.queueID));
+
+      if (groupRows.length > 0) {
+        dispatch(
+          removeTaskListAction(
+            groupRows,
+            groupRows.map((t) => t.queueID),
+          ),
+        );
+      } else {
+        dispatch(removeTaskAction(sampleID, taskIndex, task.queueID));
+      }
     } catch {
       dispatch(showErrorPanel(true, 'Server refused to delete task'));
     }
@@ -337,6 +374,29 @@ export function addDiffractionPlanAction(tasks) {
   return { type: 'ADD_DIFF_PLAN', tasks };
 }
 
+/**
+ * Persist the shape (and, for a line, its two reference points) a task was
+ * created on, so a temporary shape is not lost once the task is queued.
+ */
+function saveTaskShapes(dispatch, state, task) {
+  const shapeId = task.parameters.shape;
+
+  if (Number.parseInt(shapeId) === -1) {
+    return;
+  }
+
+  const shape = state.shapes.shapes[shapeId];
+
+  if (shape.state === 'TMP') {
+    dispatch(updateShapes([{ id: shapeId, state: 'SAVED' }]));
+  }
+
+  if (shape.t === 'L') {
+    dispatch(updateShapes([{ id: shape.refs[0], state: 'SAVED' }]));
+    dispatch(updateShapes([{ id: shape.refs[1], state: 'SAVED' }]));
+  }
+}
+
 export function addTask(sampleIDs, parameters, runNow) {
   return async (dispatch, getState) => {
     const state = getState();
@@ -364,31 +424,7 @@ export function addTask(sampleIDs, parameters, runNow) {
         };
 
         // If a task is created on a shape, save shape if not already saved before
-        if (Number.parseInt(parameters.shape) !== -1) {
-          if (state.shapes.shapes[task.parameters.shape].state === 'TMP') {
-            dispatch(
-              updateShapes([{ id: task.parameters.shape, state: 'SAVED' }]),
-            );
-          }
-          if (state.shapes.shapes[task.parameters.shape].t === 'L') {
-            dispatch(
-              updateShapes([
-                {
-                  id: state.shapes.shapes[task.parameters.shape].refs[0],
-                  state: 'SAVED',
-                },
-              ]),
-            );
-            dispatch(
-              updateShapes([
-                {
-                  id: state.shapes.shapes[task.parameters.shape].refs[1],
-                  state: 'SAVED',
-                },
-              ]),
-            );
-          }
-        }
+        saveTaskShapes(dispatch, state, task);
 
         const sample = { ...state.sampleGrid.sampleList[sampleID] };
         sample.tasks = [task];
@@ -403,14 +439,25 @@ export function addTask(sampleIDs, parameters, runNow) {
       dispatch(setQueue(json));
 
       if (runNow) {
-        const sl = json.sampleList;
-        const { taskIndex } =
-          sl[sampleIDs[0]].tasks[sl[sampleIDs[0]].tasks.length - 1];
-        dispatch(runSample(sampleIDs[0], taskIndex));
+        if (sampleIDs.length > 1) {
+          // The task was added to every selected sample, so run them all -
+          // running only sampleIDs[0] left the rest sitting in the queue.
+          dispatch(startQueue(true));
+        } else {
+          const sl = json.sampleList;
+          const { taskIndex } =
+            sl[sampleIDs[0]].tasks[sl[sampleIDs[0]].tasks.length - 1];
+          dispatch(runSample(sampleIDs[0], taskIndex));
+        }
       }
-    } catch {
+    } catch (error) {
       dispatch(
-        showErrorPanel(true, 'The task could not be added to the server'),
+        showErrorPanel(
+          true,
+          `The task could not be added to the server${
+            error && error.message ? `: ${error.message}` : ''
+          }`,
+        ),
       );
     }
 

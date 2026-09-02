@@ -29,7 +29,12 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-import { QUEUE_STOPPED, QUEUE_RUNNING, isCollected } from '../constants';
+import {
+  QUEUE_STOPPED,
+  QUEUE_RUNNING,
+  isCollected,
+  isUCPipelinePhase,
+} from '../constants';
 
 import {
   toggleMovableAction,
@@ -623,18 +628,20 @@ class SampleGridTableContainer extends React.Component {
                 picked={picked}
               >
                 <Slider className="samples-grid-table-item-tasks" {...SETTINGS}>
-                  {sample.tasks.map((taskData, i) => (
-                    <TaskItem
-                      key={`task-${i}`}
-                      taskItemOnClick={this.taskItemOnClickHandler}
-                      showDialog={this.props.showDialog}
-                      deleteButtonOnClick={
-                        this.taskItemDeleteButtonOnClickHandler
-                      }
-                      taskData={taskData}
-                      taskIndex={i}
-                    />
-                  ))}
+                  {sample.tasks
+                    .filter((taskData) => !isUCPipelinePhase(taskData))
+                    .map((taskData) => (
+                      <TaskItem
+                        key={taskData.queueID}
+                        taskItemOnClick={this.taskItemOnClickHandler}
+                        showDialog={this.props.showDialog}
+                        deleteButtonOnClick={
+                          this.taskItemDeleteButtonOnClickHandler
+                        }
+                        taskData={taskData}
+                        taskIndex={taskData.taskIndex}
+                      />
+                    ))}
                 </Slider>
               </SampleGridTableItem>
             </div>,
@@ -696,16 +703,18 @@ class SampleGridTableContainer extends React.Component {
           picked={picked}
         >
           <Slider className="samples-grid-table-item-tasks" {...SETTINGS}>
-            {sample.tasks.map((taskData, i) => (
-              <TaskItem
-                key={`task-${i}`}
-                taskItemOnClick={this.taskItemOnClickHandler}
-                showDialog={this.props.showDialog}
-                deleteButtonOnClick={this.taskItemDeleteButtonOnClickHandler}
-                taskData={taskData}
-                taskIndex={i}
-              />
-            ))}
+            {sample.tasks
+              .filter((taskData) => !isUCPipelinePhase(taskData))
+              .map((taskData) => (
+                <TaskItem
+                  key={taskData.queueID}
+                  taskItemOnClick={this.taskItemOnClickHandler}
+                  showDialog={this.props.showDialog}
+                  deleteButtonOnClick={this.taskItemDeleteButtonOnClickHandler}
+                  taskData={taskData}
+                  taskIndex={taskData.taskIndex}
+                />
+              ))}
           </Slider>
         </SampleGridTableItem>
       </div>
@@ -1135,11 +1144,6 @@ class SampleGridTableContainer extends React.Component {
     this.props.unmountSample();
   }
 
-  methodToCreate() {
-    // this method has to call for a entire sequence based on queue
-    return;
-  }
-
   renderTaskContextMenuItems() {
     return (
       <>
@@ -1155,9 +1159,6 @@ class SampleGridTableContainer extends React.Component {
         </Dropdown.Item>
         <Dropdown.Item onClick={this.props.showUnattendedCollectForm}>
           Unattended collect
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.methodToCreate}>
-          PX1Testing smth
         </Dropdown.Item>
         {this.renderWorkflowMenuOptions()}
         <Dropdown.Divider />

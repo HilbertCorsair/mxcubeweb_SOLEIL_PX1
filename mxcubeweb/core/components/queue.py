@@ -93,6 +93,53 @@ class Queue(ComponentBase):
 
         return pt.run_number
 
+    def flat_task_rows(self, sample_model):
+        """
+        The task rows a sample serialises to, as (node, owning TaskGroup) pairs.
+
+        This is the single definition of how the sample's TaskGroups flatten
+        into the flat ``tasks`` list the client sees, so taskIndex, reordering
+        and deletion all agree. It must stay in step with queue_to_dict_rec.
+
+        :param Sample sample_model: the sample whose task rows to enumerate
+        :returns: list of (TaskNode, TaskGroup) in emission order
+        """
+        rows = []
+
+        for group in sample_model.get_children():
+            if group.interleave_num_images:
+                # Interleaved groups serialize as a single umbrella row, so they
+                # occupy one slot rather than being flattened into their
+                # children.
+                rows.append((group, group))
+            elif getattr(group, "is_unattended", False):
+                # The unattended pipeline serializes as a group header row
+                # followed by one row per phase, in execution order.
+                rows.append((group, group))
+                rows.extend((child, group) for child in group.get_children())
+            else:
+                rows.extend((child, group) for child in group.get_children())
+
+        return rows
+
+    def task_group_at(self, sample_model, task_index):
+        """
+        The TaskGroup owning the task row at <task_index> of <sample_model>.
+
+        The client addresses tasks by their position in the flat task list,
+        while reordering acts on the sample's TaskGroups. Those two indices only
+        coincide while every group contributes exactly one row, which is not the
+        case for an unattended pipeline (one header + one row per phase).
+
+        :returns: the TaskGroup, or None if the index is out of range
+        """
+        rows = self.flat_task_rows(sample_model)
+
+        if 0 <= int(task_index) < len(rows):
+            return rows[int(task_index)][1]
+
+        return None
+
     def node_index(self, node):
         """
         Get the position (index) in the queue, sample and node id of node <node>.
@@ -115,19 +162,7 @@ class Queue(ComponentBase):
             sample_model = node.get_sample_node()
 
             sample = sample_model.loc_str
-            task_groups = sample_model.get_children()
-            tlist = []
-
-            for group in task_groups:
-                if group.interleave_num_images or getattr(
-                    group, "is_unattended", False
-                ):
-                    # Interleaved and unattended groups serialize as a single
-                    # umbrella row, so they occupy one slot in the task list
-                    # rather than being flattened into their children.
-                    tlist.append(group)
-                else:
-                    tlist.extend(group.get_children())
+            tlist = [row for row, _group in self.flat_task_rows(sample_model)]
 
             with contextlib.suppress(Exception):
                 index = tlist.index(node)
@@ -557,14 +592,16 @@ class Queue(ComponentBase):
         return UNCOLLECTED
 
     def _handle_unattended_collect(self, sample_node, node):
-        """Serialise an unattended collect as a single umbrella row.
+        """Serialise an unattended collect as the pipeline's group header row.
 
         Two node shapes are accepted:
           * the decomposed pipeline TaskGroup (tagged is_unattended) whose
             children are the phase tasks — state is rolled up from those phases
-            and the acquisition params are read from the GridScan phase;
+            and the acquisition params are read from the GridScan phase. The
+            phases themselves are emitted as their own rows straight after this
+            one by queue_to_dict_rec, so this row acts as the group header;
           * a legacy single UnattendedCollect task node (kept for backward
-            compatibility).
+            compatibility), which has no phase rows of its own.
 
         The acquisition subset (osc_start, osc_range, exp_time, num_images,
         transmission, resolution) round-trips to the queue UI /
@@ -579,9 +616,11 @@ class Queue(ComponentBase):
                     params = child.get_parameters()
                     break
             state = self._rollup_state(phases)
+            phase_count = len(phases)
         else:
             params = node.get_parameters()
             _, state = self.get_node_state(node._node_id)
+            phase_count = 0
 
         return {
             "label": "Unattended collect",
@@ -593,16 +632,28 @@ class Queue(ComponentBase):
             "queueID": node._node_id,
             "checked": node.is_enabled(),
             "state": state,
+            # Marks this row as the header of a decomposed pipeline; the UI
+            # renders the following ucPhaseCount rows indented beneath it.
+            "ucGroup": True,
+            "ucPhaseCount": phase_count,
         }
 
-    def _handle_uc_phase(self, sample_node, node):
-        """Serialise a standalone unattended-collect phase task as one row.
+    def _handle_uc_phase(self, sample_node, node, group_id=None, phase_index=None):
+        """Serialise an unattended-collect phase task as one row.
 
         Handles any _UnattendedPhase subclass (GridScan, LineScan,
         FinalizeCentring, UnattendedDataCollection, Unmount) as well as a
-        zoom-tagged OpticalCentring auto-centring step. The emitted ``type``
-        round-trips back to add_uc_phase via _queue_add_item_rec, so a phase
-        added manually re-serialises and re-submits identically.
+        zoom-tagged OpticalCentring auto-centring step.
+
+        Used for both shapes a phase can take:
+          * standalone (added from the per-phase right-click menu, living in its
+            own plain TaskGroup) — group_id is None and the emitted ``type``
+            round-trips back to add_uc_phase via _queue_add_item_rec, so the
+            phase re-serialises and re-submits identically;
+          * part of a decomposed pipeline — group_id is the owning
+            is_unattended TaskGroup's node id, which tells the UI to indent the
+            row under that group's header and stops _queue_add_item_rec from
+            re-adding it as a standalone phase.
         """
         _, state = self.get_node_state(node._node_id)
 
@@ -619,7 +670,10 @@ class Queue(ComponentBase):
             item_t = type(node).__name__
             params = dict(node.get_parameters())
             if isinstance(node, qmo.LineScan):
-                params["index"] = getattr(node, "index", 0)
+                index = getattr(node, "index", 0)
+                params["index"] = index
+                # Match the "Line scan #1 / #2" wording of the right-click menu.
+                label = f"{label} #{int(index) + 1}"
 
         return {
             "label": label,
@@ -631,6 +685,8 @@ class Queue(ComponentBase):
             "queueID": node._node_id,
             "checked": node.is_enabled(),
             "state": state,
+            "ucGroupID": group_id,
+            "ucPhaseIndex": phase_index,
         }
 
     def _handle_char(self, parent_node, node, include_lims_data=False):
@@ -801,9 +857,21 @@ class Queue(ComponentBase):
                 node, "is_unattended", False
             ):
                 # The decomposed unattended pipeline lives as phase children of
-                # this TaskGroup; collapse it into a single umbrella row instead
-                # of recursing into (and flattening) the individual phases.
+                # this TaskGroup. Emit a group header row followed by one row
+                # per phase, in execution order, so the queue shows the whole
+                # sequence. node_index() flattens the group the same way, so
+                # every taskIndex matches its position in this list.
                 result.append(self._handle_unattended_collect(sample_node, node))
+
+                for phase_index, child in enumerate(node.get_children()):
+                    result.append(
+                        self._handle_uc_phase(
+                            sample_node,
+                            child,
+                            group_id=node._node_id,
+                            phase_index=phase_index,
+                        )
+                    )
             elif isinstance(node, (qmo._UnattendedPhase, qmo.OpticalCentring)):
                 # Standalone phase task (added via the per-phase menu); each
                 # lives in its own plain TaskGroup and shows as its own row.
@@ -878,16 +946,31 @@ class Queue(ComponentBase):
         for sid, tindex in item_pos_list:
             if tindex in ["undefined", None]:
                 node_id = current_queue[sid]["queueID"]
-                _, entry = self.get_entry(node_id)
             else:
                 node_id = current_queue[sid]["tasks"][int(tindex)]["queueID"]
-                _, entry = self.get_entry(node_id)
 
+            # current_queue was snapshotted before the loop, so a row deleted by
+            # an earlier iteration of this same batch is stale. That is routine
+            # for an unattended pipeline, where every one of its rows resolves
+            # to the same TaskGroup and the first delete detaches the lot.
+            model = HWR.beamline.queue_model.get_node(int(node_id))
+
+            if model is None:
+                continue
+
+            entry = HWR.beamline.queue_manager.get_entry_with_model(model)
+
+            if entry is None:
+                continue
+
+            if tindex not in ["undefined", None] and not isinstance(
+                entry, qe.TaskGroupQueueEntry
+            ):
                 # Get the TaskGroup of the item, there is currently only one
                 # task per TaskGroup so we have to remove the entire TaskGroup
-                # with its task.
-                if not isinstance(entry, qe.TaskGroupQueueEntry):
-                    entry = entry.get_container()
+                # with its task. For the unattended pipeline that is deliberate:
+                # the phases are one atomic unit.
+                entry = entry.get_container()
 
             self.delete_entry(entry)
 
@@ -924,17 +1007,41 @@ class Queue(ComponentBase):
         node_id = current_queue[sid]["queueID"]
         smodel, sentry = self.get_entry(node_id)
 
+        # ti1/ti2 are positions in the flat task list; reordering acts on the
+        # sample's TaskGroups, so translate. A group contributing several rows
+        # (an unattended pipeline) moves as a unit whichever of its rows was
+        # dragged.
+        gi1 = self._group_position(smodel, ti1)
+        gi2 = self._group_position(smodel, ti2)
+
+        if gi1 is None or gi2 is None or gi1 == gi2:
+            return
+
         # Swap the order in the queue model
-        ti2_temp_model = smodel.get_children()[ti2]
-        smodel._children[ti2] = smodel._children[ti1]
-        smodel._children[ti1] = ti2_temp_model
+        smodel._children[gi1], smodel._children[gi2] = (
+            smodel._children[gi2],
+            smodel._children[gi1],
+        )
 
         # Swap queue entry order
-        ti2_temp_entry = sentry._queue_entry_list[ti2]
-        sentry._queue_entry_list[ti2] = sentry._queue_entry_list[ti1]
-        sentry._queue_entry_list[ti1] = ti2_temp_entry
+        sentry._queue_entry_list[gi1], sentry._queue_entry_list[gi2] = (
+            sentry._queue_entry_list[gi2],
+            sentry._queue_entry_list[gi1],
+        )
 
         logging.getLogger("MX3.HWR").info("[QUEUE] is:\n%s " % self.queue_to_json())
+
+    def _group_position(self, sample_model, task_index):
+        """Index of the TaskGroup owning task row <task_index>, or None."""
+        group = self.task_group_at(sample_model, task_index)
+
+        if group is None:
+            return None
+
+        with contextlib.suppress(ValueError):
+            return sample_model._children.index(group)
+
+        return None
 
     def move_task_entry(self, sid, ti1, ti2):
         """
@@ -950,11 +1057,18 @@ class Queue(ComponentBase):
         node_id = current_queue[sid]["queueID"]
         smodel, sentry = self.get_entry(node_id)
 
+        # ti1/ti2 index the flat task list; reordering acts on TaskGroups.
+        gi1 = self._group_position(smodel, ti1)
+        gi2 = self._group_position(smodel, ti2)
+
+        if gi1 is None or gi2 is None or gi1 == gi2:
+            return
+
         # Swap the order in the queue model
-        smodel._children.insert(ti2, smodel._children.pop(ti1))
+        smodel._children.insert(gi2, smodel._children.pop(gi1))
 
         # Swap queue entry order
-        sentry._queue_entry_list.insert(ti2, sentry._queue_entry_list.pop(ti1))
+        sentry._queue_entry_list.insert(gi2, sentry._queue_entry_list.pop(gi1))
 
         logging.getLogger("MX3.HWR").info("[QUEUE] is:\n%s " % self.queue_to_json())
 
@@ -1090,7 +1204,13 @@ class Queue(ComponentBase):
             elif item_t == "UnattendedCollect":
                 self.add_unattended_collect(sample_node_id, item)
             elif item_t in self.UC_PHASE_TYPES:
-                self.add_uc_phase(sample_node_id, item)
+                # A phase carrying ucGroupID is one of the rows emitted for an
+                # already-serialised pipeline; its owning "UnattendedCollect"
+                # header row rebuilds the whole group, so adding it again here
+                # would duplicate the pipeline as standalone phases on a
+                # queue_to_dict -> load_queue_from_dict round-trip.
+                if item.get("ucGroupID") is None:
+                    self.add_uc_phase(sample_node_id, item)
             elif item_t == "Sample":
                 pass
             else:

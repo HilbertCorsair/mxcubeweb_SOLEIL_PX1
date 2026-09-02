@@ -3,7 +3,9 @@
 import React from 'react';
 import './app.css';
 import { ListGroup, Form, Button } from 'react-bootstrap';
-import { QUEUE_RUNNING } from '../../constants';
+import { QUEUE_RUNNING, UC_PHASE_TYPES } from '../../constants';
+import UCGroupTaskItem from './UCGroupTaskItem';
+import UCPhaseTaskItem from './UCPhaseTaskItem';
 
 export default class TodoTree extends React.Component {
   constructor(props) {
@@ -30,6 +32,75 @@ export default class TodoTree extends React.Component {
 
   filter(list, searchWord) {
     return list.filter((sampleID) => String(sampleID).includes(searchWord));
+  }
+
+  /**
+   * Render the tasks queued on an upcoming sample, read-only.
+   *
+   * Upstream this tab showed the sample name and a Mount button only, so a
+   * queued sample looked empty however many tasks it carried. Unattended
+   * collect in particular queues a group header plus eight ordered phases per
+   * sample, and none of it was visible before the sample was mounted.
+   */
+  renderSampleTasks(sampleData) {
+    const tasks = sampleData.tasks || [];
+
+    if (tasks.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="task-list">
+        {tasks.map((taskData, i) => {
+          if (taskData.type === 'UnattendedCollect') {
+            return (
+              <UCGroupTaskItem
+                key={taskData.queueID}
+                index={i}
+                data={taskData}
+                sampleId={sampleData.sampleID}
+                state={taskData.state}
+                phaseCount={taskData.ucPhaseCount}
+                readOnly
+              />
+            );
+          }
+
+          if (UC_PHASE_TYPES.includes(taskData.type)) {
+            return (
+              <UCPhaseTaskItem
+                key={taskData.queueID}
+                index={i}
+                data={taskData}
+                sampleId={sampleData.sampleID}
+                state={taskData.state}
+                phaseNumber={
+                  taskData.ucPhaseIndex === null ||
+                  taskData.ucPhaseIndex === undefined
+                    ? undefined
+                    : taskData.ucPhaseIndex + 1
+                }
+                readOnly
+              />
+            );
+          }
+
+          // Everything else (DC, characterisation, workflows, scans) gets a
+          // plain read-only label row; the full parameter panels stay in the
+          // Current tab, where the task can actually be edited.
+          return (
+            <div key={taskData.queueID} className="node node-task">
+              <div
+                className="task-head"
+                style={{ display: 'flex', padding: '0.3rem 1rem' }}
+              >
+                <span className="node-name">{taskData.label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   render() {
@@ -92,6 +163,7 @@ export default class TodoTree extends React.Component {
                     </Button>
                   </div>
                 </div>
+                {this.renderSampleTasks(sampleData)}
               </div>
             );
           })}
