@@ -302,6 +302,7 @@ export default class CurrentTree extends React.Component {
                     state={taskData.state}
                     progress={displayData.progress}
                     phaseCount={taskData.ucPhaseCount}
+                    phasesDone={taskData.ucPhasesDone}
                     deleteTask={this.props.deleteTask}
                     showForm={this.props.showForm}
                     taskHeaderOnClickHandler={this.taskHeaderOnClickHandler}

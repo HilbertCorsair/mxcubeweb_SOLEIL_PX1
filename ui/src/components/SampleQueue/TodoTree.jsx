@@ -3,9 +3,37 @@
 import React from 'react';
 import './app.css';
 import { ListGroup, Form, Button } from 'react-bootstrap';
-import { QUEUE_RUNNING, UC_PHASE_TYPES } from '../../constants';
+import {
+  QUEUE_RUNNING,
+  UC_PHASE_TYPES,
+  TASK_COLLECTED,
+  TASK_COLLECT_FAILED,
+  TASK_RUNNING,
+  TASK_SKIPPED,
+} from '../../constants';
 import UCGroupTaskItem from './UCGroupTaskItem';
 import UCPhaseTaskItem from './UCPhaseTaskItem';
+
+/** Execution-state colour class shared by the read-only rows in this tab. */
+function stateClass(state) {
+  switch (state) {
+    case TASK_RUNNING: {
+      return ' running';
+    }
+    case TASK_COLLECTED: {
+      return ' success';
+    }
+    case TASK_COLLECT_FAILED: {
+      return ' error';
+    }
+    case TASK_SKIPPED: {
+      return ' warning';
+    }
+    default: {
+      return '';
+    }
+  }
+}
 
 export default class TodoTree extends React.Component {
   constructor(props) {
@@ -61,6 +89,7 @@ export default class TodoTree extends React.Component {
                 sampleId={sampleData.sampleID}
                 state={taskData.state}
                 phaseCount={taskData.ucPhaseCount}
+                phasesDone={taskData.ucPhasesDone}
                 readOnly
               />
             );
@@ -87,11 +116,13 @@ export default class TodoTree extends React.Component {
 
           // Everything else (DC, characterisation, workflows, scans) gets a
           // plain read-only label row; the full parameter panels stay in the
-          // Current tab, where the task can actually be edited.
+          // Current tab, where the task can actually be edited. It still
+          // carries the execution state, so a partially run sample reads
+          // correctly for as long as it is in this list.
           return (
             <div key={taskData.queueID} className="node node-task">
               <div
-                className="task-head"
+                className={`task-head${stateClass(taskData.state)}`}
                 style={{ display: 'flex', padding: '0.3rem 1rem' }}
               >
                 <span className="node-name">{taskData.label}</span>

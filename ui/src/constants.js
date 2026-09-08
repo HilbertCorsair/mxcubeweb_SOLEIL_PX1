@@ -18,6 +18,13 @@ export const TASK_COLLECT_FAILED = 0x2;
 export const TASK_COLLECT_WARNING = 0x3;
 export const TASK_RUNNING = 0x1;
 export const TASK_UNCOLLECTED = 0x0;
+/**
+ * A task the queue reached but deliberately did not run - an unattended phase
+ * that bailed out because an earlier scan found no spots. Distinct from
+ * collected (it did nothing) and from failed (nothing went wrong).
+ * Must match WARNING in mxcubeweb/core/components/queue.py.
+ */
+export const TASK_SKIPPED = 0x10;
 
 export const READY = 0;
 export const RUNNING = 0x1;

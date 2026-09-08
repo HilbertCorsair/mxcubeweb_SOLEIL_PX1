@@ -7,6 +7,7 @@ import {
   TASK_COLLECTED,
   TASK_COLLECT_FAILED,
   TASK_RUNNING,
+  TASK_SKIPPED,
 } from '../../constants';
 
 /**
@@ -53,6 +54,9 @@ export default class UCGroupTaskItem extends Component {
       case TASK_COLLECT_FAILED: {
         return ' error';
       }
+      case TASK_SKIPPED: {
+        return ' warning';
+      }
       default: {
         return '';
       }
@@ -60,7 +64,14 @@ export default class UCGroupTaskItem extends Component {
   }
 
   render() {
-    const { data, state, readOnly, phaseCount } = this.props;
+    const { data, state, readOnly, phaseCount, phasesDone } = this.props;
+
+    // Once the pipeline is under way the header doubles as its progress
+    // counter, so the operator can see how far a sample got at a glance.
+    const phaseLabel =
+      state === TASK_UNCOLLECTED || phasesDone === undefined
+        ? `(${phaseCount} phases)`
+        : `(${phasesDone}/${phaseCount} phases)`;
 
     const delTaskCSS = {
       display: 'flex',
@@ -84,7 +95,7 @@ export default class UCGroupTaskItem extends Component {
               <span className="node-name" style={{ display: 'flex' }}>
                 <i className="fas fa-layer-group me-2" />
                 {data.label}
-                {phaseCount ? ` (${phaseCount} phases)` : ''}
+                {phaseCount ? ` ${phaseLabel}` : ''}
                 {state === TASK_RUNNING && (
                   <span
                     style={{

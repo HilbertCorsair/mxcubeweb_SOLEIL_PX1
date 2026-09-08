@@ -15,7 +15,6 @@ import {
   setGroupFolder,
   setQueueSettings,
   setAutoAddDiffPlan,
-  setAutoMountSample,
   washCommand,
 } from '../actions/queue';
 
@@ -26,7 +25,6 @@ class QueueSettings extends React.Component {
     super(props);
     this.inputOnChangeHandler = this.inputOnChangeHandler.bind(this);
     this.setGroupFolderInput = this.setGroupFolderInput.bind(this);
-    this.autoMountNextOnClick = this.autoMountNextOnClick.bind(this);
     this.setAutoAddDiffPlan = this.setAutoAddDiffPlan.bind(this);
     this.autoLoopCentringOnClick = this.autoLoopCentringOnClick.bind(this);
 
@@ -47,11 +45,6 @@ class QueueSettings extends React.Component {
   inputOnChangeHandler() {
     this.setState({ validationState: 'warning' });
     /* eslint-enable react/no-set-state */
-  }
-
-  autoMountNextOnClick(e) {
-    e.preventDefault();
-    this.props.setAutoMountSample(e.target.checked);
   }
 
   inputOnSelectHandler(e) {
@@ -76,16 +69,6 @@ class QueueSettings extends React.Component {
           </span>
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          <Dropdown.Item>
-            <Form.Check
-              type="checkbox"
-              name="autoMountNext"
-              onChange={this.autoMountNextOnClick}
-              checked={this.props.queueState.autoMountNext}
-              label="Automount next sample"
-              id="auto-mount-next"
-            />
-          </Dropdown.Item>
           <Dropdown.Item>
             <Form.Check
               type="checkbox"
@@ -147,7 +130,6 @@ function mapDispatchToProps(dispatch) {
   return {
     setGroupFolder: bindActionCreators(setGroupFolder, dispatch),
     setAutoAddDiffPlan: bindActionCreators(setAutoAddDiffPlan, dispatch),
-    setAutoMountSample: bindActionCreators(setAutoMountSample, dispatch),
     setCentringMethod: bindActionCreators(setCentringMethod, dispatch),
     setQueueSettings: bindActionCreators(setQueueSettings, dispatch),
   };

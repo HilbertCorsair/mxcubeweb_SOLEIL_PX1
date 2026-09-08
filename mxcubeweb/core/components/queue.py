@@ -54,7 +54,6 @@ class Queue(ComponentBase):
     def __init__(self, app, config):
         super().__init__(app, config)
         self.init_queue_settings()
-        self.counter = 0
 
     def build_prefix_path_dict(self, path_list):
         prefix_path_dict = {}
@@ -280,22 +279,25 @@ class Queue(ComponentBase):
         running = HWR.beamline.queue_manager.is_executing() and (
             curr_entry == entry or curr_entry == entry._parent_container
         )
-        # Check point
-        print(self.counter)
         try:
             if entry.status == QUEUE_ENTRY_STATUS.FAILED:
                 state = FAILED
+            elif entry.status == QUEUE_ENTRY_STATUS.SKIPPED:
+                # A skipped entry is neither collected nor pending. Without this
+                # branch an unattended phase that bailed out (no spots) fell
+                # through to UNCOLLECTED, or worse showed as collected.
+                state = WARNING
             elif node.is_executed() or entry.status == QUEUE_ENTRY_STATUS.SUCCESS:
                 state = COLLECTED
             elif running or entry.status == QUEUE_ENTRY_STATUS.RUNNING:
                 state = RUNNING
             else:
                 state = UNCOLLECTED
-        except:
-            print("There was and error in mxcubeweb/core/components/queue.py but it got cought. Line 235 in get_node_state()")
-            print("This error is most likely causes by calling .status on the wrong oject class")
-            state = FAILED
-            return(enabled, state)
+        except Exception:
+            logging.getLogger("MX3.HWR").exception(
+                "Could not read the state of node %s", node_id
+            )
+            return (enabled, FAILED)
 
         return (enabled, state)
 
@@ -587,9 +589,20 @@ class Queue(ComponentBase):
             return RUNNING
         if FAILED in states:
             return FAILED
-        if states and all(s == COLLECTED for s in states):
-            return COLLECTED
+        if states and all(s in (COLLECTED, WARNING) for s in states):
+            # A pipeline that ran to the end but skipped phases (no spots) is
+            # finished, not pending; WARNING keeps it visually distinct from a
+            # clean run.
+            return COLLECTED if all(s == COLLECTED for s in states) else WARNING
         return UNCOLLECTED
+
+    def _phases_done(self, children):
+        """How many phases of a pipeline have finished (collected or skipped)."""
+        return sum(
+            1
+            for c in children
+            if self.get_node_state(c._node_id)[1] in (COLLECTED, WARNING, FAILED)
+        )
 
     def _handle_unattended_collect(self, sample_node, node):
         """Serialise an unattended collect as the pipeline's group header row.
@@ -617,10 +630,12 @@ class Queue(ComponentBase):
                     break
             state = self._rollup_state(phases)
             phase_count = len(phases)
+            phases_done = self._phases_done(phases)
         else:
             params = node.get_parameters()
             _, state = self.get_node_state(node._node_id)
             phase_count = 0
+            phases_done = 0
 
         return {
             "label": "Unattended collect",
@@ -636,6 +651,8 @@ class Queue(ComponentBase):
             # renders the following ucPhaseCount rows indented beneath it.
             "ucGroup": True,
             "ucPhaseCount": phase_count,
+            # Progress counter shown on the header row while the pipeline runs.
+            "ucPhasesDone": phases_done,
         }
 
     def _handle_uc_phase(self, sample_node, node, group_id=None, phase_index=None):
@@ -773,12 +790,15 @@ class Queue(ComponentBase):
                 _, child_state = self.get_node_state(_c._node_id)
                 children_states.append(child_state)
 
+        # Bitwise OR, not AND: RUNNING & SAMPLE_MOUNTED is 0x1 & 0x8 == 0, so
+        # every branch used to collapse to UNCOLLECTED and the sample level
+        # state was never reported.
         if RUNNING in children_states:
-            state = RUNNING & SAMPLE_MOUNTED
-        elif 3 in children_states:
-            state = FAILED & SAMPLE_MOUNTED
+            state = RUNNING | SAMPLE_MOUNTED
+        elif FAILED in children_states or WARNING in children_states:
+            state = FAILED | SAMPLE_MOUNTED
         elif all(i == COLLECTED for i in children_states) and len(children_states) > 0:
-            state = COLLECTED & SAMPLE_MOUNTED
+            state = COLLECTED | SAMPLE_MOUNTED
         else:
             state = UNCOLLECTED
 
@@ -2377,6 +2397,21 @@ class Queue(ComponentBase):
             except Exception:
                 HWR.beamline.queue_manager.emit("queue_execution_failed", (None,))
 
+    def _cancel_sample_changer_timers(self, *args):
+        """Cancel the sample changer's background post-mount drying timer.
+
+        Only PX1Cryotong has one; anything else is a no-op.
+        """
+        sample_changer = HWR.beamline.sample_changer
+
+        if hasattr(sample_changer, "cancel_souflette"):
+            try:
+                sample_changer.cancel_souflette(reason="queue stopped")
+            except Exception:
+                logging.getLogger("MX3.HWR").exception(
+                    "Could not cancel the sample changer drying timer"
+                )
+
     def init_signals(self, queue):
         """
         Initialize queue hwobj related signals.
@@ -2429,6 +2464,16 @@ class Queue(ComponentBase):
 
         HWR.beamline.queue_manager.connect(
             "queue_stopped", signals.queue_execution_finished
+        )
+
+        # QueueManager.stop() kills only its root greenlet, and gevent has no
+        # parent/child tree, so a background timer spawned from inside the queue
+        # greenlet outlives the stop unless something cancels it explicitly.
+        HWR.beamline.queue_manager.connect(
+            "queue_stopped", self._cancel_sample_changer_timers
+        )
+        HWR.beamline.queue_manager.connect(
+            "queue_execution_finished", self._cancel_sample_changer_timers
         )
 
         HWR.beamline.queue_manager.connect(
@@ -2518,9 +2563,11 @@ class Queue(ComponentBase):
         )
 
     def init_queue_settings(self):
-        self.app.AUTO_MOUNT_SAMPLE = HWR.beamline.collect.get_property(
-            "auto_mount_sample", False
-        )
+        # Run Queue always walks the whole queue, so the next sample is always
+        # mounted automatically; keeping this False only made
+        # handle_auto_mount_next log a misleading warning at every group
+        # boundary.
+        self.app.AUTO_MOUNT_SAMPLE = True
         self.app.AUTO_ADD_DIFFPLAN = HWR.beamline.collect.get_property(
             "auto_add_diff_plan", False
         )
@@ -2548,22 +2595,20 @@ class Queue(ComponentBase):
                 200: On success
                 409: Queue could not be started
         """
-        logging.getLogger("MX3.HWR").info("[QUEUE] Queue going to start")
+        logging.getLogger("MX3.HWR").info(
+            "[QUEUE] Queue going to start (from sample %s)", sid
+        )
         from mxcubeweb.routes import signals
 
         try:
-            # If auto mount sample is false, just run the sample
-            # supplied in the call
-            if not self.get_auto_mount_sample():
-                if sid:
-                    self.execute_entry_with_id(sid)
-            else:
-                # Making sure all sample entries are enabled before running the
-                # queue self.app.queue.enable_sample_entries(queue["sample_order"],
-                # True)
-                HWR.beamline.queue_manager.set_pause(False)
-                HWR.beamline.queue_manager.execute()
-
+            # Run Queue means the whole queue: every enabled sample and every
+            # task node under it. The previous behaviour ran only <sid> and
+            # disabled all the other sample entries, so a multi-sample
+            # unattended run stopped after the first one. Single sample and
+            # single task execution stay available through execute_entry_with_id
+            # (PUT /queue/<sid>/<tindex>/execute).
+            HWR.beamline.queue_manager.set_pause(False)
+            HWR.beamline.queue_manager.execute()
         except Exception as ex:
             signals.queue_execution_failed(ex)
         else:

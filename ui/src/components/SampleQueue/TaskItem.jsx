@@ -12,6 +12,7 @@ import {
   TASK_COLLECTED,
   TASK_COLLECT_FAILED,
   TASK_RUNNING,
+  TASK_SKIPPED,
   formatNumber as num,
 } from '../../constants';
 import TooltipTrigger from '../TooltipTrigger';
@@ -284,6 +285,11 @@ export default class TaskItem extends Component {
       }
       case TASK_COLLECT_FAILED: {
         taskCSS += ' error';
+
+        break;
+      }
+      case TASK_SKIPPED: {
+        taskCSS += ' warning';
 
         break;
       }

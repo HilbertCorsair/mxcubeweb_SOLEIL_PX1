@@ -15,7 +15,6 @@ import {
 import {
   startQueue,
   runSample,
-  setAutoMountSample,
   setCentringMethod,
   setNumSnapshots,
 } from '../actions/queue';
@@ -40,7 +39,6 @@ export class ConfirmCollectDialog extends React.Component {
     this.onResize = this.onResize.bind(this);
     this.resizeTable = this.resizeTable.bind(this);
     this.autoLoopCentringOnClick = this.autoLoopCentringOnClick.bind(this);
-    this.autoMountNextOnClick = this.autoMountNextOnClick.bind(this);
     this.collectText = this.collectText.bind(this);
     this.tasksToCollect = this.tasksToCollect.bind(this);
     this.setNumSnapshots = this.setNumSnapshots.bind(this);
@@ -60,9 +58,10 @@ export class ConfirmCollectDialog extends React.Component {
   }
 
   onOkClick() {
+    // Run Queue runs the whole queue; sid is only kept for route compatibility.
     const sample =
       this.props.queue.currentSampleID || this.props.queue.queue[0];
-    this.props.startQueue(this.props.queue.autoMountNext, sample);
+    this.props.startQueue(true, sample);
     this.props.hide();
   }
 
@@ -84,10 +83,6 @@ export class ConfirmCollectDialog extends React.Component {
     } else {
       this.props.setCentringMethod(CLICK_CENTRING);
     }
-  }
-
-  autoMountNextOnClick(e) {
-    this.props.setAutoMountSample(e.target.checked);
   }
 
   /**
@@ -135,19 +130,9 @@ export class ConfirmCollectDialog extends React.Component {
    * @return {Array} {tasks}
    */
   tasksToCollect() {
-    // Flat array of all tasks
-    let { queue } = this.props.queue;
-
-    // Making the dialog a bit more intuitive, only display the tasks for the
-    // sample to be colleted when autoMountNtext is false
-    if (!this.props.queue.autoMountNext) {
-      const sampleID =
-        this.props.queue.currentSampleID || this.props.queue.queue[0];
-
-      if (sampleID) {
-        queue = [sampleID];
-      }
-    }
+    // Flat array of all tasks. Run Queue always runs every enabled sample, so
+    // the dialog summarises the whole queue rather than just the mounted one.
+    const { queue } = this.props.queue;
 
     const tasks = Object.values(queue)
       .map((sampleID) => this.props.sampleGrid.sampleList[sampleID] || {})
@@ -164,15 +149,8 @@ export class ConfirmCollectDialog extends React.Component {
    * @return {Object} {numSaples, numTasks}
    */
   collectionSummary() {
-    let numSamples = this.props.queue.queue.length;
+    const numSamples = this.props.queue.queue.length;
     const numTasks = this.tasksToCollect().length;
-
-    if (
-      !this.props.queue.autoMountNext &&
-      (this.props.queue.currentSampleID || this.props.queue.queue[0])
-    ) {
-      numSamples = 1;
-    }
 
     return { numSamples, numTasks };
   }
@@ -183,10 +161,6 @@ export class ConfirmCollectDialog extends React.Component {
 
     if (summary.numTasks === 0) {
       text = `Collecting ${summary.numSamples} samples`;
-    }
-
-    if (!this.props.queue.autoMountNext && this.props.queue.queue.length > 1) {
-      text += ', NOT auto mounting next sample';
     }
 
     return text;
@@ -353,7 +327,6 @@ export class ConfirmCollectDialog extends React.Component {
   }
 
   render() {
-    const autoMountNext = this.props.queue.queue.length > 1;
     return (
       <Modal dialogClassName="collect-confirm-dialog" show={this.props.show}>
         <Modal.Header>
@@ -375,18 +348,6 @@ export class ConfirmCollectDialog extends React.Component {
                 id="auto-lopp-centring"
                 label="Auto loop centring"
               />
-              {autoMountNext ? (
-                <Form.Check
-                  className="mb-2"
-                  type="checkbox"
-                  id="auto-mount-next"
-                  defaultChecked={this.props.queue.autoMountNext}
-                  onClick={this.autoMountNextOnClick}
-                  label="Auto mount next sample"
-                />
-              ) : (
-                <span />
-              )}
               <NumSnapshotsDropDown align="start" />
             </span>
           </div>
@@ -427,7 +388,6 @@ function mapDispatchToProps(dispatch) {
     ),
     startQueue: bindActionCreators(startQueue, dispatch),
     runSample: bindActionCreators(runSample, dispatch),
-    setAutoMountSample: bindActionCreators(setAutoMountSample, dispatch),
     setCentringMethod: bindActionCreators(setCentringMethod, dispatch),
     setNumSnapshots: bindActionCreators(setNumSnapshots, dispatch),
   };

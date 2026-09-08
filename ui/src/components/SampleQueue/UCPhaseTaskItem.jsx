@@ -7,6 +7,7 @@ import {
   TASK_COLLECTED,
   TASK_COLLECT_FAILED,
   TASK_RUNNING,
+  TASK_SKIPPED,
   formatNumber as num,
 } from '../../constants';
 
@@ -53,6 +54,9 @@ export default class UCPhaseTaskItem extends Component {
       }
       case TASK_COLLECT_FAILED: {
         return ' error';
+      }
+      case TASK_SKIPPED: {
+        return ' warning';
       }
       default: {
         return '';
@@ -135,6 +139,9 @@ export default class UCPhaseTaskItem extends Component {
             <span className="node-name" style={{ display: 'flex' }}>
               {phaseNumber === undefined ? '' : `${phaseNumber}. `}
               {data.label}
+              {state === TASK_SKIPPED && (
+                <em className="ms-2">- skipped, no spots</em>
+              )}
               {state === TASK_RUNNING && this.progressBar()}
             </span>
             {deletable && (
