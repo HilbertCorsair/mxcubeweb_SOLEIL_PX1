@@ -42,6 +42,9 @@ export class ConfirmCollectDialog extends React.Component {
     this.collectText = this.collectText.bind(this);
     this.tasksToCollect = this.tasksToCollect.bind(this);
     this.setNumSnapshots = this.setNumSnapshots.bind(this);
+    // Guards against a double click sending two PUT /queue/start. The server
+    // rejects the second, but only by surfacing a spurious execution failure.
+    this.state = { starting: false };
   }
 
   componentDidMount() {
@@ -49,8 +52,14 @@ export class ConfirmCollectDialog extends React.Component {
     this.resizeTable();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     this.resizeTable();
+
+    // The modal stays mounted between openings, so re-arm the Collect button
+    // whenever the dialog is shown again.
+    if (this.props.show && !prevProps.show && this.state.starting) {
+      this.setState({ starting: false });
+    }
   }
 
   componentWillUnmount() {
@@ -58,6 +67,12 @@ export class ConfirmCollectDialog extends React.Component {
   }
 
   onOkClick() {
+    if (this.state.starting) {
+      return;
+    }
+
+    this.setState({ starting: true });
+
     // Run Queue runs the whole queue; sid is only kept for route compatibility.
     const sample =
       this.props.queue.currentSampleID || this.props.queue.queue[0];
@@ -362,7 +377,11 @@ export class ConfirmCollectDialog extends React.Component {
           <Button variant="outline-secondary" onClick={this.onCancelClick}>
             Cancel
           </Button>
-          <Button variant="success" onClick={this.onOkClick}>
+          <Button
+            variant="success"
+            onClick={this.onOkClick}
+            disabled={this.state.starting}
+          >
             Collect
           </Button>
         </Modal.Footer>

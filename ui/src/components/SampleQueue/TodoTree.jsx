@@ -175,6 +175,10 @@ export default class TodoTree extends React.Component {
             const proteinAcronym = sampleData.proteinAcronym
               ? `${sampleData.proteinAcronym} -`
               : '';
+            // A manual mount during a run would command the sample changer
+            // concurrently with the queue's own mount; the server refuses it
+            // too (SampleChanger._assert_queue_not_running).
+            const queueRunning = this.props.queueStatus === QUEUE_RUNNING;
 
             return (
               <div key={id} className="node node-sample">
@@ -188,6 +192,8 @@ export default class TodoTree extends React.Component {
                     <Button
                       variant="outline-secondary"
                       size="sm"
+                      disabled={queueRunning}
+                      title={queueRunning ? 'Stop the queue first' : undefined}
                       onClick={() => this.mountAndSwitchTab(sampleData)}
                     >
                       Mount

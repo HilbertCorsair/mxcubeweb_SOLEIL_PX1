@@ -274,15 +274,34 @@ class SampleChanger(ComponentBase):
                 self.set_current_sample(None)
                 signals.clear_loaded_sample()
 
+    def _assert_queue_not_running(self, action):
+        """Refuse a manual transfer while the queue owns the sample changer.
+
+        mount_sample spawns its work in a greenlet, so a manual mount issued
+        during a run would command the changer concurrently with the queue's own
+        SampleQueueEntry - the one place where two transfers can genuinely
+        overlap. The queue itself is strictly sequential.
+        """
+        if HWR.beamline.queue_manager.is_executing():
+            msg = (
+                "Cannot %s a sample while the queue is running; "
+                "stop the queue first." % action
+            )
+            logging.getLogger("user_level_log").error(msg)
+            raise RuntimeError(msg)
+
     def mount_sample(self, sample):
+        self._assert_queue_not_running("mount")
         gevent.spawn(self.mount_sample_clean_up, sample)
         return self.get_sc_contents()
 
     def unmount_sample(self, sample):
+        self._assert_queue_not_running("unmount")
         self.unmount_sample_clean_up(sample)
         return self.get_sc_contents()
 
     def unmount_current(self):
+        self._assert_queue_not_running("unmount")
         location = HWR.beamline.sample_changer.get_loaded_sample().get_address()
         self.unmount_sample_clean_up({"location": location})
 

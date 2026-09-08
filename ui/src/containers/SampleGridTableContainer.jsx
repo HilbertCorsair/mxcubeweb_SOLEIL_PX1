@@ -1204,6 +1204,11 @@ class SampleGridTableContainer extends React.Component {
   }
 
   renderSampleContextMenu() {
+    // A manual transfer while the queue is running would command the sample
+    // changer concurrently with the queue's own mount; the server refuses it
+    // too (SampleChanger._assert_queue_not_running).
+    const queueRunning = this.props.queue.queueStatus === QUEUE_RUNNING;
+
     return (
       <>
         <Dropdown.Item onClick={this.props.addSelectedSamplesToQueue}>
@@ -1211,7 +1216,11 @@ class SampleGridTableContainer extends React.Component {
             <i className="fas fa-plus" /> Add to Queue
           </span>
         </Dropdown.Item>
-        <Dropdown.Item onClick={this.mountAndCollect}>
+        <Dropdown.Item
+          onClick={this.mountAndCollect}
+          disabled={queueRunning}
+          title={queueRunning ? 'Stop the queue first' : undefined}
+        >
           <span>
             <MdFlare glyph="screenshot" /> Mount{' '}
           </span>
@@ -1228,7 +1237,15 @@ class SampleGridTableContainer extends React.Component {
             <i className="fas fa-plus" /> Add to Queue
           </span>
         </Dropdown.Item>
-        <Dropdown.Item onClick={this.unmount}>
+        <Dropdown.Item
+          onClick={this.unmount}
+          disabled={this.props.queue.queueStatus === QUEUE_RUNNING}
+          title={
+            this.props.queue.queueStatus === QUEUE_RUNNING
+              ? 'Stop the queue first'
+              : undefined
+          }
+        >
           <span>
             <Md360 glyph="share-alt" /> Unmount{' '}
           </span>
