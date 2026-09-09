@@ -74,8 +74,10 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
         }
         endedAt = null;
       } else if (isTerminalTaskState(action.state)) {
-        startedAt = startedAt || Date.now();
-        endedAt = endedAt || Date.now();
+        // Never invent a start. Without a RUNNING event first there is no
+        // duration to report, and a fabricated one reads as "0s" - a wrong
+        // number where nothing at all is the honest answer.
+        endedAt = startedAt ? endedAt || Date.now() : null;
       } else {
         startedAt = null;
         endedAt = null;

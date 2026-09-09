@@ -285,7 +285,16 @@ def queue_execution_entry_started(entry, message=None):
     handle_auto_mount_next(entry)
 
     if not mxcube.queue.is_interleaved(entry.get_data_model()):
-        server.emit("task", get_task_state(entry), namespace="/hwr")
+        state = get_task_state(entry)
+        # The signal already says what happened, so do not let the read-back
+        # decide it: get_node_state() reports a re-run entry as collected
+        # (its model still carries is_executed() from the previous run), and
+        # it depends on the emitter having recorded the entry as current
+        # before emitting - which is exactly the kind of ordering the client
+        # should not have to rely on for a row to start its clock.
+        state["state"] = RUNNING
+        state["progress"] = 0
+        server.emit("task", state, namespace="/hwr")
 
 
 def queue_execution_entry_finished(entry, message):
