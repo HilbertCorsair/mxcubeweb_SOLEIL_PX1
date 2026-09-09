@@ -41,6 +41,7 @@ export class ConfirmCollectDialog extends React.Component {
     this.autoLoopCentringOnClick = this.autoLoopCentringOnClick.bind(this);
     this.collectText = this.collectText.bind(this);
     this.tasksToCollect = this.tasksToCollect.bind(this);
+    this.isUnattendedRun = this.isUnattendedRun.bind(this);
     this.setNumSnapshots = this.setNumSnapshots.bind(this);
     // Guards against a double click sending two PUT /queue/start. The server
     // rejects the second, but only by surfacing a spurious execution failure.
@@ -72,6 +73,14 @@ export class ConfirmCollectDialog extends React.Component {
     }
 
     this.setState({ starting: true });
+
+    // An unattended run centres automatically by definition, so it does not
+    // offer the choice below - but the server still has to be told, because
+    // setCentringMethod otherwise only ever fires from the checkbox and the
+    // run would inherit whatever was last set.
+    if (this.isUnattendedRun()) {
+      this.props.setCentringMethod(AUTO_LOOP_CENTRING);
+    }
 
     // Run Queue runs the whole queue; sid is only kept for route compatibility.
     const sample =
@@ -154,6 +163,13 @@ export class ConfirmCollectDialog extends React.Component {
       .flatMap((sample) => sample.tasks || {});
 
     return tasks.filter((task) => task.state === TASK_UNCOLLECTED);
+  }
+
+  /** True when this run is driven by the unattended pipeline. */
+  isUnattendedRun() {
+    return this.tasksToCollect().some(
+      (task) => task.type === 'UnattendedCollect',
+    );
   }
 
   /**
@@ -353,16 +369,23 @@ export class ConfirmCollectDialog extends React.Component {
           </p>
           <div>
             <span>
-              <Form.Check
-                className="mb-2"
-                type="checkbox"
-                defaultChecked={
-                  this.props.queue.centringMethod === AUTO_LOOP_CENTRING
-                }
-                onClick={this.autoLoopCentringOnClick}
-                id="auto-lopp-centring"
-                label="Auto loop centring"
-              />
+              {this.isUnattendedRun() ? (
+                <p className="mb-2">
+                  <i className="fas fa-crosshairs me-2" />
+                  Automatic loop centring (unattended)
+                </p>
+              ) : (
+                <Form.Check
+                  className="mb-2"
+                  type="checkbox"
+                  defaultChecked={
+                    this.props.queue.centringMethod === AUTO_LOOP_CENTRING
+                  }
+                  onClick={this.autoLoopCentringOnClick}
+                  id="auto-lopp-centring"
+                  label="Auto loop centring"
+                />
+              )}
               <NumSnapshotsDropDown align="start" />
             </span>
           </div>
