@@ -1,5 +1,7 @@
 import { omit } from 'lodash/object';
 
+import { TASK_RUNNING, isTerminalTaskState } from '../constants';
+
 const INITIAL_STATE = {
   showRestoreDialog: false,
   searchString: '',
@@ -31,6 +33,8 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
                 collapsed: false,
                 selected: false,
                 progress: 0,
+                startedAt: null,
+                endedAt: null,
               };
             }
           });
@@ -47,17 +51,43 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
           collapsed: false,
           selected: false,
           progress: 0,
+          startedAt: null,
+          endedAt: null,
         };
       });
 
       return { ...state, displayData };
     }
     case 'ADD_TASK_RESULT': {
+      const previous = state.displayData[action.queueID] || {};
+
+      // Phase timings, taken when the state change arrives. The queue emits
+      // no durations of its own, and this is the cheapest place to learn one:
+      // every start and every finish already passes through here.
+      let { startedAt = null, endedAt = null } = previous;
+
+      if (action.state === TASK_RUNNING) {
+        // A second run of the same task restarts the clock; a repeated
+        // RUNNING event for the run in progress must not.
+        if (!startedAt || endedAt) {
+          startedAt = Date.now();
+        }
+        endedAt = null;
+      } else if (isTerminalTaskState(action.state)) {
+        startedAt = startedAt || Date.now();
+        endedAt = endedAt || Date.now();
+      } else {
+        startedAt = null;
+        endedAt = null;
+      }
+
       const displayData = {
         ...state.displayData,
         [action.queueID]: {
-          ...state.displayData[action.queueID],
+          ...previous,
           progress: action.progress,
+          startedAt,
+          endedAt,
         },
       };
 
@@ -127,6 +157,8 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
                 collapsed: false,
                 selected: false,
                 progress: 0,
+                startedAt: null,
+                endedAt: null,
               };
             }
           });

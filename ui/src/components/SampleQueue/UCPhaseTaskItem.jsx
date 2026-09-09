@@ -4,12 +4,13 @@ import { ProgressBar, Collapse, Table } from 'react-bootstrap';
 import './app.css';
 import {
   TASK_UNCOLLECTED,
-  TASK_COLLECTED,
-  TASK_COLLECT_FAILED,
   TASK_RUNNING,
   TASK_SKIPPED,
   formatNumber as num,
+  taskStateClass,
 } from '../../constants';
+import TaskStateIcon from './TaskStateIcon';
+import ElapsedTime from './ElapsedTime';
 
 /** Phases whose acquisition subset is worth showing; the rest carry no parameters. */
 const PHASES_WITH_PARAMETERS = new Set([
@@ -44,26 +45,12 @@ export default class UCPhaseTaskItem extends Component {
     this.props.deleteTask(this.props.sampleId, this.props.index);
   }
 
-  stateClass() {
-    switch (this.props.state) {
-      case TASK_RUNNING: {
-        return ' running';
-      }
-      case TASK_COLLECTED: {
-        return ' success';
-      }
-      case TASK_COLLECT_FAILED: {
-        return ' error';
-      }
-      case TASK_SKIPPED: {
-        return ' warning';
-      }
-      default: {
-        return '';
-      }
-    }
-  }
-
+  /**
+   * Only the data-collection phase reports real progress; get_task_state sends
+   * 0 for every other one, so the rest used to show a bar stuck at 0 %. They
+   * get the spinning state icon instead, and this is drawn only when there is
+   * something to draw.
+   */
   progressBar() {
     const progress = this.props.progress || 0;
     return (
@@ -119,8 +106,10 @@ export default class UCPhaseTaskItem extends Component {
   }
 
   render() {
-    const { data, state, show, phaseNumber, readOnly } = this.props;
+    const { data, state, show, phaseNumber, readOnly, startedAt, endedAt } =
+      this.props;
     const showParameters = PHASES_WITH_PARAMETERS.has(data.type);
+    const progress = this.props.progress || 0;
     // A phase that belongs to a pipeline is deleted through its group header;
     // a standalone phase owns its TaskGroup and can be removed on its own.
     const deletable =
@@ -130,20 +119,26 @@ export default class UCPhaseTaskItem extends Component {
       Boolean(this.props.deleteTask);
 
     return (
-      <div className="node node-task uc-phase-item">
+      <div
+        className={`node node-task uc-phase-item${
+          state === TASK_RUNNING ? ' uc-phase-running' : ''
+        }`}
+      >
         <div onClick={this.taskHeaderOnClick}>
           <div
-            className={`task-head${this.stateClass()}`}
+            className={`task-head${taskStateClass(state)}`}
             style={{ display: 'flex', padding: '0.3rem 1rem' }}
           >
             <span className="node-name" style={{ display: 'flex' }}>
+              <TaskStateIcon state={state} />
               {phaseNumber === undefined ? '' : `${phaseNumber}. `}
               {data.label}
               {state === TASK_SKIPPED && (
                 <em className="ms-2">- skipped, no spots</em>
               )}
-              {state === TASK_RUNNING && this.progressBar()}
+              {state === TASK_RUNNING && progress > 0 && this.progressBar()}
             </span>
+            <ElapsedTime startedAt={startedAt} endedAt={endedAt} />
             {deletable && (
               <i
                 className="fas fa-times"
@@ -174,4 +169,6 @@ export default class UCPhaseTaskItem extends Component {
 UCPhaseTaskItem.defaultProps = {
   state: TASK_UNCOLLECTED,
   readOnly: false,
+  startedAt: null,
+  endedAt: null,
 };

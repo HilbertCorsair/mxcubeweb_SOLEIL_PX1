@@ -1,14 +1,8 @@
 /* eslint-disable react/jsx-handler-names */
 import React, { Component } from 'react';
-import { ProgressBar } from 'react-bootstrap';
 import './app.css';
-import {
-  TASK_UNCOLLECTED,
-  TASK_COLLECTED,
-  TASK_COLLECT_FAILED,
-  TASK_RUNNING,
-  TASK_SKIPPED,
-} from '../../constants';
+import { TASK_UNCOLLECTED, taskStateClass } from '../../constants';
+import TaskStateIcon from './TaskStateIcon';
 
 /**
  * Header row of an unattended-collect pipeline.
@@ -43,35 +37,33 @@ export default class UCGroupTaskItem extends Component {
     this.props.deleteTask(this.props.sampleId, this.props.index);
   }
 
-  stateClass() {
-    switch (this.props.state) {
-      case TASK_RUNNING: {
-        return ' running';
-      }
-      case TASK_COLLECTED: {
-        return ' success';
-      }
-      case TASK_COLLECT_FAILED: {
-        return ' error';
-      }
-      case TASK_SKIPPED: {
-        return ' warning';
-      }
-      default: {
-        return '';
-      }
+  /**
+   * How far the pipeline has got, and what it is doing.
+   *
+   * done/total/running are counted by the parent from the phase rows
+   * themselves, not read from the header's ucPhasesDone: that field only
+   * refreshes on a full getQueue(), which the operator in control never
+   * performs during a run - so it stayed frozen for the one person watching.
+   */
+  phaseLabel() {
+    const { state, done, running } = this.props;
+    const total = this.props.total || this.props.phaseCount;
+
+    if (!total) {
+      return '';
     }
+
+    if (state === TASK_UNCOLLECTED || done === undefined) {
+      return ` (${total} phases)`;
+    }
+
+    return running
+      ? ` (${done}/${total} phases — ${running})`
+      : ` (${done}/${total} phases)`;
   }
 
   render() {
-    const { data, state, readOnly, phaseCount, phasesDone } = this.props;
-
-    // Once the pipeline is under way the header doubles as its progress
-    // counter, so the operator can see how far a sample got at a glance.
-    const phaseLabel =
-      state === TASK_UNCOLLECTED || phasesDone === undefined
-        ? `(${phaseCount} phases)`
-        : `(${phasesDone}/${phaseCount} phases)`;
+    const { data, state, readOnly } = this.props;
 
     const delTaskCSS = {
       display: 'flex',
@@ -85,7 +77,7 @@ export default class UCGroupTaskItem extends Component {
 
     const taskCSS = `task-head${
       this.props.selected ? ' task-head-selected' : ''
-    }${this.stateClass()}`;
+    }${taskStateClass(state)}`;
 
     return (
       <div className="node node-sample">
@@ -95,28 +87,21 @@ export default class UCGroupTaskItem extends Component {
               <span className="node-name" style={{ display: 'flex' }}>
                 <i className="fas fa-layer-group me-2" />
                 {data.label}
-                {phaseCount ? ` ${phaseLabel}` : ''}
-                {state === TASK_RUNNING && (
-                  <span
-                    style={{
-                      width: '150px',
-                      right: '60px',
-                      position: 'absolute',
-                    }}
-                  >
-                    <ProgressBar
-                      variant="info"
-                      striped
-                      style={{ marginBottom: 0, height: '18px' }}
-                      min={0}
-                      max={1}
-                      animated
-                      now={this.props.progress || 0}
-                    />
-                  </span>
-                )}
+                {this.phaseLabel()}
               </span>
             </b>
+            {/* The per-phase rows carry the detail; the header only says
+                whether the pipeline is running, done or waiting. */}
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginLeft: 'auto',
+                paddingLeft: '10px',
+              }}
+            >
+              <TaskStateIcon state={state} />
+            </span>
             {!readOnly && state === TASK_UNCOLLECTED && (
               <>
                 <i

@@ -129,6 +129,103 @@ export function isUnCollected(task) {
   return task.state === TASK_UNCOLLECTED;
 }
 
+/** True once the queue is finished with a task, whatever the verdict. */
+export function isTerminalTaskState(state) {
+  return (
+    state === TASK_COLLECTED ||
+    state === TASK_SKIPPED ||
+    state === TASK_COLLECT_FAILED
+  );
+}
+
+/**
+ * Execution-state colour class for a task row. The classes themselves are in
+ * components/SampleQueue/app.css; this is the single definition of which state
+ * maps to which, replacing the copies that had been pasted into every row type.
+ */
+export function taskStateClass(state) {
+  switch (state) {
+    case TASK_RUNNING: {
+      return ' running';
+    }
+    case TASK_COLLECTED: {
+      return ' success';
+    }
+    case TASK_COLLECT_FAILED: {
+      return ' error';
+    }
+    case TASK_SKIPPED: {
+      return ' warning';
+    }
+    default: {
+      return '';
+    }
+  }
+}
+
+/**
+ * Icon describing what the queue did with a task. This is the cue that tells a
+ * running phase from a finished one without having to read the row's background
+ * colour - the only indication the panel used to offer.
+ */
+export function taskStateIcon(state) {
+  switch (state) {
+    case TASK_RUNNING: {
+      return {
+        className: 'fas fa-circle-notch fa-spin',
+        color: '#337ab7',
+        title: 'Running',
+      };
+    }
+    case TASK_COLLECTED: {
+      return {
+        className: 'fas fa-check-circle',
+        color: '#4a9c1f',
+        title: 'Done',
+      };
+    }
+    case TASK_SKIPPED: {
+      return {
+        className: 'fas fa-exclamation-circle',
+        color: '#b58900',
+        title: 'Skipped',
+      };
+    }
+    case TASK_COLLECT_FAILED: {
+      return {
+        className: 'fas fa-times-circle',
+        color: '#d9534f',
+        title: 'Failed',
+      };
+    }
+    default: {
+      return { className: 'far fa-circle', color: '#adb5bd', title: 'Waiting' };
+    }
+  }
+}
+
+/**
+ * How far an unattended pipeline has got, counted from the phase rows the
+ * backend emits after the group header.
+ *
+ * Deliberately derived on the client rather than read from the header's own
+ * ucPhasesDone: that field is only refreshed by a full getQueue(), which the
+ * operator in control never performs mid-run, so it stays frozen for exactly
+ * the person watching the run.
+ */
+export function ucGroupProgress(tasks, groupQueueID) {
+  const phases = (tasks || []).filter(
+    (task) => task.ucGroupID === groupQueueID,
+  );
+  const running = phases.find((task) => task.state === TASK_RUNNING);
+
+  return {
+    total: phases.length,
+    done: phases.filter((task) => isTerminalTaskState(task.state)).length,
+    running: running ? running.label : null,
+  };
+}
+
 export function hasLimsData(sample) {
   return sample.limsID !== undefined;
 }

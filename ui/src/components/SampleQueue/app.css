@@ -198,6 +198,34 @@
   background: linear-gradient(to bottom, #ffffff 0%, rgba(255, 255, 255, 0) 5%);
   background-color: rgba(217, 83, 79, 0.56) !important;
 }
+/* Execution-state glyph carried by every task row. Fixed width so the labels
+   stay aligned down the column whatever state each row is in. */
+.task-state-icon {
+  display: inline-block;
+  width: 1.1em;
+  text-align: center;
+  margin-right: 0.45rem;
+  align-self: center;
+}
+
+/* How long a phase has run, or took. Pushed to the right of its row. */
+.task-elapsed {
+  margin-left: auto;
+  align-self: center;
+  padding-left: 10px;
+  font-size: smaller;
+  color: #555;
+  white-space: nowrap;
+}
+
+/* The phase the queue is executing right now. The .running background is
+   shared with every other state colour; this accent is what makes the active
+   row findable in a list of eight at a glance. */
+.uc-phase-running > div > .task-head {
+  border-left: 4px solid #337ab7;
+  font-weight: 600;
+}
+
 .task-controlls {
   cursor: pointer;
   font-size: 17px !important;

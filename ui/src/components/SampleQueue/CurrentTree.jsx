@@ -10,7 +10,7 @@ import WorkflowTaskItem from './WorkflowTaskItem';
 import CharacterisationTaskItem from './CharacterisationTaskItem';
 import UCGroupTaskItem from './UCGroupTaskItem';
 import UCPhaseTaskItem from './UCPhaseTaskItem';
-import { UC_PHASE_TYPES } from '../../constants';
+import { UC_PHASE_TYPES, ucGroupProgress } from '../../constants';
 
 export default class CurrentTree extends React.Component {
   constructor(props) {
@@ -302,7 +302,7 @@ export default class CurrentTree extends React.Component {
                     state={taskData.state}
                     progress={displayData.progress}
                     phaseCount={taskData.ucPhaseCount}
-                    phasesDone={taskData.ucPhasesDone}
+                    {...ucGroupProgress(sampleTasks, taskData.queueID)}
                     deleteTask={this.props.deleteTask}
                     showForm={this.props.showForm}
                     taskHeaderOnClickHandler={this.taskHeaderOnClickHandler}
@@ -322,6 +322,8 @@ export default class CurrentTree extends React.Component {
                       state={taskData.state}
                       progress={displayData.progress}
                       show={displayData.collapsed}
+                      startedAt={displayData.startedAt}
+                      endedAt={displayData.endedAt}
                       phaseNumber={
                         taskData.ucPhaseIndex === null ||
                         taskData.ucPhaseIndex === undefined

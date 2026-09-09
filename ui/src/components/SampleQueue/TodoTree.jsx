@@ -6,34 +6,12 @@ import { ListGroup, Form, Button } from 'react-bootstrap';
 import {
   QUEUE_RUNNING,
   UC_PHASE_TYPES,
-  TASK_COLLECTED,
-  TASK_COLLECT_FAILED,
-  TASK_RUNNING,
-  TASK_SKIPPED,
+  taskStateClass,
+  ucGroupProgress,
 } from '../../constants';
 import UCGroupTaskItem from './UCGroupTaskItem';
 import UCPhaseTaskItem from './UCPhaseTaskItem';
-
-/** Execution-state colour class shared by the read-only rows in this tab. */
-function stateClass(state) {
-  switch (state) {
-    case TASK_RUNNING: {
-      return ' running';
-    }
-    case TASK_COLLECTED: {
-      return ' success';
-    }
-    case TASK_COLLECT_FAILED: {
-      return ' error';
-    }
-    case TASK_SKIPPED: {
-      return ' warning';
-    }
-    default: {
-      return '';
-    }
-  }
-}
+import TaskStateIcon from './TaskStateIcon';
 
 export default class TodoTree extends React.Component {
   constructor(props) {
@@ -77,6 +55,11 @@ export default class TodoTree extends React.Component {
       return null;
     }
 
+    // A sample only reaches this tab before it runs or after it was stopped
+    // part-way, so most rows have no timing - but the ones that do should keep
+    // showing it.
+    const displayData = (task) => this.props.displayData[task.queueID] || {};
+
     return (
       <div className="task-list">
         {tasks.map((taskData, i) => {
@@ -89,7 +72,7 @@ export default class TodoTree extends React.Component {
                 sampleId={sampleData.sampleID}
                 state={taskData.state}
                 phaseCount={taskData.ucPhaseCount}
-                phasesDone={taskData.ucPhasesDone}
+                {...ucGroupProgress(tasks, taskData.queueID)}
                 readOnly
               />
             );
@@ -103,6 +86,8 @@ export default class TodoTree extends React.Component {
                 data={taskData}
                 sampleId={sampleData.sampleID}
                 state={taskData.state}
+                startedAt={displayData(taskData).startedAt}
+                endedAt={displayData(taskData).endedAt}
                 phaseNumber={
                   taskData.ucPhaseIndex === null ||
                   taskData.ucPhaseIndex === undefined
@@ -122,10 +107,13 @@ export default class TodoTree extends React.Component {
           return (
             <div key={taskData.queueID} className="node node-task">
               <div
-                className={`task-head${stateClass(taskData.state)}`}
+                className={`task-head${taskStateClass(taskData.state)}`}
                 style={{ display: 'flex', padding: '0.3rem 1rem' }}
               >
-                <span className="node-name">{taskData.label}</span>
+                <span className="node-name" style={{ display: 'flex' }}>
+                  <TaskStateIcon state={taskData.state} />
+                  {taskData.label}
+                </span>
               </div>
             </div>
           );

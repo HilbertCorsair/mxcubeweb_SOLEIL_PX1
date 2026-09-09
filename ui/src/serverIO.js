@@ -205,12 +205,19 @@ class ServerIO {
       }
 
       // The current node might not be a task, in that case ignore it
-      if (
-        store.getState().queueGUI.displayData[record.queueID] &&
-        record.taskIndex !== null
-      ) {
-        const taskCollapsed =
-          store.getState().queueGUI.displayData[record.queueID].collapsed;
+      if (record.taskIndex === null) {
+        return;
+      }
+
+      // Only the collapse/expand needs to know how the row is displayed. The
+      // state change itself is dispatched either way: gating the whole event
+      // on displayData meant one missed seed silently froze a row's state -
+      // and now its icon and its timer with it.
+      const taskDisplayData =
+        store.getState().queueGUI.displayData[record.queueID];
+
+      if (taskDisplayData) {
+        const taskCollapsed = taskDisplayData.collapsed;
 
         if (
           (record.state === 1 && !taskCollapsed) ||
@@ -218,18 +225,18 @@ class ServerIO {
         ) {
           dispatch(collapseItem(record.queueID));
         }
-
-        dispatch(
-          addTaskResultAction(
-            record.sample,
-            record.taskIndex,
-            record.state,
-            record.progress,
-            record.limsResultData,
-            record.queueID,
-          ),
-        );
       }
+
+      dispatch(
+        addTaskResultAction(
+          record.sample,
+          record.taskIndex,
+          record.state,
+          record.progress,
+          record.limsResultData,
+          record.queueID,
+        ),
+      );
     });
 
     this.hwrSocket.on('add_task', (record) => {
@@ -455,7 +462,7 @@ class ServerIO {
   }
 
   connectLogging() {
-    const serverUrl = window.location.origin;//'https://195.221.8.78:5173';
+    const serverUrl = window.location.origin; //'https://195.221.8.78:5173';
 
     this.loggingSocket = io(`${serverUrl}/logging`, {
       transports: ['websocket', 'polling'],
