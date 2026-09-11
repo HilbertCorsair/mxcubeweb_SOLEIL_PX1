@@ -110,11 +110,60 @@ class Beamline(ComponentBase):
             "scale": scale,
             "videoSizes": video_sizes,
             "videoHash": HWR.beamline.sample_view.camera.stream_hash,
-            "videoURL":"https://mxcubeweb-px1.synchrotron-soleil.fr/video", #self.app.CONFIG.app.VIDEO_STREAM_URL,#"https://mxcubeweb-proxima1.exp.synchrotron-soleil.fr/video",#self.app.CONFIG.app.VIDEO_STREAM_URL,
+            # Read from configuration rather than hardcoded: the argussight OAV
+            # URL below has to be able to override it. The previous hardcoded
+            # value belongs in VIDEO_STREAM_URL in server.yaml.
+            "videoURL": self.app.CONFIG.app.VIDEO_STREAM_URL,
         }
 
         data.update(beam_info_dict)
+
+        cameras, oav_url = self._argussight_cameras()
+        data["cameras"] = cameras
+        if oav_url:
+            # argussight streams are addressed by name in the URL itself, so no
+            # separate hash is appended by the frontend (videoHash empty).
+            data["videoURL"] = oav_url
+            data["videoHash"] = ""
+
         return data
+
+    def _argussight_cameras(self):
+        """Discover the argussight camera streams for the sample view.
+
+        Returns:
+            tuple[list[dict], str]: the list of camera components (for the camera
+            selector) and the full WebSocket URL of the OAV/centring stream. Both
+            empty when argussight is disabled or unreachable, in which case the
+            sample view keeps the single direct video-streamer URL.
+        """
+        cfg = self.app.CONFIG.app
+        if not getattr(cfg, "ARGUSSIGHT_ENABLED", False):
+            return [], ""
+
+        from mxcubeweb.core.util.argussight_discovery import discover_streams
+
+        cameras_meta = {
+            cam.name: {
+                "label": cam.label,
+                "width": cam.width,
+                "height": cam.height,
+                "format": cam.format,
+                "oav": cam.oav,
+            }
+            for cam in cfg.ARGUSSIGHT_CAMERAS
+        }
+        cameras = discover_streams(
+            cfg.ARGUSSIGHT_GRPC_HOST,
+            cfg.ARGUSSIGHT_GRPC_PORT,
+            cfg.ARGUSSIGHT_PROXY_URL,
+            cameras_meta,
+        )
+        if not cameras:
+            return [], ""
+
+        oav = next((cam for cam in cameras if cam.get("oav")), cameras[0])
+        return cameras, oav["url"]
 
     def beamline_get_all_attributes(self):
         ho = BeamlineAdapter(HWR.beamline)

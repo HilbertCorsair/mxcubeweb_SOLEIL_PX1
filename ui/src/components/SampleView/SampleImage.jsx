@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable sonarjs/no-duplicate-string */
 import React from 'react';
+import { Dropdown } from 'react-bootstrap';
 import { HW_STATE } from '../../constants';
 import {
   makePoints,
@@ -17,6 +18,11 @@ import 'fabric';
 
 import { JSMpeg } from './jsmpeg.min.js';
 
+// Plain mouse-wheel rotation on the OAV camera (no modifier key), asymmetric by
+// design. Counter-clockwise on screen = decreasing omega.
+const WHEEL_ROTATE_CCW_DEG = 90; // scroll down -> 90 deg counter-clockwise
+const WHEEL_ROTATE_CW_DEG = 30; // scroll up -> 30 deg clockwise
+
 const { fabric } = window;
 fabric.Group.prototype.hasControls = false;
 fabric.Group.prototype.hasBorders = false;
@@ -25,31 +31,34 @@ if (fabric.Text && fabric.Text.prototype) {
   // Override initialize to fix textBaseline at creation
   if (fabric.Text.prototype.initialize) {
     const originalInitialize = fabric.Text.prototype.initialize;
-    fabric.Text.prototype.initialize = function initializeText(text, optionsParam) {
+    fabric.Text.prototype.initialize = function initializeText(
+      text,
+      optionsParam,
+    ) {
       // Create a new options object to avoid reassigning the parameter
       const options = optionsParam ? { ...optionsParam } : {};
-      
+
       // Fix 'alphabetical' typo to 'alphabetic'
       if (options.textBaseline === 'alphabetical') {
         options.textBaseline = 'alphabetic';
       }
-      
+
       // Set default textBaseline if not provided
       if (!options.textBaseline) {
         options.textBaseline = 'alphabetic';
       }
-      
+
       const result = originalInitialize.call(this, text, options);
-      
+
       // Ensure textBaseline is set correctly after initialization
       if (this.textBaseline === 'alphabetical') {
         this.textBaseline = 'alphabetic';
       }
-      
+
       return result;
     };
   }
-  
+
   // Override set method to catch when textBaseline is set via set()
   if (fabric.Text.prototype.set) {
     const originalSet = fabric.Text.prototype.set;
@@ -70,7 +79,7 @@ if (fabric.Text && fabric.Text.prototype) {
       return originalSet.call(this, key, value);
     };
   }
-  
+
   // Override _render to fix textBaseline before rendering (catches line 375 issue)
   if (fabric.Text.prototype._render) {
     const originalRender = fabric.Text.prototype._render;
@@ -82,7 +91,7 @@ if (fabric.Text && fabric.Text.prototype) {
       return originalRender.call(this, ctx);
     };
   }
-  
+
   // Override fromObject to fix textBaseline when loading from JSON
   if (fabric.Text.fromObject && typeof fabric.Text.fromObject === 'function') {
     const originalFromObject = fabric.Text.fromObject;
@@ -191,8 +200,12 @@ export default class SampleImage extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    // Initialize JSMpeg for decoding the MPEG1 stream
-    if (prevProps.videoFormat !== 'MPEG1') {
+    // Initialize JSMpeg for decoding the MPEG1 stream. Re-init when the format
+    // becomes MPEG1 or when the stream URL changes (e.g. switching camera).
+    if (
+      prevProps.videoFormat !== 'MPEG1' ||
+      prevProps.videoURL !== this.props.videoURL
+    ) {
       this.initJSMpeg();
     }
 
@@ -409,11 +422,25 @@ export default class SampleImage extends React.Component {
   }
 
   goToBeam(e) {
-    const { sampleViewActions, imageRatio } = this.props;
+    const {
+      sampleViewActions,
+      imageRatio,
+      centringEnabled,
+      clickCentring,
+      measureDistance,
+      drawGrid,
+    } = this.props;
     const { moveToBeam } = sampleViewActions;
 
+    // Beam geometry is only valid on the OAV/centring camera, and a
+    // double-click must not disturb a click-centring, distance-measuring or
+    // grid-drawing sequence that is already in progress.
+    if (!centringEnabled || clickCentring || measureDistance || drawGrid) {
+      return;
+    }
+
     // Only move to beam if the click was done directly on the canvas.
-    if (e.target.tagName === 'CANVAS' && e.shiftKey) {
+    if (e.target.tagName === 'CANVAS') {
       moveToBeam(e.layerX / imageRatio, e.layerY / imageRatio);
     }
   }
@@ -601,7 +628,7 @@ export default class SampleImage extends React.Component {
       drawGrid,
     } = this.props;
 
-    if (clickCentring) {
+    if (clickCentring && this.props.centringEnabled) {
       this.canvas.selection = false; // Disable group selection
       sampleViewActions.recordCentringClick(
         option.e.layerX / imageRatio,
@@ -668,11 +695,31 @@ export default class SampleImage extends React.Component {
     const focusProps = components.find((c) => c.role === 'focus');
     const zoomProps = components.find((c) => c.role === 'zoom');
 
-    const omega = hardwareObjects[omegaProps.attribute];
-    const focus = hardwareObjects[focusProps.attribute];
-    const zoom = hardwareObjects[zoomProps.attribute];
+    // Fall back to the uiproperties entry when the hardware object has not
+    // reached redux yet, then to an empty object when the motor is not declared
+    // at all. Every branch below is gated on `state === READY`, so an undefined
+    // state simply skips it -- this handler now runs on every plain scroll, not
+    // just with a modifier key, so it must not throw on an incomplete config.
+    const omega = hardwareObjects[omegaProps?.attribute] ?? omegaProps ?? {};
+    const focus = hardwareObjects[focusProps?.attribute] ?? focusProps ?? {};
+    const zoom = hardwareObjects[zoomProps?.attribute] ?? zoomProps ?? {};
 
-    if (keyPressed === 'r' && omega.state === HW_STATE.READY) {
+    if (
+      !keyPressed &&
+      this.props.centringEnabled &&
+      !this.props.clickCentring &&
+      omega.state === HW_STATE.READY
+    ) {
+      // Plain scroll on the OAV camera (outside 3-click centring): spin the
+      // sample.
+      if (e.deltaY > 0) {
+        // scroll down -> counter-clockwise -> decrease omega
+        setAttribute(omegaProps.attribute, omega.value - WHEEL_ROTATE_CCW_DEG);
+      } else if (e.deltaY < 0) {
+        // scroll up -> clockwise -> increase omega
+        setAttribute(omegaProps.attribute, omega.value + WHEEL_ROTATE_CW_DEG);
+      }
+    } else if (keyPressed === 'r' && omega.state === HW_STATE.READY) {
       if (e.deltaY > 0) {
         setAttribute(omegaProps.attribute, omega.value + omegaProps.step);
       } else if (e.deltaY < 0) {
@@ -848,11 +895,22 @@ export default class SampleImage extends React.Component {
     return result;
   }
 
+  selectedCameraLabel() {
+    const cam = this.props.cameras.find(
+      (c) => c.name === this.props.selectedCamera,
+    );
+    return cam ? cam.label : 'Camera';
+  }
+
   createVideoPlayerContainer(format) {
     let source = '/mxcube/api/v0.1/sampleview/camera/subscribe';
 
     if (this.props.videoURL !== '') {
-      source = `${this.props.videoURL}/${this.props.videoHash}`;
+      // argussight streams carry the stream name in the URL, so no separate
+      // hash is appended (videoHash empty). The legacy path appends the hash.
+      source = this.props.videoHash
+        ? `${this.props.videoURL}/${this.props.videoHash}`
+        : this.props.videoURL;
     }
 
     let result = (
@@ -873,7 +931,9 @@ export default class SampleImage extends React.Component {
       let source =
         this.props.videoURL || `http://${document.location.hostname}:4042/`;
 
-      source = `${source}/${this.props.videoHash}`;
+      if (this.props.videoHash) {
+        source = `${source}/${this.props.videoHash}`;
+      }
 
       if (this.player) {
         this.player.stop();
@@ -887,9 +947,8 @@ export default class SampleImage extends React.Component {
           protocols: [],
         });
         this.player.play();
+        canvas.src = source;
       }
-
-      canvas.src = source;
     }
   }
 
@@ -916,6 +975,14 @@ export default class SampleImage extends React.Component {
     } = this.props;
 
     this.drawCanvas(imageRatio, sourceScale);
+
+    // Non-OAV cameras have no centring geometry: show the raw video only, with
+    // an empty overlay canvas (already cleared/sized by drawCanvas).
+    if (!this.props.centringEnabled) {
+      this.canvas.requestRenderAll();
+      return;
+    }
+
     this.canvas.add(
       ...makeImageOverlay(
         imageRatio,
@@ -1028,6 +1095,32 @@ export default class SampleImage extends React.Component {
               selectedGrids={this.props.selectedGrids.map((grid) => grid.id)}
             />
             {this.createVideoPlayerContainer(this.props.videoFormat)}
+
+            {this.props.cameras && this.props.cameras.length > 1 && (
+              <div className="cameraSelector">
+                <Dropdown
+                  onSelect={(name) =>
+                    this.props.sampleViewActions.selectCamera(name)
+                  }
+                  id="camera-selector"
+                >
+                  <Dropdown.Toggle size="sm" variant="outline-light">
+                    {this.selectedCameraLabel()}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    {this.props.cameras.map((cam) => (
+                      <Dropdown.Item
+                        key={cam.name}
+                        eventKey={cam.name}
+                        active={cam.name === this.props.selectedCamera}
+                      >
+                        {cam.label}
+                      </Dropdown.Item>
+                    ))}
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
+            )}
 
             <SampleControls canvas={this.canvas} />
             <div>{this.centringMessage()}</div>

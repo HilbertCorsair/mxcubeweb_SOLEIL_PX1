@@ -9,6 +9,14 @@ const INITIAL_STATE = {
   videoFormat: 'MJPEG',
   videoHash: '',
   videoURL: '',
+  // Streams discovered from argussight; empty when it is disabled or down, in
+  // which case the single direct video-streamer URL is used and the switcher is
+  // not rendered.
+  cameras: [],
+  selectedCamera: '',
+  // Centring geometry (beam position, pixelsPerMm, click-to-centre) is only
+  // valid on the OAV camera, so it is disabled while another one is shown.
+  centringEnabled: true,
   sourceIsScalable: false,
   videoSizes: [],
   autoScale: true,
@@ -28,6 +36,43 @@ const INITIAL_STATE = {
   savedPointId: '',
   selectedShapes: [],
 };
+
+// Seed the camera switcher from the sample-image metadata. The view opens on
+// the OAV/centring camera when argussight declares one, else on the first
+// discovered stream; with no streams at all the switcher is not rendered and
+// the single direct video-streamer URL is used.
+function initialCameraState(cameraMetaData) {
+  const cameras = cameraMetaData.cameras || [];
+  const oav = cameras.find((cam) => cam.oav) || cameras[0];
+
+  return {
+    cameras,
+    selectedCamera: oav ? oav.name : '',
+    centringEnabled: true,
+  };
+}
+
+// Point the player at another argussight stream. Returns the state unchanged
+// for an unknown name, so a stale click cannot blank the video.
+function selectCameraState(state, name) {
+  const cam = state.cameras.find((c) => c.name === name);
+
+  if (!cam) {
+    return state;
+  }
+
+  return {
+    ...state,
+    selectedCamera: cam.name,
+    videoURL: cam.url,
+    // argussight URLs already carry the stream name.
+    videoHash: '',
+    videoFormat: cam.format,
+    width: cam.width || state.width,
+    height: cam.height || state.height,
+    centringEnabled: Boolean(cam.oav),
+  };
+}
 
 function sampleViewReducer(state = INITIAL_STATE, action = {}) {
   // eslint-disable-next-line sonarjs/max-switch-cases
@@ -167,9 +212,13 @@ function sampleViewReducer(state = INITIAL_STATE, action = {}) {
         gridCount: 0,
       };
     }
+    case 'SELECT_CAMERA': {
+      return selectCameraState(state, action.name);
+    }
     case 'SET_INITIAL_STATE': {
       return {
         ...state,
+        ...initialCameraState(action.data.Camera),
         width: action.data.Camera.imageWidth,
         height: action.data.Camera.imageHeight,
         videoFormat: action.data.Camera.format,

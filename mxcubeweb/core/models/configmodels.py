@@ -73,6 +73,24 @@ class _UICameraConfigModel(BaseModel):
     height: int | None
 
 
+class _ArgussightCameraModel(BaseModel):
+    """Optional display metadata for an argussight stream.
+
+    `name` must match the stream name registered in argussight (the name used
+    to build ws://<host>:<proxy_port>/ws/<name>). The remaining fields are only
+    used for how the stream is presented in the camera switcher.
+    """
+
+    name: str
+    label: str | None = None
+    width: int | None = None
+    height: int | None = None
+    format: str = "MPEG1"
+    # True for the centring (OAV) camera. The main sample view enables the
+    # centring overlay only for this stream.
+    oav: bool = False
+
+
 class _UISampleViewVideoControlsModel(BaseModel):
     id: str
     show: bool
@@ -148,6 +166,33 @@ class MXCUBEAppConfigModel(BaseModel):
         description=(
             "True to use video stream produced by external software, false otherwise"
         ),
+    )
+    # Argussight (https://github.com/mxcube/argussight) aggregates several
+    # camera streams behind one WebSocket proxy and lists them over gRPC. The
+    # backend only makes the discovery call; the browser dials the proxy
+    # directly, so PROXY_URL must be reachable from the client (and must be
+    # wss:// when MXCuBE is served over https).
+    ARGUSSIGHT_ENABLED: bool = Field(
+        False,
+        description="Discover beamline camera streams from argussight via gRPC",
+    )
+    ARGUSSIGHT_GRPC_HOST: str = Field(
+        "localhost",
+        description="Host of the argussight gRPC server",
+    )
+    ARGUSSIGHT_GRPC_PORT: int = Field(
+        50051,
+        description="Port of the argussight gRPC server",
+    )
+    ARGUSSIGHT_PROXY_URL: str = Field(
+        "",
+        description="Base WebSocket URL of the argussight stream proxy, "
+        "e.g. ws://<host>:7000/ws",
+    )
+    ARGUSSIGHT_CAMERAS: list[_ArgussightCameraModel] = Field(
+        [],
+        description="Optional per-stream display metadata (label/size/format). "
+        "When set, only these streams are shown, in this order.",
     )
     mode: ModeEnum = Field(
         ModeEnum.OSC, description="MXCuBE mode OSC, SSX-CHIP or SSX-INJECTOR"

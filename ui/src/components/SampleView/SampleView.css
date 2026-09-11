@@ -174,3 +174,12 @@ table.table-striped > tbody > tr[data-user-hidden='true'] {
   background-color: #a3ceff;
   font-style: italic;
 }
+
+/* Camera switcher overlaid on the video, top-left. Only rendered when
+   argussight reports more than one stream. */
+.cameraSelector {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 100;
+}

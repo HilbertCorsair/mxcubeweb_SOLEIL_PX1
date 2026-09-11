@@ -215,6 +215,10 @@ export function acceptCentring() {
   };
 }
 
+export function selectCamera(name) {
+  return { type: 'SELECT_CAMERA', name };
+}
+
 export function moveToBeam(x, y) {
   return () => sendMoveToBeam(x, y);
 }
