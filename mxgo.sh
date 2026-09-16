@@ -25,9 +25,15 @@ ARGUS_CONDA_ENV=${ARGUS_CONDA_ENV-argussight}
 ARGUS_LOG=${ARGUS_LOG-$HOME/MXCuBElogs/argussight.log}
 ARGUS_WAIT=${ARGUS_WAIT-120}   # seconds; leaves time to answer the camera prompt
 
-# The gRPC server binds [::]:50051, so try IPv6 loopback too.
+# Is anything LISTENING on this local port (any user, IPv4 or IPv6)? Asks the
+# kernel via ss rather than connecting through bash's /dev/tcp, which some bash
+# builds lack and which a firewall on loopback can hang.
 port_open() {
-    (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null || (exec 3<>"/dev/tcp/::1/$1") 2>/dev/null
+    if command -v ss > /dev/null 2>&1; then
+        ss -ltn "sport = :$1" 2>/dev/null | grep -q LISTEN
+    else
+        timeout 2 bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
+    fi
 }
 
 if [ "$ARGUS_AUTOSTART" = "1" ]; then
@@ -73,6 +79,9 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
                 echo "WARNING: argussight not up after ${ARGUS_WAIT}s (still starting?); continuing." >&2
                 echo "         Reload the page once it is up. Log: $ARGUS_LOG" >&2
                 break
+            fi
+            if [ "$waited" -gt 0 ] && [ $((waited % 10)) -eq 0 ]; then
+                echo "  still waiting for argussight (${waited}/${ARGUS_WAIT}s; :50051 $(port_open 50051 && echo up || echo down), :7000 $(port_open 7000 && echo up || echo down))"
             fi
             sleep 1
             waited=$((waited + 1))
