@@ -57,7 +57,10 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
         echo "starting argussight in conda env '$ARGUS_CONDA_ENV' (log: $ARGUS_LOG) ..."
         # setsid: own session, so Ctrl-C of the server does not reach the stack.
         # PYTHONPATH above points at mxcubeweb/mxcubecore; keep it out of that env.
-        env -u PYTHONPATH CONDA_ENV="$ARGUS_CONDA_ENV" MXCUBE_ENV="$ARGUS_CONDA_ENV" \
+        # argussight and its helpers run in $ARGUS_CONDA_ENV; the video-streamers
+        # run in the mxcubeweb env (start_argus_px1.sh's MXCUBE_ENV default),
+        # where video-streamer is installed -- it cannot share argussight's env.
+        env -u PYTHONPATH CONDA_ENV="$ARGUS_CONDA_ENV" \
             setsid -w "$ARGUS_START" >> "$ARGUS_LOG" 2>&1 < /dev/null &
         argus_pid=$!
 
