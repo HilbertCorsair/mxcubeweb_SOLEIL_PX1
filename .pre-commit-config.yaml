@@ -80,4 +80,5 @@ repos:
     hooks:
       - id: flake8
         name: Flake8
-        exclude: (ui/|test/)
+        # argussight_grpc/ holds generated protobuf/gRPC stubs
+        exclude: (ui/|test/|argussight_grpc/)

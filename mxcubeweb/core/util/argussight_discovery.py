@@ -9,8 +9,12 @@ This module turns that gRPC response into a list of camera components that the
 web UI's "Beamline Cameras" switcher understands
 (:class:`mxcubeweb.core.models.configmodels._UICameraConfigModel`).
 
-Everything here is best-effort and fully guarded: if the argussight Python/gRPC
-stubs are not installed, or the server is unreachable (e.g. off the beamline
+The gRPC stubs come from an installed argussight package if there is one, else
+from the copy vendored in :mod:`mxcubeweb.core.util.argussight_grpc`, so the
+mxcubeweb environment only needs ``grpcio`` and ``protobuf``.
+
+Everything here is best-effort and fully guarded: if grpcio/protobuf are
+missing or the wrong version, or the server is unreachable (e.g. off the beamline
 network), :func:`discover_streams` logs a warning and returns an empty list so
 callers can fall back to the static ``camera_setup`` configuration.
 """
@@ -22,6 +26,46 @@ logger = logging.getLogger("MX3.HWR")
 # Time (s) we are willing to wait for the gRPC call before giving up. Kept short
 # so a missing/hung argussight never blocks the ui-properties request.
 _GRPC_TIMEOUT = 2.0
+
+# What the mxcubeweb environment needs for discovery. NOT the argussight
+# package itself: its pydantic/pillow pins clash with mxcubeweb's.
+_GRPC_REQUIREMENT = 'grpcio==1.70.0 "protobuf>=5.29,<6"'
+
+
+def _import_stubs():
+    """Return ``(grpc, pb2, pb2_grpc)``, or None (logged) if unavailable.
+
+    An installed argussight package wins, so its stubs always match its
+    server; otherwise the copy vendored in ``argussight_grpc`` is used.
+    """
+    try:
+        import grpc
+
+        try:
+            import argussight.grpc.argus_service_pb2 as pb2
+            import argussight.grpc.argus_service_pb2_grpc as pb2_grpc
+        except ImportError:
+            from mxcubeweb.core.util.argussight_grpc import argus_service_pb2 as pb2
+            from mxcubeweb.core.util.argussight_grpc import (
+                argus_service_pb2_grpc as pb2_grpc,
+            )
+    except ImportError as ex:
+        logger.warning(
+            "Argussight camera discovery disabled: %s. Install into the "
+            "mxcubeweb environment: pip install %s",
+            ex,
+            _GRPC_REQUIREMENT,
+        )
+        return None
+    except Exception as ex:  # protobuf VersionError, grpc version RuntimeError
+        logger.warning(
+            "Argussight camera discovery disabled, gRPC stubs failed to load: %s."
+            " Needs: pip install %s",
+            ex,
+            _GRPC_REQUIREMENT,
+        )
+        return None
+    return grpc, pb2, pb2_grpc
 
 
 def discover_streams(host, port, proxy_url, cameras_meta=None):
@@ -43,17 +87,10 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
     """
     cameras_meta = cameras_meta or {}
 
-    try:
-        import grpc
-
-        import argussight.grpc.argus_service_pb2 as pb2
-        import argussight.grpc.argus_service_pb2_grpc as pb2_grpc
-    except ImportError:
-        logger.warning(
-            "Argussight gRPC stubs not importable; skipping camera discovery. "
-            "Install argussight in the mxcubeweb environment to enable it."
-        )
+    stubs = _import_stubs()
+    if stubs is None:
         return []
+    grpc, pb2, pb2_grpc = stubs
 
     try:
         # grpc honours http(s)_proxy; on the beamline that is the SOLEIL site
@@ -71,7 +108,8 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
 
     if getattr(response, "status", "") != "success":
         logger.warning(
-            "Argussight GetProcesses returned status=%r", getattr(response, "status", "")
+            "Argussight GetProcesses returned status=%r",
+            getattr(response, "status", ""),
         )
         return []
 

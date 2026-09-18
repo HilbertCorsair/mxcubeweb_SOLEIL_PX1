@@ -94,13 +94,19 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
         done
     fi
 
-    # Camera discovery runs inside MXCuBE and needs argussight's gRPC stubs in
-    # THIS env (the one running mxcubeweb-server). Without them it silently
-    # finds no cameras and the sample view is black even with argussight up.
-    if ! python -c "import grpc, argussight.grpc.argus_service_pb2" > /dev/null 2>&1; then
-        echo "WARNING: $(command -v python) cannot import grpc + argussight: camera" >&2
-        echo "         discovery will find nothing and the sample view will be black." >&2
-        echo "         Fix: pip install grpcio argussight into this env." >&2
+    # Camera discovery runs inside MXCuBE and needs gRPC in THIS env (the one
+    # running mxcubeweb-server). The argussight stubs are vendored in
+    # mxcubeweb/core/util/argussight_grpc, so only grpcio + protobuf are needed;
+    # loading the vendored stubs also checks their versions. Without them
+    # discovery finds no cameras and the sample view is black even with
+    # argussight up. Do NOT pip install argussight here: its pydantic/pillow
+    # pins clash with mxcubeweb's.
+    if ! stub_err=$(python -c "import sys; sys.path.insert(0, 'mxcubeweb/core/util'); import argussight_grpc.argus_service_pb2_grpc" 2>&1); then
+        echo "WARNING: $(command -v python) cannot load the argussight gRPC stubs:" >&2
+        echo "         $(printf '%s\n' "$stub_err" | tail -n 1)" >&2
+        echo "         Camera discovery will find nothing and the sample view will be black." >&2
+        echo "         Fix (in this env): pip install grpcio==1.70.0 \"protobuf>=5.29,<6\"" >&2
+        echo "         (not argussight itself: its pydantic pin clashes with mxcubeweb)" >&2
     fi
 fi
 

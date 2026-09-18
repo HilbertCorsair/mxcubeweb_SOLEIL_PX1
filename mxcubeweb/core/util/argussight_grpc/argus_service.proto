@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package argussight;
+
+service SpawnerService {
+    rpc StartProcesses (StartProcessesRequest) returns (StartProcessesResponse);
+    rpc TerminateProcesses (TerminateProcessesRequest) returns (TerminateProcessesResponse);
+    rpc ManageProcesses (ManageProcessesRequest) returns (ManageProcessesResponse);
+    rpc GetProcesses (GetProcessesRequest) returns (GetProcessesResponse);
+    rpc ChangeSettings (ChangeSettingsRequest) returns (ChangeSettingsResponse);
+    rpc AddStream (AddStreamRequest) returns (AddStreamResponse);
+    rpc RemoveStream (RemoveStreamRequest) returns (RemoveStreamResponse);
+    rpc HideStream (HideStreamRequest) returns (HideStreamResponse);
+    rpc ShowStream (ShowStreamRequest) returns (ShowStreamResponse);
+}
+
+message StartProcessesRequest {
+    string name = 1;
+    string type = 2;
+}
+
+message StartProcessesResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message TerminateProcessesRequest {
+    repeated string names = 1;
+}
+message TerminateProcessesResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message ManageProcessesRequest {
+    string name = 1;
+    string command = 2;
+}
+message ManageProcessesResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message ChangeSettingsRequest {
+    string name = 1;
+    map<string, google.protobuf.Any> settings = 2;
+}
+
+message ChangeSettingsResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message GetProcessesRequest {}
+
+message GetProcessesResponse {
+    string status = 1;
+    map<string, RunningProcessDictionary> running_processes = 2;
+    repeated string available_process_types = 3;
+    string error_message = 4;
+    repeated string streams = 5;
+}
+
+message RunningProcessDictionary {
+    string type = 1;
+    repeated string commands = 2;
+    map<string, google.protobuf.Any> settings = 3;
+}
+
+message AddStreamRequest {
+    string name = 1;
+    string port = 2;
+    string stream_id =3;
+}
+
+message AddStreamResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message RemoveStreamRequest {
+    string name = 1;
+}
+
+message RemoveStreamResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message HideStreamRequest {
+    string name = 1;
+    string reason_to_hide = 2;
+}
+
+message HideStreamResponse {
+    string status = 1;
+    string error_message = 2;
+}
+
+message ShowStreamRequest {
+    string name = 1;
+}
+
+message ShowStreamResponse {
+    string status = 1;
+    string error_message = 2;
+}
