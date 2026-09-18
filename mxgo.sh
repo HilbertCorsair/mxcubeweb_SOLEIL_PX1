@@ -18,6 +18,9 @@ export PYTHONPATH=/nfs/ruche/share-dev/px1dev/MXCuBE/WebApp/mxcubecore/:$PYTHONP
 # (start_argus_px1.sh) in its own conda env, detached so it outlives MXCuBE
 # restarts. If the operator presses Cancel on the camera prompt, MXCuBE is not
 # started; any other failure only warns (MXCuBE runs without the switcher).
+# start_argus_px1.sh exits within seconds (with the reason, tailed below) when
+# argussight cannot start, so ARGUS_WAIT is mostly the operator's time to
+# answer the camera prompt.
 # Set ARGUS_AUTOSTART=0 to skip all of this.
 ARGUS_AUTOSTART=${ARGUS_AUTOSTART-1}
 ARGUS_START=${ARGUS_START-/nfs/ruche/share-dev/px1dev/MXCuBE/WebApp/mxcubecore/scripts/argussight/start_argus_px1.sh}
@@ -86,6 +89,15 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
             sleep 1
             waited=$((waited + 1))
         done
+    fi
+
+    # Camera discovery runs inside MXCuBE and needs argussight's gRPC stubs in
+    # THIS env (the one running mxcubeweb-server). Without them it silently
+    # finds no cameras and the sample view is black even with argussight up.
+    if ! python -c "import grpc, argussight.grpc.argus_service_pb2" > /dev/null 2>&1; then
+        echo "WARNING: $(command -v python) cannot import grpc + argussight: camera" >&2
+        echo "         discovery will find nothing and the sample view will be black." >&2
+        echo "         Fix: pip install grpcio argussight into this env." >&2
     fi
 fi
 
