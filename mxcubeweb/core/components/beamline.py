@@ -121,10 +121,12 @@ class Beamline(ComponentBase):
         cameras, oav_url = self._argussight_cameras()
         data["cameras"] = cameras
         if oav_url:
-            # argussight streams are addressed by name in the URL itself, so no
-            # separate hash is appended by the frontend (videoHash empty).
-            data["videoURL"] = oav_url
-            data["videoHash"] = ""
+            # Every frontend opens `${videoURL}/${videoHash}`; bundles built
+            # before the camera switcher do so even when the hash is empty,
+            # which gives ".../oav/", and argussight's /ws/{path} route rejects
+            # the trailing slash (black pane). So send the proxy base and the
+            # stream name separately: every bundle then opens ".../oav".
+            data["videoURL"], _, data["videoHash"] = oav_url.rpartition("/")
 
         return data
 
@@ -134,8 +136,10 @@ class Beamline(ComponentBase):
         Returns:
             tuple[list[dict], str]: the list of camera components (for the camera
             selector) and the full WebSocket URL of the OAV/centring stream. Both
-            empty when argussight is disabled or unreachable, in which case the
-            sample view keeps the single direct video-streamer URL.
+            empty when argussight is disabled (or discovery finds none of the
+            configured cameras), in which case the sample view keeps the single
+            direct video-streamer URL. An unreachable argussight still yields
+            the configured ARGUSSIGHT_CAMERAS (see ``discover_streams``).
         """
         cfg = self.app.CONFIG.app
         if not getattr(cfg, "ARGUSSIGHT_ENABLED", False):

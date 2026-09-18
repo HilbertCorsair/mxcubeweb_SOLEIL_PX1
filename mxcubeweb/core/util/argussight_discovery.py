@@ -14,9 +14,10 @@ from the copy vendored in :mod:`mxcubeweb.core.util.argussight_grpc`, so the
 mxcubeweb environment only needs ``grpcio`` and ``protobuf``.
 
 Everything here is best-effort and fully guarded: if grpcio/protobuf are
-missing or the wrong version, or the server is unreachable (e.g. off the beamline
-network), :func:`discover_streams` logs a warning and returns an empty list so
-callers can fall back to the static ``camera_setup`` configuration.
+missing or the wrong version, or the server is unreachable, :func:`discover_streams`
+logs a warning and returns the configured cameras unchecked. The proxy URL is
+known without gRPC, and with argussight enabled the direct video-streamer is not
+running, so a guessed stream URL is the only one that can still work.
 """
 
 import logging
@@ -86,14 +87,15 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
 
     Returns:
         list[dict]: one dict per stream with ``name``, ``label``, ``url``,
-        ``format``, ``width``, ``height`` and ``oav`` keys. Empty on any error or
-        when no stream is available.
+        ``format``, ``width``, ``height`` and ``oav`` keys. When gRPC fails, the
+        streams listed in ``cameras_meta``, unchecked (empty if none are).
+        Empty when argussight answers but none of those streams exist.
     """
     cameras_meta = cameras_meta or {}
 
     stubs = _import_stubs()
     if stubs is None:
-        return []
+        return _unchecked(proxy_url, cameras_meta)
     grpc, pb2, pb2_grpc = stubs
 
     try:
@@ -108,14 +110,14 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
             )
     except Exception as ex:  # grpc.RpcError and anything else
         logger.warning("Argussight discovery failed (%s:%s): %s", host, port, ex)
-        return []
+        return _unchecked(proxy_url, cameras_meta)
 
     if getattr(response, "status", "") != "success":
         logger.warning(
             "Argussight GetProcesses returned status=%r",
             getattr(response, "status", ""),
         )
-        return []
+        return _unchecked(proxy_url, cameras_meta)
 
     available = list(response.streams)
 
@@ -123,9 +125,33 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
     # list wins (order + restriction); otherwise every discovered stream.
     if cameras_meta:
         names = [name for name in cameras_meta if name in available]
+        if not names:
+            logger.warning(
+                "Argussight discovery: none of the ARGUSSIGHT_CAMERAS %s is "
+                "among the registered streams %s; check the names in server.yaml",
+                list(cameras_meta),
+                available,
+            )
     else:
         names = available
 
+    components = _components(proxy_url, names, cameras_meta)
+    logger.info("Argussight discovery: %d stream(s) found", len(components))
+    return components
+
+
+def _unchecked(proxy_url, cameras_meta):
+    """The configured streams, for when argussight cannot be asked."""
+    if cameras_meta:
+        logger.warning(
+            "Argussight discovery: using the configured cameras %s unchecked",
+            list(cameras_meta),
+        )
+    return _components(proxy_url, list(cameras_meta), cameras_meta)
+
+
+def _components(proxy_url, names, cameras_meta):
+    """One UI camera component per stream name, addressed through the proxy."""
     base = proxy_url.rstrip("/")
     components = []
     for name in names:
@@ -141,6 +167,4 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
                 "oav": bool(meta.get("oav")),
             }
         )
-
-    logger.info("Argussight discovery: %d stream(s) found", len(components))
     return components
