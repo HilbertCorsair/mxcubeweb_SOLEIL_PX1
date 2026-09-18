@@ -56,7 +56,11 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
         return []
 
     try:
-        with grpc.insecure_channel(f"{host}:{port}") as channel:
+        # grpc honours http(s)_proxy; on the beamline that is the SOLEIL site
+        # proxy, which cannot reach argussight on this host. Never use it.
+        with grpc.insecure_channel(
+            f"{host}:{port}", options=[("grpc.enable_http_proxy", 0)]
+        ) as channel:
             stub = pb2_grpc.SpawnerServiceStub(channel)
             response = stub.GetProcesses(
                 pb2.GetProcessesRequest(), timeout=_GRPC_TIMEOUT
