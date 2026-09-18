@@ -4,28 +4,6 @@ import grpc
 
 from . import argus_service_pb2 as argus__service__pb2
 
-GRPC_GENERATED_VERSION = "1.70.0"
-GRPC_VERSION = grpc.__version__
-_version_not_supported = False
-
-try:
-    from grpc._utilities import first_version_is_lower
-
-    _version_not_supported = first_version_is_lower(
-        GRPC_VERSION, GRPC_GENERATED_VERSION
-    )
-except ImportError:
-    _version_not_supported = True
-
-if _version_not_supported:
-    raise RuntimeError(
-        f"The grpc package installed is at version {GRPC_VERSION},"
-        + f" but the generated code in argus_service_pb2_grpc.py depends on"
-        + f" grpcio>={GRPC_GENERATED_VERSION}."
-        + f" Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}"
-        + f" or downgrade your generated code using grpcio-tools<={GRPC_VERSION}."
-    )
-
 
 class SpawnerServiceStub(object):
     """Missing associated documentation comment in .proto file."""
@@ -40,55 +18,46 @@ class SpawnerServiceStub(object):
             "/argussight.SpawnerService/StartProcesses",
             request_serializer=argus__service__pb2.StartProcessesRequest.SerializeToString,
             response_deserializer=argus__service__pb2.StartProcessesResponse.FromString,
-            _registered_method=True,
         )
         self.TerminateProcesses = channel.unary_unary(
             "/argussight.SpawnerService/TerminateProcesses",
             request_serializer=argus__service__pb2.TerminateProcessesRequest.SerializeToString,
             response_deserializer=argus__service__pb2.TerminateProcessesResponse.FromString,
-            _registered_method=True,
         )
         self.ManageProcesses = channel.unary_unary(
             "/argussight.SpawnerService/ManageProcesses",
             request_serializer=argus__service__pb2.ManageProcessesRequest.SerializeToString,
             response_deserializer=argus__service__pb2.ManageProcessesResponse.FromString,
-            _registered_method=True,
         )
         self.GetProcesses = channel.unary_unary(
             "/argussight.SpawnerService/GetProcesses",
             request_serializer=argus__service__pb2.GetProcessesRequest.SerializeToString,
             response_deserializer=argus__service__pb2.GetProcessesResponse.FromString,
-            _registered_method=True,
         )
         self.ChangeSettings = channel.unary_unary(
             "/argussight.SpawnerService/ChangeSettings",
             request_serializer=argus__service__pb2.ChangeSettingsRequest.SerializeToString,
             response_deserializer=argus__service__pb2.ChangeSettingsResponse.FromString,
-            _registered_method=True,
         )
         self.AddStream = channel.unary_unary(
             "/argussight.SpawnerService/AddStream",
             request_serializer=argus__service__pb2.AddStreamRequest.SerializeToString,
             response_deserializer=argus__service__pb2.AddStreamResponse.FromString,
-            _registered_method=True,
         )
         self.RemoveStream = channel.unary_unary(
             "/argussight.SpawnerService/RemoveStream",
             request_serializer=argus__service__pb2.RemoveStreamRequest.SerializeToString,
             response_deserializer=argus__service__pb2.RemoveStreamResponse.FromString,
-            _registered_method=True,
         )
         self.HideStream = channel.unary_unary(
             "/argussight.SpawnerService/HideStream",
             request_serializer=argus__service__pb2.HideStreamRequest.SerializeToString,
             response_deserializer=argus__service__pb2.HideStreamResponse.FromString,
-            _registered_method=True,
         )
         self.ShowStream = channel.unary_unary(
             "/argussight.SpawnerService/ShowStream",
             request_serializer=argus__service__pb2.ShowStreamRequest.SerializeToString,
             response_deserializer=argus__service__pb2.ShowStreamResponse.FromString,
-            _registered_method=True,
         )
 
 
@@ -202,9 +171,6 @@ def add_SpawnerServiceServicer_to_server(servicer, server):
         "argussight.SpawnerService", rpc_method_handlers
     )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers(
-        "argussight.SpawnerService", rpc_method_handlers
-    )
 
 
 # This class is part of an EXPERIMENTAL API.
@@ -238,7 +204,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -268,7 +233,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -298,7 +262,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -328,7 +291,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -358,7 +320,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -388,7 +349,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -418,7 +378,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -448,7 +407,6 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )
 
     @staticmethod
@@ -478,5 +436,4 @@ class SpawnerService(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True,
         )

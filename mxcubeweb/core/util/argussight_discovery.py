@@ -28,15 +28,19 @@ logger = logging.getLogger("MX3.HWR")
 _GRPC_TIMEOUT = 2.0
 
 # What the mxcubeweb environment needs for discovery. NOT the argussight
-# package itself: its pydantic/pillow pins clash with mxcubeweb's.
-_GRPC_REQUIREMENT = 'grpcio==1.70.0 "protobuf>=5.29,<6"'
+# package itself: its pydantic/pillow pins clash with mxcubeweb's. Any grpcio
+# and protobuf >= 3.20.3 work with the vendored stubs, so whatever tensorflow
+# (protobuf < 5) already installed is fine; do not upgrade protobuf for this.
+_GRPC_REQUIREMENT = '"grpcio<2" "protobuf>=3.20.3"'
 
 
 def _import_stubs():
     """Return ``(grpc, pb2, pb2_grpc)``, or None (logged) if unavailable.
 
-    An installed argussight package wins, so its stubs always match its
-    server; otherwise the copy vendored in ``argussight_grpc`` is used.
+    An installed argussight package wins when its stubs load; they need
+    protobuf >= 5.29 and grpcio >= 1.70, so on older versions (e.g. the
+    protobuf 4 tensorflow requires) the copy vendored in ``argussight_grpc``
+    is used instead.
     """
     try:
         import grpc
@@ -44,7 +48,7 @@ def _import_stubs():
         try:
             import argussight.grpc.argus_service_pb2 as pb2
             import argussight.grpc.argus_service_pb2_grpc as pb2_grpc
-        except ImportError:
+        except Exception:  # not installed, or its stubs reject these versions
             from mxcubeweb.core.util.argussight_grpc import argus_service_pb2 as pb2
             from mxcubeweb.core.util.argussight_grpc import (
                 argus_service_pb2_grpc as pb2_grpc,
@@ -57,7 +61,7 @@ def _import_stubs():
             _GRPC_REQUIREMENT,
         )
         return None
-    except Exception as ex:  # protobuf VersionError, grpc version RuntimeError
+    except Exception as ex:  # e.g. a protobuf too old for the vendored stubs
         logger.warning(
             "Argussight camera discovery disabled, gRPC stubs failed to load: %s."
             " Needs: pip install %s",
