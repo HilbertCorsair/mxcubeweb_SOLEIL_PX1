@@ -110,5 +110,22 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
     fi
 fi
 
-./mxcubeweb-server -r ../config --static-folder $(pwd)/ui/build/ -L debug -l $HOME/MXCuBElogs/mxcube.log
+# --- the page mxcubeweb will serve -------------------------------------------
+# The server serves --static-folder, i.e. the BUILT ui. A dev server (pnpm
+# start, vite on :5173) serves ui/src instead and proxies /mxcube/api here;
+# with one running, the browser may be showing that, not this build.
+UI_BUILD=$(pwd)/ui/build
+if [ ! -f "$UI_BUILD/index.html" ]; then
+    echo "WARNING: no $UI_BUILD/index.html: the page itself will 404." >&2
+    echo "         Build it: (cd ui && pnpm install && pnpm build)" >&2
+elif [ -n "$(find ui/src -newer "$UI_BUILD/index.html" -print -quit 2> /dev/null)" ]; then
+    echo "WARNING: $UI_BUILD is older than ui/src: the browser will run stale code." >&2
+    echo "         Rebuild: (cd ui && pnpm build)" >&2
+fi
+if port_open 5173; then
+    echo "NOTE: a UI dev server is listening on :5173 (pnpm start)." >&2
+    echo "      Stop it to serve this build instead: kill \$(ss -ltnp 'sport = :5173' | grep -o 'pid=[0-9]*' | cut -d= -f2)" >&2
+fi
+
+./mxcubeweb-server -r ../config --static-folder "$UI_BUILD" -L debug -l $HOME/MXCuBElogs/mxcube.log
 

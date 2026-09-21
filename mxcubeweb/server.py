@@ -64,16 +64,40 @@ class Server:
                 os.kill(int(pid), signal.SIGKILL)
 
     @staticmethod
+    def _static_dir(cmdline_options):
+        """The directory holding the built UI that Flask serves.
+
+        `--static-folder` wins, as the docs and mxgo.sh promise; it used to be
+        ignored in favour of the package's own `ui/`, so a build in `ui/build`
+        was never served and only a dev server could show the app. The package
+        directory stays as the fallback for an installed mxcubeweb.
+        """
+        candidates = [
+            getattr(cmdline_options, "static_folder", "") or "",
+            os.path.join(os.path.dirname(__file__), "ui"),
+        ]
+        for path in candidates:
+            if path and os.path.isfile(os.path.join(path, "index.html")):
+                logging.getLogger("HWR").info("Serving the UI from %s", path)
+                return path
+
+        chosen = candidates[0] or candidates[1]
+        logging.getLogger("HWR").warning(
+            "No index.html in %s: the browser will get 404s for the page itself."
+            " Build the UI (cd ui && pnpm install && pnpm build) and point"
+            " --static-folder at the result.",
+            " or ".join(p for p in candidates if p),
+        )
+        return chosen
+
+    @staticmethod
     def init(cmdline_options, cfg):
         template_dir = os.path.join(os.path.dirname(__file__), "templates")
-        static_dir = os.path.join(os.path.dirname(__file__), "ui")
-        print(f"Debug - Static directory path: {static_dir}")  # Add this debug line
-        print(f"Debug - Directory exists: {os.path.exists(static_dir)}")  # And this one
-        print(f"Debug - Index.html exists: {os.path.exists(os.path.join(static_dir, 'index.html'))}")
+        static_dir = Server._static_dir(cmdline_options)
 
         Server.flask = Flask(
             __name__,
-            static_folder= static_dir, #os.path.join(os.path.dirname(__file__), "ui"), #cmdline_options.static_folder,
+            static_folder=static_dir,
             static_url_path="",
             template_folder=template_dir,
         )
