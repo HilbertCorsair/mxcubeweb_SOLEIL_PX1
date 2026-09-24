@@ -200,11 +200,17 @@ export default class SampleImage extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    // Initialize JSMpeg for decoding the MPEG1 stream. Re-init when the format
-    // becomes MPEG1 or when the stream URL changes (e.g. switching camera).
+    // Initialize JSMpeg for decoding the MPEG1 stream. Re-init only on a real
+    // change: when the format *becomes* MPEG1, or when the stream address
+    // changes (switching camera). Testing `prevProps.videoFormat !== 'MPEG1'`
+    // alone fires on every update while the format is anything else, which
+    // re-inits on each render once it flips. The hash is part of the address
+    // (see initJSMpeg), so it has to be compared too.
     if (
-      prevProps.videoFormat !== 'MPEG1' ||
-      prevProps.videoURL !== this.props.videoURL
+      (this.props.videoFormat === 'MPEG1' &&
+        prevProps.videoFormat !== 'MPEG1') ||
+      prevProps.videoURL !== this.props.videoURL ||
+      prevProps.videoHash !== this.props.videoHash
     ) {
       this.initJSMpeg();
     }
@@ -217,14 +223,7 @@ export default class SampleImage extends React.Component {
       this.canvas.dispose();
     }
 
-    if (this.player) {
-      try {
-        this.player.destroy();
-        this.player = null;
-      } catch {
-        this.player = null;
-      }
-    }
+    this.destroyPlayer();
 
     this.canvas.off('mouse:down', this.leftClick);
     this.canvas.off('mouse:move', this.onMouseMove);
@@ -924,6 +923,17 @@ export default class SampleImage extends React.Component {
     return result;
   }
 
+  destroyPlayer() {
+    if (this.player) {
+      try {
+        this.player.destroy();
+      } catch {
+        // already torn down (no canvas, no WebGL context): nothing left to free
+      }
+      this.player = null;
+    }
+  }
+
   initJSMpeg() {
     if (this.props.videoFormat === 'MPEG1') {
       const canvas = document.querySelector('#sample-img');
@@ -935,9 +945,11 @@ export default class SampleImage extends React.Component {
         source = `${source}/${this.props.videoHash}`;
       }
 
-      if (this.player) {
-        this.player.stop();
-      }
+      // destroy(), never stop(): stop() only pauses playback. It leaves the
+      // WSSource's socket open and `shouldAttemptReconnect` armed, so the old
+      // player goes on reconnecting every `reconnectInterval` (5s) forever,
+      // unreachable. Only destroy() closes the socket and disarms the retry.
+      this.destroyPlayer();
 
       if (canvas) {
         this.player = new JSMpeg.Player(source, {
