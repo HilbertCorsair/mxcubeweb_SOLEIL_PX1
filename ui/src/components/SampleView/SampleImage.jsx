@@ -945,6 +945,18 @@ export default class SampleImage extends React.Component {
         source = `${source}/${this.props.videoHash}`;
       }
 
+      // A root-relative ARGUSSIGHT_PROXY_URL ("/argus") is resolved against the
+      // page, so the stream always uses the host, port and TLS scheme the page
+      // itself was served on. Writing it absolutely in server.yaml means the
+      // port has to be kept in step with nginx by hand, and when nginx does not
+      // publish :443 -- a container usually does not -- the browser dials a port
+      // nothing serves and the canvas stays black. `host` carries the port,
+      // `origin` would carry the wrong scheme (https, not wss).
+      if (source.startsWith('/')) {
+        const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        source = `${scheme}//${window.location.host}${source}`;
+      }
+
       // destroy(), never stop(): stop() only pauses playback. It leaves the
       // WSSource's socket open and `shouldAttemptReconnect` armed, so the old
       // player goes on reconnecting every `reconnectInterval` (5s) forever,

@@ -126,6 +126,8 @@ class Beamline(ComponentBase):
             # which gives ".../oav/", and argussight's /ws/{path} route rejects
             # the trailing slash (black pane). So send the proxy base and the
             # stream name separately: every bundle then opens ".../oav".
+            # A root-relative ARGUSSIGHT_PROXY_URL survives this unchanged
+            # ("/argus" + "oav"); the page resolves it against its own origin.
             data["videoURL"], _, data["videoHash"] = oav_url.rpartition("/")
 
         return data

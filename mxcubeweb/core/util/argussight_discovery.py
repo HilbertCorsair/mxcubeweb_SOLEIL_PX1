@@ -9,6 +9,14 @@ This module turns that gRPC response into a list of camera components that the
 web UI's "Beamline Cameras" switcher understands
 (:class:`mxcubeweb.core.models.configmodels._UICameraConfigModel`).
 
+The proxy URL is passed through untouched, so ``ARGUSSIGHT_PROXY_URL`` may be
+either an absolute ``wss://host[:port]/argus`` or a root-relative ``/argus``.
+The relative form is preferred: the page resolves it against its own origin
+(see ``initJSMpeg`` in ``SampleImage.jsx``), so the stream cannot end up on a
+different port from the one the page was served on -- which is exactly what
+happens when nginx publishes something other than :443 and the absolute URL
+still names the old port.
+
 The gRPC stubs come from an installed argussight package if there is one, else
 from the copy vendored in :mod:`mxcubeweb.core.util.argussight_grpc`, so the
 mxcubeweb environment only needs ``grpcio`` and ``protobuf``.
@@ -79,8 +87,9 @@ def discover_streams(host, port, proxy_url, cameras_meta=None):
     Args:
         host: argussight gRPC server host.
         port: argussight gRPC server port.
-        proxy_url: base WebSocket URL of the argussight stream proxy, e.g.
-            ``ws://<host>:7000/ws`` (no trailing slash required).
+        proxy_url: base URL of the argussight stream proxy as the browser
+            should open it, e.g. ``wss://<public host>:<port>/argus`` or the
+            root-relative ``/argus`` (no trailing slash required).
         cameras_meta: optional ``{name: {label, width, height, format}}`` map
             providing display metadata. When non-empty, only the streams listed
             here are returned, in the given order.
