@@ -2,7 +2,9 @@ import atexit
 import logging
 import os
 import signal
+import socket
 import traceback
+from urllib.parse import urlsplit
 
 import flask_security
 import gevent
@@ -64,6 +66,48 @@ class Server:
                 os.kill(int(pid), signal.SIGKILL)
 
     @staticmethod
+    def _socket_origins(allowed):
+        """The socket.io origin check for ALLOWED_CORS_ORIGINS.
+
+        engineio accepts every origin for an empty list, but a non-empty list
+        accepts only the origins in it, not even the page's own: listing the
+        vite dev server (:5173) silently refuses the socket of the UI that
+        Flask or nginx serves from the same host, and that page then never
+        gets a live update (no timers, zoom, light, queue state).
+
+        So an origin is also accepted when its host is the host of a listed
+        origin, or this machine, whatever its port or scheme.
+        """
+        if not allowed:
+            return allowed
+
+        allowed = [allowed] if isinstance(allowed, str) else list(allowed)
+        if "*" in allowed:
+            return "*"
+
+        hosts = {urlsplit(origin).hostname for origin in allowed} - {None}
+        try:
+            fqdn = socket.getfqdn()
+            hosts.update({socket.gethostname(), fqdn, socket.gethostbyname(fqdn)})
+        except OSError:
+            pass
+        hosts = {host.lower() for host in hosts if host}
+
+        logging.getLogger("HWR").info(
+            "socket.io accepts origins %s and any port on %s",
+            allowed,
+            sorted(hosts),
+        )
+
+        def accept(origin):
+            if origin in allowed:
+                return True
+            host = urlsplit(origin or "").hostname
+            return bool(host) and host.lower() in hosts
+
+        return accept
+
+    @staticmethod
     def _static_dir(cmdline_options):
         """The directory holding the built UI that Flask serves.
 
@@ -114,7 +158,7 @@ class Server:
 
         Server.flask_socketio = SocketIO(
             manage_session=False,
-            cors_allowed_origins=cfg.flask.ALLOWED_CORS_ORIGINS,
+            cors_allowed_origins=Server._socket_origins(cfg.flask.ALLOWED_CORS_ORIGINS),
         )
         Server.flask_socketio.init_app(Server.flask)
 

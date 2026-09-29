@@ -111,6 +111,9 @@ class ServerIO {
         type: error.type,
         description: error.description,
       });
+      // A refused handshake (e.g. "Not an accepted origin") never fires
+      // 'disconnect', so without this the page looks fine but never updates.
+      dispatch(showConnectionLostDialog(true));
     });
 
     this.hwrSocket.on('disconnect', (reason) => {
