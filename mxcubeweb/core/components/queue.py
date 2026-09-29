@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import time
 from functools import reduce
 from unittest.mock import Mock
 
@@ -258,43 +257,6 @@ class Queue(ComponentBase):
         )
 
         return json.dumps(res, sort_keys=True, indent=4)
-
-    @staticmethod
-    def _ms(stamp):
-        return int(stamp * 1000) if stamp else None
-
-    def task_timing(self, node_id):
-        """When the task with this node id started and ended, from the server.
-
-        The queue manager stamps every entry it runs (entry.started_at /
-        ended_at, time.time()), so a row's timer does not depend on this
-        browser having seen the state change: it survives a reload and is the
-        same for every client. serverTime lets the client correct for its own
-        clock being off.
-
-        An unattended pipeline's group header times the whole sample instead,
-        from the start of its mount to the end of its last phase.
-        """
-        timing = {"startedAt": None, "endedAt": None, "serverTime": self._ms(time.time())}
-        try:
-            node, entry = self.get_entry(node_id)
-        except Exception:
-            return timing
-        if entry is HWR.beamline.queue_manager:
-            return timing
-
-        started = getattr(entry, "started_at", None)
-        ended = getattr(entry, "ended_at", None)
-        if isinstance(node, qmo.TaskGroup) and getattr(node, "is_unattended", False):
-            sample_entry = entry.get_container()
-            sample_started = getattr(sample_entry, "started_at", None)
-            if sample_started and (not started or sample_started <= started):
-                started = sample_started
-        if started and ended and ended < started:
-            ended = None  # an end left over from the previous run
-        timing["startedAt"] = self._ms(started)
-        timing["endedAt"] = self._ms(ended)
-        return timing
 
     def get_node_state(self, node_id):
         """
@@ -940,12 +902,6 @@ class Queue(ComponentBase):
                 result.append(self._handle_task_node(sample_node, node))
             else:
                 result.extend(self.queue_to_dict_rec(node, include_lims_data))
-
-        # Every task row carries its server-side start/end, so a client that
-        # (re)loads the queue mid-run still shows the running timers.
-        for row in result:
-            if isinstance(row, dict) and "taskIndex" in row and "startedAt" not in row:
-                row.update(self.task_timing(row["queueID"]))
 
         return result
 

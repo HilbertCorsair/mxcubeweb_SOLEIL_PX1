@@ -267,7 +267,6 @@ def get_task_state(entry):
         "sample": node_index["sample"],
         "state": state,
         "progress": 1 if state == COLLECTED else 0,
-        **mxcube.queue.task_timing(node_id),
     }
 
 

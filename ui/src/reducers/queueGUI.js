@@ -2,56 +2,6 @@ import { omit } from 'lodash/object';
 
 import { TASK_RUNNING, isTerminalTaskState } from '../constants';
 
-/**
- * The server's start/end stamps for a task, moved onto this browser's clock.
- *
- * The queue manager stamps every entry it runs, so these are the real times
- * whoever is watching and whenever the page was loaded. serverTime says what
- * the server clock read when it sent them; the difference to Date.now() is
- * the clock offset (plus a network hop, which is noise at 1 s resolution).
- * Returns null when the server sent no start, or when the task is not
- * running or done - a re-queued task's old stamps must not show.
- */
-function serverTiming(timing, state) {
-  if (!timing || !timing.startedAt) {
-    return null;
-  }
-  if (state !== TASK_RUNNING && !isTerminalTaskState(state)) {
-    return null;
-  }
-
-  const offset = timing.serverTime ? Date.now() - timing.serverTime : 0;
-  if (state === TASK_RUNNING) {
-    return { startedAt: timing.startedAt + offset, endedAt: null };
-  }
-
-  // Done: stop the clock, even if the server had no end stamp to send.
-  return {
-    startedAt: timing.startedAt + offset,
-    endedAt: timing.endedAt ? timing.endedAt + offset : Date.now(),
-  };
-}
-
-/** displayData entries for a freshly (re)loaded list of tasks. */
-function seedTasks(displayData, existingNodes, tasks) {
-  tasks.forEach((task) => {
-    const server = serverTiming(task, task.state);
-
-    if (!existingNodes.includes(task.queueID.toString())) {
-      displayData[task.queueID] = {
-        collapsed: false,
-        selected: false,
-        progress: 0,
-        startedAt: null,
-        endedAt: null,
-        ...server,
-      };
-    } else if (server) {
-      displayData[task.queueID] = { ...displayData[task.queueID], ...server };
-    }
-  });
-}
-
 const INITIAL_STATE = {
   showRestoreDialog: false,
   searchString: '',
@@ -77,11 +27,17 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
       const existingNodes = Object.keys(state.displayData);
       action.sampleOrder.forEach((sampleID) => {
         if (sampleID in action.sampleList) {
-          seedTasks(
-            displayData,
-            existingNodes,
-            action.sampleList[sampleID].tasks,
-          );
+          action.sampleList[sampleID].tasks.forEach((task) => {
+            if (!existingNodes.includes(task.queueID.toString())) {
+              displayData[task.queueID] = {
+                collapsed: false,
+                selected: false,
+                progress: 0,
+                startedAt: null,
+                endedAt: null,
+              };
+            }
+          });
         }
       });
 
@@ -105,15 +61,12 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
     case 'ADD_TASK_RESULT': {
       const previous = state.displayData[action.queueID] || {};
 
-      // Phase timings: the server's own stamps when it sends them. Without
-      // them (an older backend, or a "task" event from a collect signal),
-      // fall back to when the state change arrived here.
+      // Phase timings, taken when the state change arrives. The queue emits
+      // no durations of its own, and this is the cheapest place to learn one:
+      // every start and every finish already passes through here.
       let { startedAt = null, endedAt = null } = previous;
-      const server = serverTiming(action.timing, action.state);
 
-      if (server) {
-        ({ startedAt, endedAt } = server);
-      } else if (action.state === TASK_RUNNING) {
+      if (action.state === TASK_RUNNING) {
         // A second run of the same task restarts the clock; a repeated
         // RUNNING event for the run in progress must not.
         if (!startedAt || endedAt) {
@@ -200,7 +153,17 @@ function queueGUIReducer(state = INITIAL_STATE, action = {}) {
 
       sampleOrder.forEach((sampleID) => {
         if (sampleID in sampleList) {
-          seedTasks(displayData, existingNodes, sampleList[sampleID].tasks);
+          sampleList[sampleID].tasks.forEach((task) => {
+            if (!existingNodes.includes(task.queueID.toString())) {
+              displayData[task.queueID] = {
+                collapsed: false,
+                selected: false,
+                progress: 0,
+                startedAt: null,
+                endedAt: null,
+              };
+            }
+          });
         }
       });
 

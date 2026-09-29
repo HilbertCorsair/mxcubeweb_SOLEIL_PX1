@@ -472,7 +472,6 @@ export function addTaskResultAction(
   progress,
   limsResultData,
   queueID,
-  timing = null,
 ) {
   return {
     type: 'ADD_TASK_RESULT',
@@ -482,8 +481,6 @@ export function addTaskResultAction(
     progress,
     limsResultData,
     queueID,
-    // Server-side { startedAt, endedAt, serverTime } in epoch ms, if sent.
-    timing,
   };
 }
 
