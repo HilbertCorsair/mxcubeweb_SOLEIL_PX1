@@ -1,98 +1,40 @@
 import React from 'react';
-import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HW_STATE } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './SampleControls.module.css';
 
-function LightControl() {
+/**
+ * ON/OFF toggle for an N-state light object (e.g. diffractometer.backlight).
+ * The button shows the value the server reports, not the last click.
+ */
+function LightControl(props) {
+  const { hwoId, label } = props;
   const dispatch = useDispatch();
+  const light = useSelector((state) => state.beamline.hardwareObjects[hwoId]);
 
-  const backlightObj = useSelector(
-    (state) => true, // state.beamline.hardwareObjects['diffractometer.backlight'],
-  );
+  if (!light) {
+    return null; // not configured on this beamline
+  }
 
-  // Add this for debugging
-
-  // console.log('Backlight object:', backlightObj);
-
-  const { value } = backlightObj;
-  const isActive = value === 'ON';
-
-  // More logging
-  // console.log('Backlight state:', value);
-  // console.log('isActive:', isActive);
-
-  const toggleLight = () => {
-    const newState = isActive ? 'OFF' : 'ON';
-    // console.log(`Changing backlight state to: ${newState}`);
-    dispatch(setAttribute('diffractometer.backlight.state', newState));
-  };
+  const isOn = light.value === 'ON';
+  const ready = light.state === HW_STATE.READY;
 
   return (
     <Button
       className={styles.lightBtn}
       data-default-styles
-      active={isActive}
-      title={`Backlight is ${isActive ? 'ON' : 'OFF'}`}
-      onClick={toggleLight}
+      active={isOn}
+      disabled={!ready}
+      title={`${label} is ${isOn ? 'ON' : 'OFF'}`}
+      onClick={() => dispatch(setAttribute(hwoId, isOn ? 'OFF' : 'ON'))}
     >
       <i className={`${styles.controlIcon} fas fa-lightbulb`} />
-      <span className={styles.controlLabel}>backlight</span>
+      <span className={styles.controlLabel}>{label.toLowerCase()}</span>
     </Button>
   );
 }
 
 export default LightControl;
-
-/*
-
-import { useState, useEffect } from 'react';
-import axios from 'axios'; // For making API requests
-
-const LightControl = () => {
-  const [lightState, setLightState] = useState('OFF');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Function to toggle light state via API call
-  const toggleLight = async () => {
-    const newState = lightState === 'ON' ? 'OFF' : 'ON';
-    setIsLoading(true);
-
-    try {
-           const response = await axios.post('/backlight', {
-        light: newState
-      });
-
-      // If request was successful, update the local state
-      if (response.status === 200) {
-        setLightState(newState);
-      }
-    } catch (error) {
-      console.error('Error toggling light:', error);
-      // Handle error appropriately (could show an error message)
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Determine if button should be in active state
-  const isActive = lightState === 'ON';
-
-  return (
-    <Button
-      className={styles.lightBtn}
-      data-default-styles
-      active={isActive}
-      disabled={isLoading}
-      title={`Backlight is ${lightState}`}
-      onClick={toggleLight}
-    >
-      <i className={`${styles.controlIcon} fas fa-lightbulb`} />
-      <span className={styles.controlLabel}>backlight</span>
-    </Button>
-  );
-};
-
-export default LightControl;*/
