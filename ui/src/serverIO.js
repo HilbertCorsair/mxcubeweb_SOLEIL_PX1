@@ -94,9 +94,10 @@ class ServerIO {
   connectHwr() {
     const serverUrl = window.location.origin; //'http://195.221.8.78:8081';
     this.hwrSocket = io(`${serverUrl}/hwr`, {
-      transports: ['websocket', 'polling'],
+      // Default transports: handshake over polling, then upgrade to a
+      // websocket if the proxy passes it. Forcing websocket first never
+      // connects behind a proxy that does not forward the upgrade.
       path: '/socket.io',
-      reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     });
 
@@ -111,9 +112,6 @@ class ServerIO {
         type: error.type,
         description: error.description,
       });
-      // A refused handshake (e.g. "Not an accepted origin") never fires
-      // 'disconnect', so without this the page looks fine but never updates.
-      dispatch(showConnectionLostDialog(true));
     });
 
     this.hwrSocket.on('disconnect', (reason) => {
@@ -468,9 +466,10 @@ class ServerIO {
     const serverUrl = window.location.origin; //'https://195.221.8.78:5173';
 
     this.loggingSocket = io(`${serverUrl}/logging`, {
-      transports: ['websocket', 'polling'],
+      // Default transports: handshake over polling, then upgrade to a
+      // websocket if the proxy passes it. Forcing websocket first never
+      // connects behind a proxy that does not forward the upgrade.
       path: '/socket.io',
-      reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     });
 

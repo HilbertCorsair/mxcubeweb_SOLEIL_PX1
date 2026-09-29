@@ -76,7 +76,9 @@ class Server:
         gets a live update (no timers, zoom, light, queue state).
 
         So an origin is also accepted when its host is the host of a listed
-        origin, or this machine, whatever its port or scheme.
+        origin, or this machine, whatever its port or scheme. "This machine"
+        includes any DNS alias resolving to one of its addresses, such as the
+        name the TLS proxy serves the page under.
         """
         if not allowed:
             return allowed
@@ -86,12 +88,15 @@ class Server:
             return "*"
 
         hosts = {urlsplit(origin).hostname for origin in allowed} - {None}
+        addresses = {"127.0.0.1"}
         try:
             fqdn = socket.getfqdn()
-            hosts.update({socket.gethostname(), fqdn, socket.gethostbyname(fqdn)})
+            hosts.update({socket.gethostname(), fqdn})
+            for name in (socket.gethostname(), fqdn):
+                addresses.update(socket.gethostbyname_ex(name)[2])
         except OSError:
             pass
-        hosts = {host.lower() for host in hosts if host}
+        hosts = {host.lower() for host in hosts if host} | addresses
 
         logging.getLogger("HWR").info(
             "socket.io accepts origins %s and any port on %s",
@@ -99,11 +104,29 @@ class Server:
             sorted(hosts),
         )
 
+        resolved = {}  # host -> accepted; DNS is asked once per host
+
         def accept(origin):
             if origin in allowed:
                 return True
-            host = urlsplit(origin or "").hostname
-            return bool(host) and host.lower() in hosts
+            host = (urlsplit(origin or "").hostname or "").lower()
+            if not host:
+                return False
+            if host in hosts:
+                return True
+            if host not in resolved:
+                try:
+                    ips = set(socket.gethostbyname_ex(host)[2])
+                except OSError:
+                    ips = set()
+                resolved[host] = bool(ips & addresses)
+                if not resolved[host]:
+                    logging.getLogger("HWR").warning(
+                        "socket.io refuses origin %s (add it to"
+                        " ALLOWED_CORS_ORIGINS)",
+                        origin,
+                    )
+            return resolved[host]
 
         return accept
 
