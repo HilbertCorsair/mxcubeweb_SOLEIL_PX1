@@ -16,6 +16,7 @@ import {
   formatNumber as num,
 } from '../../constants';
 import TooltipTrigger from '../TooltipTrigger';
+import ElapsedTime from './ElapsedTime';
 
 export default class TaskItem extends Component {
   static propTypes = {
@@ -315,6 +316,10 @@ export default class TaskItem extends Component {
                   {state === TASK_RUNNING && this.progressBar()}
                 </span>
               </b>
+              <ElapsedTime
+                startedAt={this.props.startedAt}
+                endedAt={this.props.endedAt}
+              />
               {state === TASK_UNCOLLECTED && (
                 <i
                   className="fas fa-times"

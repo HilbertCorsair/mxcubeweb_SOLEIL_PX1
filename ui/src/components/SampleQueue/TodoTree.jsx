@@ -72,6 +72,8 @@ export default class TodoTree extends React.Component {
                 sampleId={sampleData.sampleID}
                 state={taskData.state}
                 phaseCount={taskData.ucPhaseCount}
+                startedAt={displayData(taskData).startedAt}
+                endedAt={displayData(taskData).endedAt}
                 {...ucGroupProgress(tasks, taskData.queueID)}
                 readOnly
               />

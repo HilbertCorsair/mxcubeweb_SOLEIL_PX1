@@ -302,6 +302,8 @@ export default class CurrentTree extends React.Component {
                     state={taskData.state}
                     progress={displayData.progress}
                     phaseCount={taskData.ucPhaseCount}
+                    startedAt={displayData.startedAt}
+                    endedAt={displayData.endedAt}
                     {...ucGroupProgress(sampleTasks, taskData.queueID)}
                     deleteTask={this.props.deleteTask}
                     showForm={this.props.showForm}
@@ -359,6 +361,8 @@ export default class CurrentTree extends React.Component {
                     }
                     show={displayData.collapsed}
                     progress={displayData.progress}
+                    startedAt={displayData.startedAt}
+                    endedAt={displayData.endedAt}
                     moveTask={this.props.moveTask}
                     showForm={this.props.showForm}
                     shapes={this.props.shapes}

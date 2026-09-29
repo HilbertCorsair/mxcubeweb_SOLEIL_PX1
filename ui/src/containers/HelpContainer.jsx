@@ -8,6 +8,11 @@ import characterisation from '../help_videos/mx3-characterisation.ogv';
 import interleaved from '../help_videos/mx3-interleaved.ogv';
 import mesh from '../help_videos/mx3-mesh.ogv';
 
+// Set by vite at build time (vite.config.js); compare it with
+// `ui/source-id.sh` in the checkout to know whether this page is stale.
+// eslint-disable-next-line no-undef
+const UI_SOURCE = typeof __UI_SOURCE__ === 'undefined' ? 'dev' : __UI_SOURCE__;
+
 export class HelpContainer extends React.Component {
   constructor(props) {
     super(props);
@@ -123,6 +128,8 @@ export class HelpContainer extends React.Component {
                 </Card.Header>
                 <Card.Body>
                   <span>Version: {this.props.general.serverVersion}</span>
+                  <br />
+                  <span>UI build: {UI_SOURCE}</span>
                 </Card.Body>
               </Card>
             </Col>

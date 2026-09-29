@@ -138,7 +138,63 @@ def build_server_and_config(test=False, argv=None):
     return server, cfg
 
 
+def code_origin(module):
+    """Where a package is imported from, and at which git commit.
+
+    An installed copy in site-packages silently wins over a git checkout
+    whenever the checkout is not first on sys.path, so "the fix is in git"
+    and "the fix is running" are two different claims. This says which.
+    """
+    import subprocess
+
+    path = os.path.dirname(os.path.abspath(module.__file__))
+    if "site-packages" in path or "dist-packages" in path:
+        return "%s (NOT the git checkout: an installed copy)" % path
+    # The proxima1 checkouts are owned by another user than the one running
+    # MXCuBE, and git refuses to read them ("dubious ownership") unless told
+    # they are safe. -c safe.directory is ignored by git 2.35.2-2.38, hence
+    # also a throw-away global config, which every version honours.
+    import tempfile
+
+    git = ["git", "-c", "safe.directory=*", "-C", path]
+    cfg = tempfile.NamedTemporaryFile("w", suffix=".gitconfig", delete=False)
+    cfg.write("[safe]\n\tdirectory = *\n")
+    cfg.close()
+    env = {**os.environ, "GIT_CONFIG_GLOBAL": cfg.name, "GIT_OPTIONAL_LOCKS": "0"}
+    try:
+        sha = subprocess.run(
+            [*git, "log", "-1", "--format=%h %cs %s"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+            env=env,
+        ).stdout.strip()
+        dirty = subprocess.run(
+            [*git, "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env=env,
+        ).stdout.strip()
+        return "%s (git %s%s)" % (path, sha, ", uncommitted changes" if dirty else "")
+    except Exception:
+        return "%s (commit unknown)" % path
+    finally:
+        os.unlink(cfg.name)
+
+
 def main():
+    import logging
+
+    import mxcubecore
+    import mxcubeweb
+
+    for module in (mxcubecore, mxcubeweb):
+        msg = "%s imported from %s" % (module.__name__, code_origin(module))
+        print(msg)
+        logging.getLogger("HWR").info(msg)
+
     server, cfg = build_server_and_config()
     if server and cfg:
         server.run(cfg)

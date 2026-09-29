@@ -110,17 +110,39 @@ if [ "$ARGUS_AUTOSTART" = "1" ]; then
     fi
 fi
 
+# --- the code mxcubeweb will run ---------------------------------------------
+# The mxcubeweb conda env also holds an INSTALLED mxcubecore (site-packages).
+# It wins over the checkout whenever the checkout is not first on PYTHONPATH,
+# and then changes made to the checkout do not run. Ask this very environment
+# which one it will import.
+CORE_DIR=$(python -c "import os, mxcubecore; print(os.path.dirname(os.path.abspath(mxcubecore.__file__)))" 2> /dev/null)
+if [ -z "$CORE_DIR" ]; then
+    echo "ERROR: $(command -v python) cannot import mxcubecore." >&2
+    exit 4
+fi
+echo "mxcubecore: $CORE_DIR"
+case "$CORE_DIR" in
+    */site-packages/* | */dist-packages/*)
+        echo "WARNING: that is an installed copy, not the checkout on PYTHONPATH." >&2
+        ;;
+esac
+
 # --- the page mxcubeweb will serve -------------------------------------------
-# The server serves --static-folder, i.e. the BUILT ui. A dev server (pnpm
-# start, vite on :5173) serves ui/src instead and proxies /mxcube/api here;
-# with one running, the browser may be showing that, not this build.
+# The server serves --static-folder, i.e. the BUILT ui, as it is: building it
+# is not this script's job. A dev server (pnpm start, vite on :5173) serves
+# ui/src instead and proxies /mxcube/api here; with one running, the browser
+# may be showing that, not this build.
 UI_BUILD=$(pwd)/ui/build
 if [ ! -f "$UI_BUILD/index.html" ]; then
     echo "WARNING: no $UI_BUILD/index.html: the page itself will 404." >&2
     echo "         Build it: (cd ui && pnpm install && pnpm build)" >&2
-elif [ -n "$(find ui/src -newer "$UI_BUILD/index.html" -print -quit 2> /dev/null)" ]; then
-    echo "WARNING: $UI_BUILD is older than ui/src: the browser will run stale code." >&2
-    echo "         Rebuild: (cd ui && pnpm build)" >&2
+else
+    # Written by the build (vite.config.js); also shown in Help > About.
+    echo "UI build: $(cat "$UI_BUILD/ui-source.txt" 2> /dev/null || echo 'no stamp (built before stamping)'), built $(date -r "$UI_BUILD/index.html" '+%F %T')"
+    if [ -n "$(find ui/src -newer "$UI_BUILD/index.html" -print -quit 2> /dev/null)" ]; then
+        echo "WARNING: ui/src has files newer than $UI_BUILD: the browser may run stale code." >&2
+        echo "         Rebuild: (cd ui && pnpm build)" >&2
+    fi
 fi
 if port_open 5173; then
     echo "NOTE: a UI dev server is listening on :5173 (pnpm start)." >&2

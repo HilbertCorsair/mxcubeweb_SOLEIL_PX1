@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import './app.css';
 import { TASK_UNCOLLECTED, taskStateClass } from '../../constants';
 import TaskStateIcon from './TaskStateIcon';
+import ElapsedTime from './ElapsedTime';
 
 /**
  * Header row of an unattended-collect pipeline.
@@ -63,7 +64,7 @@ export default class UCGroupTaskItem extends Component {
   }
 
   render() {
-    const { data, state, readOnly } = this.props;
+    const { data, state, readOnly, startedAt, endedAt } = this.props;
 
     const delTaskCSS = {
       display: 'flex',
@@ -100,6 +101,8 @@ export default class UCGroupTaskItem extends Component {
                 paddingLeft: '10px',
               }}
             >
+              {/* The whole sample, from the start of its mount. */}
+              <ElapsedTime startedAt={startedAt} endedAt={endedAt} />
               <TaskStateIcon state={state} />
             </span>
             {!readOnly && state === TASK_UNCOLLECTED && (
@@ -128,4 +131,6 @@ export default class UCGroupTaskItem extends Component {
 UCGroupTaskItem.defaultProps = {
   state: TASK_UNCOLLECTED,
   readOnly: false,
+  startedAt: null,
+  endedAt: null,
 };

@@ -235,6 +235,11 @@ class ServerIO {
           record.progress,
           record.limsResultData,
           record.queueID,
+          {
+            startedAt: record.startedAt,
+            endedAt: record.endedAt,
+            serverTime: record.serverTime,
+          },
         ),
       );
     });
