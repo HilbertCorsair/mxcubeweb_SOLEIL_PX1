@@ -3,7 +3,7 @@ import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
 import MotorInput from './MotorInput';
-import { HW_STATE, QUEUE_RUNNING } from '../../constants';
+import { HW_STATE, isQueueExecuting } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './TwoAxisTranslationControl.module.css';
 
@@ -21,7 +21,7 @@ function TwoAxisTranslationControl(props) {
   const motorsDisabled = useSelector(
     (state) =>
       state.beamline.motorInputDisable ||
-      state.queue.queueStatus === QUEUE_RUNNING,
+      isQueueExecuting(state.queue.queueStatus),
   );
 
   return (

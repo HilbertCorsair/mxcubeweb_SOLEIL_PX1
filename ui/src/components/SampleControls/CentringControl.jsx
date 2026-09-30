@@ -3,17 +3,22 @@ import { Button } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { toggleCentring } from '../../actions/sampleview';
+import { isQueueExecuting } from '../../constants';
 import styles from './SampleControls.module.css';
 
 function CentringControl() {
   const dispatch = useDispatch();
   const isActive = useSelector((state) => state.sampleview.clickCentring);
+  const locked = useSelector((state) =>
+    isQueueExecuting(state.queue.queueStatus),
+  );
 
   return (
     <Button
       className={styles.controlBtn}
       data-default-styles
       active={isActive}
+      disabled={locked && !isActive}
       title={`${isActive ? 'Stop' : 'Start'} 3-click centring`}
       onClick={() => dispatch(toggleCentring())}
     >

@@ -7,7 +7,7 @@ import BaseMotorInput from './BaseMotorInput';
 import { stopBeamlineAction } from '../../actions/beamlineActions';
 import { setAttribute } from '../../actions/beamline';
 import { setMotorStep } from '../../actions/sampleview';
-import { HW_STATE, QUEUE_RUNNING } from '../../constants';
+import { HW_STATE, isQueueExecuting } from '../../constants';
 import styles from './MotorInput.module.css';
 
 function MotorInput(props) {
@@ -25,7 +25,7 @@ function MotorInput(props) {
   const disabled = useSelector((state) => {
     return (
       state.beamline.motorInputDisable ||
-      state.queue.queueStatus === QUEUE_RUNNING
+      isQueueExecuting(state.queue.queueStatus)
     );
   });
 

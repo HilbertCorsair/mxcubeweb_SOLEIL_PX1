@@ -1,4 +1,5 @@
 import { showErrorPanel } from './general';
+import { GONIO_LOCKED_MSG, isQueueExecuting } from '../constants';
 import {
   sendUpdateAperture,
   sendUpdateCurrentPhase,
@@ -16,6 +17,18 @@ import {
   sendAbortCentring,
   sendMoveToPoint,
 } from '../api/sampleview';
+
+/**
+ * True (and says so) while the queue executes: goniometer moves from the UI
+ * are disabled then (see isQueueExecuting). The server refuses them anyway.
+ */
+function gonioLocked(dispatch, getState) {
+  if (isQueueExecuting(getState().queue.queueStatus)) {
+    dispatch(showErrorPanel(true, GONIO_LOCKED_MSG));
+    return true;
+  }
+  return false;
+}
 
 export function setMotorMoving(name, status) {
   return { type: 'SET_MOTOR_MOVING', name, status };
@@ -180,7 +193,10 @@ export function centringClicksLeft(clicksLeft) {
 }
 
 export function rotateToShape(sid) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return;
+    }
     try {
       await sendRotateToShape(sid);
     } catch {
@@ -190,7 +206,10 @@ export function rotateToShape(sid) {
 }
 
 export function recordCentringClick(x, y) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return;
+    }
     const json = await sendRecordCentringClick(x, y);
 
     const { clicksLeft } = json;
@@ -220,7 +239,12 @@ export function selectCamera(name) {
 }
 
 export function moveToBeam(x, y) {
-  return () => sendMoveToBeam(x, y);
+  return (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return undefined;
+    }
+    return sendMoveToBeam(x, y);
+  };
 }
 
 export function add2DPoint(x, y, state, successCb) {
@@ -307,6 +331,9 @@ export function toggleCentring() {
 
 export function startAutoCentring() {
   return async (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return;
+    }
     const { queue, shapes } = getState();
 
     dispatch(clearSelectedShapes());
@@ -338,6 +365,9 @@ export function startAutoCentring() {
 
 export function startClickCentring() {
   return async (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return;
+    }
     const { queue, shapes } = getState();
 
     dispatch(clearSelectedShapes());
@@ -375,7 +405,10 @@ export function abortCentring() {
 }
 
 export function moveToPoint(id) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    if (gonioLocked(dispatch, getState)) {
+      return;
+    }
     try {
       await sendMoveToPoint(id);
     } catch {

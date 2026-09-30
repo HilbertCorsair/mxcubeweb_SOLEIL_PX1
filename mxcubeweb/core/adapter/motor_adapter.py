@@ -3,6 +3,10 @@ from mxcubeweb.core.models.adaptermodels import (
     FloatValueModel,
     HOActuatorValueChangeModel,
 )
+from mxcubeweb.core.util.gonioguard import (
+    assert_gonio_moves_allowed,
+    is_gonio_motor,
+)
 from mxcubeweb.core.util.networkutils import RateLimited
 
 
@@ -32,6 +36,8 @@ class MotorAdapter(ActuatorAdapterBase):
             RuntimeError: Timeout while setting the value.
             StopItteration: When a value change was interrupted (abort/cancel).
         """
+        if is_gonio_motor(self._ho):
+            assert_gonio_moves_allowed("Moving %s" % self._ho.name())
         self._ho.set_value(float(value.value))
         return self.get_value()
 

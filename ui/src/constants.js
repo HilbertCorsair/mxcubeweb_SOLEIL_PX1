@@ -10,6 +10,19 @@ export const QUEUE_STOPPED = 'QueueStopped';
 /** BeamlineActions command name; must match PX1BeamlineActions ControllerCommand id. */
 export const UNATTENDED_COLLECT_QUEUE_ACTION = 'UnattendedCollectQueuedSamples';
 export const QUEUE_PAUSED = 'QueuePaused';
+
+/**
+ * Auto mode: while the queue executes, goniometer moves from the UI are
+ * disabled - the goniometer takes one command at a time and the queue's
+ * procedures own it. The server refuses them too; this only keeps the UI
+ * from offering them.
+ */
+export function isQueueExecuting(queueStatus) {
+  return queueStatus === QUEUE_RUNNING || queueStatus === QUEUE_STARTED;
+}
+
+export const GONIO_LOCKED_MSG =
+  'Goniometer moves are disabled while the queue runs';
 export const QUEUE_FAILED = 'QueueFailed';
 
 export const SAMPLE_MOUNTED = 0x8;

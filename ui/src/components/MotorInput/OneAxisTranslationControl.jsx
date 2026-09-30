@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button } from 'react-bootstrap';
 
 import BaseMotorInput from './BaseMotorInput';
-import { HW_STATE, QUEUE_RUNNING } from '../../constants';
+import { HW_STATE, isQueueExecuting } from '../../constants';
 import { setAttribute } from '../../actions/beamline';
 import styles from './OneAxisTranslationControl.module.css';
 
@@ -18,7 +18,7 @@ function OneAxisTranslationControl(props) {
   const motorsDisabled = useSelector(
     (state) =>
       state.beamline.motorInputDisable ||
-      state.queue.queueStatus === QUEUE_RUNNING,
+      isQueueExecuting(state.queue.queueStatus),
   );
 
   const { value, state, limits } = motor;

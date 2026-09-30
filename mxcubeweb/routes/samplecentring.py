@@ -11,6 +11,8 @@ from flask import (
 )
 from mxcubecore import HardwareRepository as HWR
 
+from mxcubeweb.core.util.gonioguard import gonio_move
+
 
 # Disabling C901 function is too complex (19)
 def init_route(app, server, url_prefix):  # noqa: C901
@@ -112,6 +114,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/centring/<point_id>/moveto", methods=["PUT"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def move_to_centred_position(point_id):
         """
         Move to the given centred position.
@@ -206,6 +209,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/shapes/rotate_to", methods=["POST"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def rotate_to():
         """
         Rotate Phi to the position where the given shape was defined
@@ -229,6 +233,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/centring/startauto", methods=["GET"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def centre_auto():
         """
         Start automatic (murko) centring procedure.
@@ -241,6 +246,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/centring/start3click", methods=["PUT"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def centre_3_click():
         """
         Start 3 click centring procedure.
@@ -278,6 +284,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/centring/click", methods=["PUT"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def click():
         """
         The 3-click method needs the input from the user, a running 3click centring
@@ -319,6 +326,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/movetobeam", methods=["PUT"])
     @server.require_control
     @server.restrict
+    @gonio_move
     def move_to_beam():
         """Go to the beam position from the given (x, y) position."""
         pos = json.loads(request.data).get("clickPos")
