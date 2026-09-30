@@ -26,85 +26,22 @@ const WHEEL_ROTATE_CW_DEG = 30; // scroll up -> 30 deg clockwise
 const { fabric } = window;
 fabric.Group.prototype.hasControls = false;
 fabric.Group.prototype.hasBorders = false;
-// Fix: Override fabric.Text default textBaseline to use 'alphabetic' instead of 'alphabetical'
-if (fabric.Text && fabric.Text.prototype) {
-  // Override initialize to fix textBaseline at creation
-  if (fabric.Text.prototype.initialize) {
-    const originalInitialize = fabric.Text.prototype.initialize;
-    fabric.Text.prototype.initialize = function initializeText(
-      text,
-      optionsParam,
-    ) {
-      // Create a new options object to avoid reassigning the parameter
-      const options = optionsParam ? { ...optionsParam } : {};
-
-      // Fix 'alphabetical' typo to 'alphabetic'
-      if (options.textBaseline === 'alphabetical') {
-        options.textBaseline = 'alphabetic';
-      }
-
-      // Set default textBaseline if not provided
-      if (!options.textBaseline) {
-        options.textBaseline = 'alphabetic';
-      }
-
-      const result = originalInitialize.call(this, text, options);
-
-      // Ensure textBaseline is set correctly after initialization
-      if (this.textBaseline === 'alphabetical') {
-        this.textBaseline = 'alphabetic';
-      }
-
-      return result;
-    };
+// fabric 5.x sets ctx.textBaseline = 'alphabetical' (invalid; the browser
+// warns on every text draw). Same method, correct value.
+fabric.Text.prototype._setTextStyles = function setTextStyles(
+  ctx,
+  charStyle,
+  forMeasuring,
+) {
+  ctx.textBaseline = 'alphabetic';
+  if (this.path) {
+    ctx.textBaseline =
+      { center: 'middle', ascender: 'top', descender: 'bottom' }[
+        this.pathAlign
+      ] || ctx.textBaseline;
   }
-
-  // Override set method to catch when textBaseline is set via set()
-  if (fabric.Text.prototype.set) {
-    const originalSet = fabric.Text.prototype.set;
-    fabric.Text.prototype.set = function setTextProperty(key, valueParam) {
-      // Fix parameter reassignment by creating a new variable
-      let value = valueParam;
-      if (key === 'textBaseline' && value === 'alphabetical') {
-        value = 'alphabetic';
-      }
-      if (typeof key === 'object' && key !== null) {
-        // If key is an object, fix all textBaseline values
-        const options = { ...key }; // Use object spread
-        if (options.textBaseline === 'alphabetical') {
-          options.textBaseline = 'alphabetic';
-        }
-        return originalSet.call(this, options);
-      }
-      return originalSet.call(this, key, value);
-    };
-  }
-
-  // Override _render to fix textBaseline before rendering (catches line 375 issue)
-  if (fabric.Text.prototype._render) {
-    const originalRender = fabric.Text.prototype._render;
-    fabric.Text.prototype._render = function renderText(ctx) {
-      // Fix textBaseline if it's set to 'alphabetical' before rendering
-      if (this.textBaseline === 'alphabetical') {
-        this.textBaseline = 'alphabetic';
-      }
-      return originalRender.call(this, ctx);
-    };
-  }
-
-  // Override fromObject to fix textBaseline when loading from JSON
-  if (fabric.Text.fromObject && typeof fabric.Text.fromObject === 'function') {
-    const originalFromObject = fabric.Text.fromObject;
-    fabric.Text.fromObject = function fromObjectText(object, callback) {
-      if (object && object.textBaseline === 'alphabetical') {
-        const fixedObject = { ...object };
-        fixedObject.textBaseline = 'alphabetic';
-        return originalFromObject.call(this, fixedObject, callback);
-      }
-      return originalFromObject.call(this, object, callback);
-    };
-  }
-}
+  ctx.font = this._getFontDeclaration(charStyle, forMeasuring);
+};
 
 // eslint-disable-next-line react/no-unsafe
 export default class SampleImage extends React.Component {
