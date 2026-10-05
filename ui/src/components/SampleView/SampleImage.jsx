@@ -23,6 +23,22 @@ import { JSMpeg } from './jsmpeg.min.js';
 const WHEEL_ROTATE_CCW_DEG = 90; // scroll down -> 90 deg counter-clockwise
 const WHEEL_ROTATE_CW_DEG = 30; // scroll up -> 30 deg clockwise
 
+// A new canvas for every JSMpeg player. The WebGL renderer's destroy() loses
+// the canvas's WebGL context *and* removes the canvas from the page, so a
+// player created on the previous canvas gets a dead context and its shader
+// compile throws `Error(gl.getShaderInfoLog(shader))`, i.e. "Error: null": the
+// sample view crashed on every camera switch.
+function newVideoCanvas(holder, style) {
+  holder.querySelector('#sample-img')?.remove();
+  const canvas = document.createElement('canvas');
+  canvas.id = 'sample-img';
+  canvas.className = 'img';
+  // Keep the size drawCanvas gave the previous one until it runs again.
+  canvas.style.cssText = style;
+  holder.append(canvas);
+  return canvas;
+}
+
 const { fabric } = window;
 fabric.Group.prototype.hasControls = false;
 fabric.Group.prototype.hasBorders = false;
@@ -854,7 +870,10 @@ export default class SampleImage extends React.Component {
     );
 
     if (format === 'MPEG1') {
-      result = <canvas id="sample-img" className="img" />;
+      // Only the holder is React's: initJSMpeg puts a new <canvas
+      // id="sample-img"> in it for every player (see there). `display:
+      // contents` keeps the canvas laid out as a direct child of insideWrapper.
+      result = <div id="sample-img-holder" style={{ display: 'contents' }} />;
     }
 
     return result;
@@ -865,7 +884,14 @@ export default class SampleImage extends React.Component {
       try {
         this.player.destroy();
       } catch {
-        // already torn down (no canvas, no WebGL context): nothing left to free
+        // Player.destroy() throws before reaching the renderer when its socket
+        // was never opened (destroyed before the first animation frame). Free
+        // the WebGL context anyway: browsers allow only a few at a time.
+        try {
+          this.player.renderer?.destroy();
+        } catch {
+          // already torn down: nothing left to free
+        }
       }
       this.player = null;
     }
@@ -873,7 +899,8 @@ export default class SampleImage extends React.Component {
 
   initJSMpeg() {
     if (this.props.videoFormat === 'MPEG1') {
-      const canvas = document.querySelector('#sample-img');
+      const holder = document.querySelector('#sample-img-holder');
+      const style = document.querySelector('#sample-img')?.style.cssText || '';
 
       let source =
         this.props.videoURL || `http://${document.location.hostname}:4042/`;
@@ -900,7 +927,8 @@ export default class SampleImage extends React.Component {
       // unreachable. Only destroy() closes the socket and disarms the retry.
       this.destroyPlayer();
 
-      if (canvas) {
+      if (holder) {
+        const canvas = newVideoCanvas(holder, style);
         this.player = new JSMpeg.Player(source, {
           canvas,
           decodeFirstFrame: false,
