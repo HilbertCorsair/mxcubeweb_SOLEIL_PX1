@@ -310,18 +310,9 @@ class Lims(ComponentBase):
             print(f"Updated proposal_id in components/lims.py.sync ... {proposal_id}")
 
         session_id =  HWR.beamline.lims.session_manager.active_session.session_id"""
-        samples_info_list = HWR.beamline.lims.get_samples()
-        #self.check_if_str(samples_info_list)
-
-
-
-        #print(f"==========================mxcubeweb core components synch_with_lims {samples_info_list[0:2]}")
-        #import pdb
-        #pdb.set_trace()
-
-        #samples_info_list = HWR.beamline.sample_changer.get_components()
-
-
+        proposal_id= HWR.beamline.lims.session_manager.active_session.proposal_name[2:]
+        samples_info_list = HWR.beamline.lims.adapter.get_samples(proposal_id)
+        print(f'Sercing for propsal Id in lims.py {proposal_id}')
         if not samples_info_list: 
             samples_info_list = []
         

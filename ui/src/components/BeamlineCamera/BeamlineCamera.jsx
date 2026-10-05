@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Dropdown, Card, Stack } from 'react-bootstrap';
 import Draggable from 'react-draggable';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { selectCamera } from '../../actions/sampleview';
 import { MdClose } from 'react-icons/md';
 
 import styles from './beamlineCamera.module.css';
@@ -20,6 +21,11 @@ export default function BeamlineCamera(props) {
   const { cameraSetup } = props;
 
   const [showVideoModal, setShowVideoModal] = useState({});
+  const dispatch = useDispatch();
+  const argusCameras = useSelector((state) => state.sampleview.cameras);
+  const selectedCamera = useSelector(
+    (state) => state.sampleview.selectedCamera,
+  );
 
   function handleShowVideoCard(key, value) {
     setShowVideoModal({ ...showVideoModal, [key]: value });
@@ -89,6 +95,35 @@ export default function BeamlineCamera(props) {
       );
     });
     return DraggableElements;
+  }
+
+  if (argusCameras && argusCameras.length > 1) {
+    return (
+      <Dropdown
+        id="beamline-cameras-dropdown"
+        onSelect={(name) => dispatch(selectCamera(name))}
+      >
+        <Dropdown.Toggle
+          variant="outline-secondary"
+          size="sm"
+          className="mb-1"
+          style={{ width: '150px' }}
+        >
+          Beamline Cameras
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          {argusCameras.map((cam) => (
+            <Dropdown.Item
+              key={cam.name}
+              eventKey={cam.name}
+              active={cam.name === selectedCamera}
+            >
+              {cam.label || cam.name} <i className="fas fa-video" />
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
+    );
   }
 
   if (!cameraSetup || cameraSetup.components.length <= 0) {

@@ -2,7 +2,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form';
-import { Modal, Button, Form, ButtonToolbar, ModalBody, ModalFooter } from 'react-bootstrap';
+import {
+  Modal,
+  Button,
+  Form,
+  ButtonToolbar,
+  ModalBody,
+  ModalFooter,
+} from 'react-bootstrap';
 import { DraggableModal } from '../DraggableModal';
 
 class TestTask extends React.Component {

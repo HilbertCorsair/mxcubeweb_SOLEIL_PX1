@@ -143,7 +143,7 @@ export default class ContextMenu extends React.Component {
         {
           text: 'Add X-ray Centring',
           action: () => this.showModal('XrayCentring'),
-          key: "xray_centring",
+          key: 'xray_centring',
         },
         {
           text: 'Go to Point',
@@ -184,7 +184,7 @@ export default class ContextMenu extends React.Component {
         {
           text: 'Add X-ray Centring',
           action: () => this.showModal('XrayCentring'),
-          key: "xray_centring",
+          key: 'xray_centring',
         },
         {
           text: 'Add Test Task',
@@ -327,13 +327,16 @@ export default class ContextMenu extends React.Component {
       options[k] = options[k].filter((e) => {
         // If the key exists in availableMethods and its values is false
         // then filter out, otherwise keep it
-        return !(Object.keys(this.props.availableMethods).includes(e.key) && !this.props.availableMethods[e.key]);
+        return !(
+          Object.keys(this.props.availableMethods).includes(e.key) &&
+          !this.props.availableMethods[e.key]
+        );
       });
     });
 
     return options;
   }
-/**
+  /**
     Object.keys(this.props.availableMethods).forEach((key) => {
       if (!this.props.availableMethods[key]) {
         Object.keys(options).forEach((k) => {

@@ -15,7 +15,11 @@ const PHASE_INFO = {
   GridScan: { label: 'Grid scan', acq: true, index: false },
   LineScan: { label: 'Line scan', acq: true, index: true },
   FinalizeCentring: { label: 'Finalize centring', acq: false, index: false },
-  UnattendedDataCollection: { label: 'Data collection', acq: true, index: false },
+  UnattendedDataCollection: {
+    label: 'Data collection',
+    acq: true,
+    index: false,
+  },
   Unmount: { label: 'Unmount', acq: false, index: false },
 };
 
