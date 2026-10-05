@@ -32,8 +32,8 @@ import 'slick-carousel/slick/slick-theme.css';
 import {
   QUEUE_STOPPED,
   QUEUE_RUNNING,
+  groupedTasks,
   isCollected,
-  isUCPipelinePhase,
 } from '../constants';
 
 import {
@@ -628,20 +628,18 @@ class SampleGridTableContainer extends React.Component {
                 picked={picked}
               >
                 <Slider className="samples-grid-table-item-tasks" {...SETTINGS}>
-                  {sample.tasks
-                    .filter((taskData) => !isUCPipelinePhase(taskData))
-                    .map((taskData) => (
-                      <TaskItem
-                        key={taskData.queueID}
-                        taskItemOnClick={this.taskItemOnClickHandler}
-                        showDialog={this.props.showDialog}
-                        deleteButtonOnClick={
-                          this.taskItemDeleteButtonOnClickHandler
-                        }
-                        taskData={taskData}
-                        taskIndex={taskData.taskIndex}
-                      />
-                    ))}
+                  {groupedTasks(sample.tasks).map((taskData) => (
+                    <TaskItem
+                      key={taskData.queueID}
+                      taskItemOnClick={this.taskItemOnClickHandler}
+                      showDialog={this.props.showDialog}
+                      deleteButtonOnClick={
+                        this.taskItemDeleteButtonOnClickHandler
+                      }
+                      taskData={taskData}
+                      taskIndex={taskData.taskIndex}
+                    />
+                  ))}
                 </Slider>
               </SampleGridTableItem>
             </div>,
@@ -703,18 +701,16 @@ class SampleGridTableContainer extends React.Component {
           picked={picked}
         >
           <Slider className="samples-grid-table-item-tasks" {...SETTINGS}>
-            {sample.tasks
-              .filter((taskData) => !isUCPipelinePhase(taskData))
-              .map((taskData) => (
-                <TaskItem
-                  key={taskData.queueID}
-                  taskItemOnClick={this.taskItemOnClickHandler}
-                  showDialog={this.props.showDialog}
-                  deleteButtonOnClick={this.taskItemDeleteButtonOnClickHandler}
-                  taskData={taskData}
-                  taskIndex={taskData.taskIndex}
-                />
-              ))}
+            {groupedTasks(sample.tasks).map((taskData) => (
+              <TaskItem
+                key={taskData.queueID}
+                taskItemOnClick={this.taskItemOnClickHandler}
+                showDialog={this.props.showDialog}
+                deleteButtonOnClick={this.taskItemDeleteButtonOnClickHandler}
+                taskData={taskData}
+                taskIndex={taskData.taskIndex}
+              />
+            ))}
           </Slider>
         </SampleGridTableItem>
       </div>
@@ -1157,38 +1153,12 @@ class SampleGridTableContainer extends React.Component {
         <Dropdown.Item onClick={this.props.showCharacterisationForm}>
           Characterisation
         </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showUnattendedCollectForm}>
-          Unattended collect
-        </Dropdown.Item>
+        {this.props.showUnattendedCollectForm && (
+          <Dropdown.Item onClick={this.props.showUnattendedCollectForm}>
+            Unattended collect
+          </Dropdown.Item>
+        )}
         {this.renderWorkflowMenuOptions()}
-        <Dropdown.Divider />
-        <Dropdown.Header>
-          <i className="fas fa-plus" /> Add UC phase{' '}
-        </Dropdown.Header>
-        <Dropdown.Item onClick={this.props.showAutoCentringZoom1Form}>
-          Auto centring (zoom1)
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showAutoCentringZoom2Form}>
-          Auto centring (zoom2)
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showGridScanForm}>
-          Grid scan
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showLineScan0Form}>
-          Line scan #1
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showLineScan1Form}>
-          Line scan #2
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showFinalizeCentringForm}>
-          Finalize centring
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showUCDataCollectionForm}>
-          Data collection
-        </Dropdown.Item>
-        <Dropdown.Item onClick={this.props.showUnmountForm}>
-          Unmount
-        </Dropdown.Item>
         <Dropdown.Divider />
         <Dropdown.Header>
           <MdRemove glyph="minus" /> Remove

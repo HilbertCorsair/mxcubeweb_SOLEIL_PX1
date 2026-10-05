@@ -25,6 +25,7 @@ import {
   TASK_UNCOLLECTED,
   AUTO_LOOP_CENTRING,
   CLICK_CENTRING,
+  isGroupHead,
 } from '../constants';
 
 import './ConfirmCollectDialog.css';
@@ -162,7 +163,12 @@ export class ConfirmCollectDialog extends React.Component {
       .map((sampleID) => this.props.sampleGrid.sampleList[sampleID] || {})
       .flatMap((sample) => sample.tasks || {});
 
-    return tasks.filter((task) => task.state === TASK_UNCOLLECTED);
+    // A task group (unattended collect) is listed once
+    return tasks.filter(
+      (task, i) =>
+        task.state === TASK_UNCOLLECTED &&
+        (typeof task.groupID !== 'number' || isGroupHead(task, i, tasks)),
+    );
   }
 
   /** True when this run is driven by the unattended pipeline. */

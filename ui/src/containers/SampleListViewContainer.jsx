@@ -94,46 +94,11 @@ class SampleListViewContainer extends React.Component {
     this.removeSamplesFromQueue = this.removeSamplesFromQueue.bind(this);
     this.removeSelectedSamples = this.removeSelectedSamples.bind(this);
     this.removeSelectedTasks = this.removeSelectedTasks.bind(this);
-    // Unattended collect uses the generic task-form flow, exactly like every
-    // other task: opening the form fans out a single atomic add per selected
-    // sample (Sample + is_unattended TaskGroup + the 8 phase nodes), carrying
-    // the form's parameters (or the untouched defaults). No bare-sample pre-add.
     this.showUnattendedCollectForm = this.showTaskForm.bind(
       this,
       'UnattendedCollect',
       {},
     );
-    // Standalone unattended-collect phase tasks (one per pipeline step). Each
-    // opens the generic UCPhase form; OpticalCentring/LineScan carry the fixed
-    // zoom/index via extraParams so the phase is self-contained.
-    this.showAutoCentringZoom1Form = this.showTaskForm.bind(
-      this,
-      'OpticalCentring',
-      { zoom: 'zoom1', zoom_settle: 10 },
-    );
-    this.showAutoCentringZoom2Form = this.showTaskForm.bind(
-      this,
-      'OpticalCentring',
-      { zoom: 'zoom2', zoom_settle: 6 },
-    );
-    this.showGridScanForm = this.showTaskForm.bind(this, 'GridScan', {});
-    this.showLineScan0Form = this.showTaskForm.bind(this, 'LineScan', {
-      index: 0,
-    });
-    this.showLineScan1Form = this.showTaskForm.bind(this, 'LineScan', {
-      index: 1,
-    });
-    this.showFinalizeCentringForm = this.showTaskForm.bind(
-      this,
-      'FinalizeCentring',
-      {},
-    );
-    this.showUCDataCollectionForm = this.showTaskForm.bind(
-      this,
-      'UnattendedDataCollection',
-      {},
-    );
-    this.showUnmountForm = this.showTaskForm.bind(this, 'Unmount', {});
     this.getSamplesFromSC = this.getSamplesFromSC.bind(this);
     this.renderCollectButton = this.renderCollectButton.bind(this);
     this.startCollect = this.startCollect.bind(this);
@@ -1002,15 +967,11 @@ class SampleListViewContainer extends React.Component {
               removeSamplesFromQueue={this.removeSamplesFromQueue}
               removeSelectedSamples={this.removeSelectedSamples}
               removeSelectedTasks={this.removeSelectedTasks}
-              showUnattendedCollectForm={this.showUnattendedCollectForm}
-              showAutoCentringZoom1Form={this.showAutoCentringZoom1Form}
-              showAutoCentringZoom2Form={this.showAutoCentringZoom2Form}
-              showGridScanForm={this.showGridScanForm}
-              showLineScan0Form={this.showLineScan0Form}
-              showLineScan1Form={this.showLineScan1Form}
-              showFinalizeCentringForm={this.showFinalizeCentringForm}
-              showUCDataCollectionForm={this.showUCDataCollectionForm}
-              showUnmountForm={this.showUnmountForm}
+              showUnattendedCollectForm={
+                this.props.defaultParameters.unattendedcollect
+                  ? this.showUnattendedCollectForm
+                  : null
+              }
               setViewMode={this.setViewMode}
               filterSampleByKey={this.filter}
               type={this.props.type}

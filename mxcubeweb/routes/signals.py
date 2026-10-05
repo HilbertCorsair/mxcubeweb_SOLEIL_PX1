@@ -397,7 +397,8 @@ def collect_image_taken(frame):
         node = None
 
     if node and not mxcube.queue.is_interleaved(node["node"]):
-        progress = HWR.beamline.collect.progress
+        # Set by the collect object from its first progress update on
+        progress = getattr(HWR.beamline.collect, "progress", 0) or 0
         #mxcube.queue.get_task_progress(last_queue_node()["node"], frame)
 
         msg = {

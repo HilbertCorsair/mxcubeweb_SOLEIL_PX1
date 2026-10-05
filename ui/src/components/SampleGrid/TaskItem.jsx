@@ -32,8 +32,7 @@ export class TaskItem extends React.Component {
   tagName() {
     const task = this.props.taskData;
 
-    // Falls back to the task type rather than to 'DC': labelling an unknown
-    // task 'DC' is how every unattended-collect phase ended up mislabelled.
+    // Falls back to the task type rather than to 'DC', which mislabels it.
     return taskTagName(task) || task.type || '?';
   }
 

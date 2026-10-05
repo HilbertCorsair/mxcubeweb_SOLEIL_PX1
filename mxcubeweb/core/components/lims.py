@@ -172,9 +172,7 @@ class Lims(ComponentBase):
     def get_session_manager(self) -> LimsSessionManager:
         if HWR.beamline.lims.session_manager:
             return HWR.beamline.lims.session_manager
-        else:
-            print("problem")
-            exit()
+        raise RuntimeError("LIMS has no session manager: nobody is logged in")
 
     def is_rescheduled_session(self, session):
         """
@@ -310,11 +308,7 @@ class Lims(ComponentBase):
             print(f"Updated proposal_id in components/lims.py.sync ... {proposal_id}")
 
         session_id =  HWR.beamline.lims.session_manager.active_session.session_id"""
-        proposal_id= HWR.beamline.lims.session_manager.active_session.proposal_name[2:]
-        samples_info_list = HWR.beamline.lims.adapter.get_samples(proposal_id)
-        print(f'Sercing for propsal Id in lims.py {proposal_id}')
-        if not samples_info_list: 
-            samples_info_list = []
+        samples_info_list = HWR.beamline.lims.get_samples(lims_name) or []
         
         
         for sample_info in samples_info_list:

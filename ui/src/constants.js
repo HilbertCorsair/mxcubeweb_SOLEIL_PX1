@@ -32,8 +32,8 @@ export const TASK_COLLECT_WARNING = 0x3;
 export const TASK_RUNNING = 0x1;
 export const TASK_UNCOLLECTED = 0x0;
 /**
- * A task the queue reached but deliberately did not run - an unattended phase
- * that bailed out because an earlier scan found no spots. Distinct from
+ * A task the queue reached but deliberately did not run - a task of an
+ * unattended collect after an earlier scan found no spots. Distinct from
  * collected (it did nothing) and from failed (nothing went wrong).
  * Must match WARNING in mxcubeweb/core/components/queue.py.
  */
@@ -46,34 +46,6 @@ export const AUTO_LOOP_CENTRING = 1;
 export const CLICK_CENTRING = 0;
 
 export const TWO_STATE_ACTUATOR = 'INOUT';
-
-/**
- * Task types of the unattended-collect pipeline phases.
- * Kept in step with Queue.UC_PHASE_TYPES on the backend.
- */
-export const UC_PHASE_TYPES = [
-  'OpticalCentring',
-  'GridScan',
-  'LineScan',
-  'FinalizeCentring',
-  'UnattendedDataCollection',
-  'Unmount',
-];
-
-export function isUCPhase(task) {
-  return UC_PHASE_TYPES.includes(task.type);
-}
-
-/**
- * True for a phase row belonging to a decomposed pipeline, as opposed to a
- * phase added on its own from the "Add UC phase" menu. The backend tags the
- * former with the owning TaskGroup's node id.
- */
-export function isUCPipelinePhase(task) {
-  return (
-    isUCPhase(task) && task.ucGroupID !== null && task.ucGroupID !== undefined
-  );
-}
 
 /**
  * Short badge tag for a task, as shown in the samples table. Returns null for a
@@ -99,24 +71,6 @@ export function taskTagName(task) {
     case 'UnattendedCollect': {
       return 'UC';
     }
-    case 'OpticalCentring': {
-      return task.parameters?.zoom === 'zoom2' ? 'AC2' : 'AC1';
-    }
-    case 'GridScan': {
-      return 'GS';
-    }
-    case 'LineScan': {
-      return `LS${Number(task.parameters?.index ?? 0) + 1}`;
-    }
-    case 'FinalizeCentring': {
-      return 'FC';
-    }
-    case 'UnattendedDataCollection': {
-      return 'DC';
-    }
-    case 'Unmount': {
-      return 'UM';
-    }
     default: {
       return null;
     }
@@ -124,9 +78,8 @@ export function taskTagName(task) {
 }
 
 /**
- * Fixed-point format for a value that may be absent: not every task carries the
- * full DataCollection acquisition set (the unattended phases carry a subset),
- * so a missing number must render as a dash rather than throw on toFixed().
+ * Fixed-point format for a value that may be absent, so a missing number
+ * renders as a dash rather than throw on toFixed().
  */
 export function formatNumber(value, digits) {
   return typeof value === 'number' && Number.isFinite(value)
@@ -217,26 +170,44 @@ export function taskStateIcon(state) {
   }
 }
 
-/**
- * How far an unattended pipeline has got, counted from the phase rows the
- * backend emits after the group header.
- *
- * Deliberately derived on the client rather than read from the header's own
- * ucPhasesDone: that field is only refreshed by a full getQueue(), which the
- * operator in control never performs mid-run, so it stays frozen for exactly
- * the person watching the run.
- */
-export function ucGroupProgress(tasks, groupQueueID) {
-  const phases = (tasks || []).filter(
-    (task) => task.ucGroupID === groupQueueID,
+/** First row of a task group (e.g. the tasks of an unattended collect). */
+export function isGroupHead(task, i, tasks) {
+  return (
+    typeof task.groupID === 'number' && tasks[i - 1]?.groupID !== task.groupID
   );
-  const running = phases.find((task) => task.state === TASK_RUNNING);
+}
 
-  return {
-    total: phases.length,
-    done: phases.filter((task) => isTerminalTaskState(task.state)).length,
-    running: running ? running.label : null,
-  };
+/** State and progress of a task group, from its rows. */
+export function groupSummary(rows) {
+  const ended = rows.filter((row) => isTerminalTaskState(row.state));
+  const running = rows.find((row) => row.state === TASK_RUNNING);
+  let state = TASK_UNCOLLECTED;
+
+  if (running) {
+    state = TASK_RUNNING;
+  } else if (rows.some((row) => row.state === TASK_COLLECT_FAILED)) {
+    state = TASK_COLLECT_FAILED;
+  } else if (ended.length === rows.length) {
+    state = rows.every((row) => row.state === TASK_COLLECTED)
+      ? TASK_COLLECTED
+      : TASK_SKIPPED;
+  }
+
+  return { state, done: ended.length, running: running?.label };
+}
+
+/** One item per task, a task group (unattended collect) counting as one. */
+export function groupedTasks(tasks) {
+  return tasks.flatMap((task, i) => {
+    if (typeof task.groupID !== 'number') {
+      return [task];
+    }
+
+    const rows = tasks.filter((t) => t.groupID === task.groupID);
+    return isGroupHead(task, i, tasks)
+      ? [{ ...task, state: groupSummary(rows).state }]
+      : [];
+  });
 }
 
 export function hasLimsData(sample) {

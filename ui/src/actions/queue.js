@@ -241,52 +241,36 @@ export function setEnabledSample(sampleIDList, value) {
   };
 }
 
-/**
- * Every row of the unattended-collect pipeline <task> belongs to: the group
- * header plus its phase rows. Empty for anything else, including a phase added
- * standalone from the "Add UC phase" menu, which owns its TaskGroup.
- */
-function unattendedGroupRows(tasks, task) {
-  const groupID =
-    task.type === 'UnattendedCollect' && task.ucGroup
-      ? task.queueID
-      : task.ucGroupID;
-
-  if (groupID === null || groupID === undefined) {
-    return [];
-  }
-
-  return tasks.filter((t) => t.queueID === groupID || t.ucGroupID === groupID);
+/** Every row of the task group of <task>, empty when it has none. */
+function groupRows(tasks, task) {
+  return typeof task.groupID === 'number'
+    ? tasks.filter((t) => t.groupID === task.groupID)
+    : [];
 }
 
 export function deleteTask(sampleID, taskIndex) {
   return async (dispatch, getState) => {
     const state = getState();
     const task = state.sampleGrid.sampleList[sampleID].tasks[taskIndex];
+    // An unattended collect is one TaskGroup spread over one row per task.
+    // The server removes the group as a unit whichever row was targeted, so
+    // drop them all locally too.
+    const rows = groupRows(state.sampleGrid.sampleList[sampleID].tasks, task);
 
-    if (task.state !== TASK_UNCOLLECTED) {
+    if ([task, ...rows].some((t) => t.state !== TASK_UNCOLLECTED)) {
       return;
     }
 
     dispatch(queueLoading(true));
 
-    // An unattended-collect pipeline is one TaskGroup spread over a header row
-    // and one row per phase. The server removes the group as a unit whichever
-    // of those rows was targeted, so drop them all locally too rather than
-    // leaving the other rows behind as ghosts.
-    const groupRows = unattendedGroupRows(
-      state.sampleGrid.sampleList[sampleID].tasks,
-      task,
-    );
-
     try {
       await sendDeleteQueueItem([[sampleID, taskIndex]]);
 
-      if (groupRows.length > 0) {
+      if (rows.length > 0) {
         dispatch(
           removeTaskListAction(
-            groupRows,
-            groupRows.map((t) => t.queueID),
+            rows,
+            rows.map((t) => t.queueID),
           ),
         );
       } else {

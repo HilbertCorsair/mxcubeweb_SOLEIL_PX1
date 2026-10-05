@@ -8,9 +8,8 @@ import XRFTaskItem from './XRFTaskItem';
 import EnergyScanTaskItem from './EnergyScanTaskItem';
 import WorkflowTaskItem from './WorkflowTaskItem';
 import CharacterisationTaskItem from './CharacterisationTaskItem';
-import UCGroupTaskItem from './UCGroupTaskItem';
-import UCPhaseTaskItem from './UCPhaseTaskItem';
-import { UC_PHASE_TYPES, ucGroupProgress } from '../../constants';
+import UnattendedCollectItem from './UnattendedCollectItem';
+import { isGroupHead } from '../../constants';
 
 export default class CurrentTree extends React.Component {
   constructor(props) {
@@ -290,56 +289,24 @@ export default class CurrentTree extends React.Component {
                 break;
               }
               case 'UnattendedCollect': {
-                // Group header; the phase rows the backend emits right after
-                // it render underneath as UCPhaseTaskItems.
-                task = (
-                  <UCGroupTaskItem
+                // One item for all the rows of its task group
+                task = isGroupHead(taskData, i, sampleTasks) && (
+                  <UnattendedCollectItem
                     key={taskData.queueID}
                     index={i}
-                    data={taskData}
+                    tasks={sampleTasks.filter(
+                      (t) => t.groupID === taskData.groupID,
+                    )}
                     sampleId={sampleData.sampleID}
-                    selected={displayData.selected}
-                    state={taskData.state}
-                    progress={displayData.progress}
-                    phaseCount={taskData.ucPhaseCount}
-                    startedAt={displayData.startedAt}
-                    endedAt={displayData.endedAt}
-                    {...ucGroupProgress(sampleTasks, taskData.queueID)}
+                    displayData={this.props.displayData}
                     deleteTask={this.props.deleteTask}
                     showForm={this.props.showForm}
-                    taskHeaderOnClickHandler={this.taskHeaderOnClickHandler}
                   />
                 );
 
                 break;
               }
               default: {
-                if (UC_PHASE_TYPES.includes(taskData.type)) {
-                  task = (
-                    <UCPhaseTaskItem
-                      key={taskData.queueID}
-                      index={i}
-                      data={taskData}
-                      sampleId={sampleData.sampleID}
-                      state={taskData.state}
-                      progress={displayData.progress}
-                      show={displayData.collapsed}
-                      startedAt={displayData.startedAt}
-                      endedAt={displayData.endedAt}
-                      phaseNumber={
-                        taskData.ucPhaseIndex === null ||
-                        taskData.ucPhaseIndex === undefined
-                          ? undefined
-                          : taskData.ucPhaseIndex + 1
-                      }
-                      deleteTask={this.props.deleteTask}
-                      taskHeaderOnClickHandler={this.taskHeaderOnClickHandler}
-                    />
-                  );
-
-                  break;
-                }
-
                 task = (
                   <TaskItem
                     key={taskData.queueID}

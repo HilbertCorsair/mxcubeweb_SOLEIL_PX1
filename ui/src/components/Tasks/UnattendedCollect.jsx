@@ -33,16 +33,20 @@ class UnattendedCollect extends React.Component {
     };
 
     // Form values arrive as strings; everything not listed here is converted
-    // back to a number by doAddTask. Only the acquisition subset is numeric.
+    // back to a number by doAddTask.
     const stringFields = [
       'type',
       'label',
       'shape',
+      'method',
       'prefix',
       'subdir',
       'path',
+      'fileName',
+      'fullPath',
       'prefixTemplate',
       'subDirTemplate',
+      'experiment_type',
     ];
 
     this.props.addTask(parameters, stringFields, runNow);
@@ -61,11 +65,10 @@ class UnattendedCollect extends React.Component {
         </Modal.Header>
         <Modal.Body>
           <p>
-            One unattended-collect task will be added to each selected sample (
+            One unattended collect will be added to each selected sample (
             {sampleCount} sample{sampleCount === 1 ? '' : 's'}). For each sample
-            the queue mounts the pin, performs murko + X-ray centring, collects
-            with the parameters below, then unmounts. File paths, motors and
-            sample identity are derived per sample at collect time.
+            the queue mounts the pin, centres it optically and with X-rays,
+            collects with the parameters below, then unmounts.
           </p>
 
           <FieldsHeader title="Acquisition" />

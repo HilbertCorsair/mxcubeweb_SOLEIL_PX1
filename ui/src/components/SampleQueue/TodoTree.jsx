@@ -3,14 +3,8 @@
 import React from 'react';
 import './app.css';
 import { ListGroup, Form, Button } from 'react-bootstrap';
-import {
-  QUEUE_RUNNING,
-  UC_PHASE_TYPES,
-  taskStateClass,
-  ucGroupProgress,
-} from '../../constants';
-import UCGroupTaskItem from './UCGroupTaskItem';
-import UCPhaseTaskItem from './UCPhaseTaskItem';
+import { QUEUE_RUNNING, isGroupHead, taskStateClass } from '../../constants';
+import UnattendedCollectItem from './UnattendedCollectItem';
 import TaskStateIcon from './TaskStateIcon';
 
 export default class TodoTree extends React.Component {
@@ -44,9 +38,9 @@ export default class TodoTree extends React.Component {
    * Render the tasks queued on an upcoming sample, read-only.
    *
    * Upstream this tab showed the sample name and a Mount button only, so a
-   * queued sample looked empty however many tasks it carried. Unattended
-   * collect in particular queues a group header plus eight ordered phases per
-   * sample, and none of it was visible before the sample was mounted.
+   * queued sample looked empty however many tasks it carried. An unattended
+   * collect in particular queues eight ordered tasks per sample, and none of
+   * it was visible before the sample was mounted.
    */
   renderSampleTasks(sampleData) {
     const tasks = sampleData.tasks || [];
@@ -55,49 +49,22 @@ export default class TodoTree extends React.Component {
       return null;
     }
 
-    // A sample only reaches this tab before it runs or after it was stopped
-    // part-way, so most rows have no timing - but the ones that do should keep
-    // showing it.
-    const displayData = (task) => this.props.displayData[task.queueID] || {};
-
     return (
       <div className="task-list">
         {tasks.map((taskData, i) => {
           if (taskData.type === 'UnattendedCollect') {
+            // One item for all the rows of its task group
             return (
-              <UCGroupTaskItem
-                key={taskData.queueID}
-                index={i}
-                data={taskData}
-                sampleId={sampleData.sampleID}
-                state={taskData.state}
-                phaseCount={taskData.ucPhaseCount}
-                startedAt={displayData(taskData).startedAt}
-                endedAt={displayData(taskData).endedAt}
-                {...ucGroupProgress(tasks, taskData.queueID)}
-                readOnly
-              />
-            );
-          }
-
-          if (UC_PHASE_TYPES.includes(taskData.type)) {
-            return (
-              <UCPhaseTaskItem
-                key={taskData.queueID}
-                index={i}
-                data={taskData}
-                sampleId={sampleData.sampleID}
-                state={taskData.state}
-                startedAt={displayData(taskData).startedAt}
-                endedAt={displayData(taskData).endedAt}
-                phaseNumber={
-                  taskData.ucPhaseIndex === null ||
-                  taskData.ucPhaseIndex === undefined
-                    ? undefined
-                    : taskData.ucPhaseIndex + 1
-                }
-                readOnly
-              />
+              isGroupHead(taskData, i, tasks) && (
+                <UnattendedCollectItem
+                  key={taskData.queueID}
+                  index={i}
+                  tasks={tasks.filter((t) => t.groupID === taskData.groupID)}
+                  sampleId={sampleData.sampleID}
+                  displayData={this.props.displayData}
+                  readOnly
+                />
+              )
             );
           }
 

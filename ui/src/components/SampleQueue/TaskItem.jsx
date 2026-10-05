@@ -145,8 +145,7 @@ export default class TaskItem extends Component {
 
   wedgePath(wedge) {
     const { parameters } = wedge;
-    // Tasks whose file paths are derived at execute time (the unattended
-    // phases) carry neither fileName nor path.
+    // Not every task carries a fileName and a path.
     const value = parameters.fileName || '';
     const path = parameters.path || '';
     const pathEndPart = path.slice(-40);
