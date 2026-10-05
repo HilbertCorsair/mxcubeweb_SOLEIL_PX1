@@ -33,11 +33,41 @@ import UserMessage from '../components/Notify/UserMessage';
 import loader from '../img/loader.gif';
 import { prepareBeamlineForNewSample } from '../actions/beamline';
 import { mountSample, unmountSample } from '../actions/sampleChanger';
+import { QUEUE_PAUSED, QUEUE_RUNNING } from '../constants';
+import styles from './SampleQueueContainer.module.css';
+
+function isActive(queueStatus) {
+  return queueStatus === QUEUE_RUNNING || queueStatus === QUEUE_PAUSED;
+}
+
+// Idle, the live tab still holds a mounted sample's tasks to edit and run
+function liveTabLabel(sampleLabel, active) {
+  if (!sampleLabel) {
+    return 'Running now';
+  }
+  return `${active ? 'Running now' : 'Mounted'} · ${sampleLabel}`;
+}
+
+function caption(visibleList, active) {
+  if (visibleList !== 'current') {
+    return 'Plan: the samples and tasks waiting to run';
+  }
+  return active
+    ? 'Live: what the queue is executing now'
+    : 'Mounted: the tasks ready to run on this sample';
+}
 
 class SampleQueueContainer extends React.Component {
   constructor(props) {
     super(props);
     this.handleSelect = this.handleSelect.bind(this);
+  }
+
+  componentDidUpdate(prevProps) {
+    // Jump to the live view when a run starts
+    if (isActive(this.props.queueStatus) && !isActive(prevProps.queueStatus)) {
+      this.props.showList('current');
+    }
   }
 
   handleSelect(selectedKey) {
@@ -88,6 +118,9 @@ class SampleQueueContainer extends React.Component {
         : '';
     }
 
+    const active = isActive(queueStatus);
+    const sampleLabel = `${proteinAcronym} ${sampleName}`.trim();
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
         <QueueControl
@@ -123,20 +156,30 @@ class SampleQueueContainer extends React.Component {
             className="queue-nav"
           >
             <Nav.Item>
-              <Nav.Link eventKey="current" className="queue-nav-link">
-                <b>
-                  {currentSampleID
-                    ? `Sample: ${proteinAcronym} ${sampleName}`
-                    : 'Current'}
-                </b>
+              <Nav.Link
+                eventKey="current"
+                disabled={!active && !currentSampleID}
+                className={`queue-nav-link ${
+                  active ? styles.liveTab : styles.idleTab
+                }`}
+              >
+                {queueStatus === QUEUE_PAUSED && (
+                  <i className="fas fa-pause me-2" />
+                )}
+                {queueStatus === QUEUE_RUNNING && (
+                  <span className={styles.spinner} />
+                )}
+                <b>{liveTabLabel(currentSampleID && sampleLabel, active)}</b>
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
               <Nav.Link eventKey="todo" className="queue-nav-link">
+                <i className="fas fa-list-ul me-2" />
                 <b>Queued Samples ({todo.length})</b>
               </Nav.Link>
             </Nav.Item>
           </Nav>
+          <div className={styles.caption}>{caption(visibleList, active)}</div>
           {loading ? (
             <div className="center-in-box" style={{ zIndex: '1000' }}>
               <img src={loader} className="img-responsive" width="100" alt="" />
