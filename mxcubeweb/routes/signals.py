@@ -255,9 +255,14 @@ def centring_started(method, *args):
 
 
 def get_task_state(entry):
-    node_id = entry.get_data_model()._node_id
+    model = entry.get_data_model()
+    if model._node_id is None:
+        # A characterisation's reference collection is not in the queue
+        # tree: its row is the characterisation's (the parent entry's model)
+        model = entry._parent_container.get_data_model()
+    node_id = model._node_id
     _, state = mxcube.queue.get_node_state(node_id)
-    node_index = mxcube.queue.node_index(entry.get_data_model())
+    node_index = mxcube.queue.node_index(model)
 
     return {
         "Signal": "",
