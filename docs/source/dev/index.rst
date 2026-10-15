@@ -14,6 +14,7 @@ Developer documentation
     front-end.md
     login.rst
     sample-changer-changes-and-maintenance.md
+    unattended-collect.md
     tutorial.md
     tests.md
     deployment.md
