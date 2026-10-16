@@ -78,14 +78,12 @@ Add the role under the procedures:
 
 ```xml
 <object class="SOLEIL.PX1.PX1UnattendedCollect">
-  <scan_attempts>2</scan_attempts>
   <object href="/px1-xray-centring" role="xray_centring"/>
 </object>
 ```
 
 | Property / role | Meaning |
 |---|---|
-| `scan_attempts` | How many times the grid scan and each line scan are tried before giving up on spots (default 2). |
 | `xray_centring` | The `PX1XrayCentring` object that does the work. Without it, `HWR.beamline.xray_centring` is used. |
 | `murko` (optional, generic) | A `Murko` object for loop detection by the generic helpers. PX1 does not need it here: `PX1MiniDiff` talks to murko itself. |
 
@@ -208,10 +206,10 @@ On PX1, `PX1UnattendedCollect` maps the methods onto `PX1XrayCentring`:
 - `optical_centring`: `run_optical_centring("zoom1" | "zoom2")`. It waits until no other
   centring runs, moves the zoom, starts one `CENTRING_METHOD_AUTO` centring and waits
   for its real end. It returns whether the centring is valid, and raises on a timeout.
-- `grid_scan`: `begin_centring_session(prefix)`, then `run_grid_scan()`, tried up to
-  `scan_attempts` times. The prefix is that of the group's data collection, which also
-  names the result directories.
-- `line_scan`: `run_line_scan(index)`, also tried up to `scan_attempts` times.
+- `grid_scan`: `begin_centring_session(prefix)`, then `run_grid_scan()`, once. The prefix
+  is that of the group's data collection, which also names the result directories.
+- `line_scan`: `run_line_scan(index)`, once. A scan is never repeated: a sample that does
+  not diffract will not show spots on a second try.
 - `finalize_centring`: `finalize_centring()`, then the diffractometer position is copied
   into the context.
 - `unmount`: `finalize_session(unload)`.
@@ -268,8 +266,12 @@ the grid scan and of the tasks after it.
 ## Logs and timing
 
 - Hardware log (`HWR`): lines tagged **`[UC]`** come from the unattended path. For example
-  `[UC] optical centring zoom1 done in 8.2 s`, `[UC] grid scan attempt 1/2 found no spots`
-  and `[UC] grid drawn at omega …`.
+  `[UC] optical centring zoom1 done in 8.2 s` and `[UC] grid drawn at omega …`.
+- Lines tagged **`[UC-time]`** give the seconds of each step inside the grid scan
+  (`grid: murko grid`, `prepare + report figure`, `report snapshots + omega back`, `mesh`,
+  `spot finding`, `heatmap report`), the line scans (`line n: scan`, `spot finding`) and
+  the data collection (`collect: ...` from `AbstractCollect.do_collect`, `hook: ...` from
+  `PX1Collect`, where `hook: acquisition` also prints the pure exposure time).
 - After each sample the queue manager logs one **`[Timing]`** line, also shown in the
   user log:
   `[Timing] sample 1:03: total 4m12s | mount 41s | Centring (zoom 1) 9s | … | Unmount 2s`
@@ -326,8 +328,8 @@ The mockup beamline (`configuration/mockup/qt/beamline_config.yml`) loads
   does and the menu still lacks it, the browser runs an old UI build.
 
 **Every task after the grid scan is skipped**
-- The grid scan found no spots `scan_attempts` times. Look for
-  `[UC] grid scan attempt n/N found no spots`, and at the heat map in the report.
+- The grid scan found no spots. Look at `No result from mesh analysis` in the log and at
+  the heat map in the report.
 
 **The queue stopped on the first centring**
 - Murko is not reachable (`MurkoUnavailable`). Start murko and run the queue again.
