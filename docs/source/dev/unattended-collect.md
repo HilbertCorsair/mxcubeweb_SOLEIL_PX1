@@ -280,7 +280,8 @@ scanned and analysed as before.
   (`show_crystal_on_grid`). The crystal outline is drawn in **cyan**. The HWR log says
   `[UC] n of N grid cells on the crystal`. If murko sends no crystal mask
   (`descriptions["crystal"]["notion_mask"]`), every cell is green and no outline is
-  drawn. To see what the murko server sends, run `check_murko_crystal.py`.
+  drawn. To see what the murko server sends, run
+  `scripts/murko/check_murko_crystal.py` from the mxcubecore checkout.
 - **Mesh heatmap** - after the spot finding, cells with spots get a colour by number
   of spots ('hot' colormap: dark red for few, yellow-white for most). Cells without
   spots keep green/red (`show_spots_on_grid`).
