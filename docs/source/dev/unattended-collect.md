@@ -24,6 +24,7 @@ code described is `main_web` with mxcubecore `main_core`.
 - [Skips, failures and aborts](#skips-failures-and-aborts)
 - [The data collection](#the-data-collection)
 - [What the UI shows](#what-the-ui-shows)
+- [On the video: grid, crystal and heatmap](#on-the-video-grid-crystal-and-heatmap)
 - [Logs and timing](#logs-and-timing)
 - [Adding unattended collect to another beamline](#adding-unattended-collect-to-another-beamline)
 - [Testing](#testing)
@@ -74,6 +75,12 @@ Add the role under the procedures:
   - unattended_collect: px1-unattended-collect.xml
 ```
 
+and, at the top level, the per-cell colour format the grid overlay uses:
+
+```yaml
+mesh_result_format: RGB
+```
+
 ### px1-unattended-collect.xml
 
 ```xml
@@ -103,8 +110,8 @@ centring timeout (`optical_centring_timeout`, 120 s) are class attributes of
 **`/nfs/ruche/share-dev/px1dev/MXCuBE/WebApp/config/`**, outside both repositories.
 `git pull` never changes it. Every change made in
 `mxcubecore/configuration/soleil_px1/` must also be made there by hand: the
-`unattended_collect` line in `beamline_config.yml`, `px1-unattended-collect.xml` and
-`px1-xray-centring.xml`.
+`unattended_collect` and `mesh_result_format` lines in `beamline_config.yml`,
+`px1-unattended-collect.xml` and `px1-xray-centring.xml`.
 
 ## How it is built
 
@@ -262,6 +269,33 @@ the grid scan and of the tasks after it.
   **skipped** (`TASK_SKIPPED = 0x10`). Skipped means the queue reached the task and
   deliberately did not run it. `groupSummary()` derives the group state from its rows.
 - Elapsed times are counted in the browser from the start signal (`ElapsedTime.jsx`).
+
+## On the video: grid, crystal and heatmap
+
+The overlay is for checking by eye. The scans do not depend on it: the whole grid is
+scanned and analysed as before.
+
+- **Grid** - drawn when the grid scan starts (`begin_centring_session`). Its cells are
+  **green** where they touch the crystal murko sees and **red** where they do not
+  (`show_crystal_on_grid`). The crystal outline is drawn in **cyan**. The HWR log says
+  `[UC] n of N grid cells on the crystal`. If murko sends no crystal mask
+  (`descriptions["crystal"]["notion_mask"]`), every cell is green and no outline is
+  drawn. To see what the murko server sends, run `check_murko_crystal.py`.
+- **Mesh heatmap** - after the spot finding, cells with spots get a colour by number
+  of spots ('hot' colormap: dark red for few, yellow-white for most). Cells without
+  spots keep green/red (`show_spots_on_grid`).
+- **Line scans** - one narrow strip per line scan, right of the mesh, labelled `+120`
+  and `+240`. Each strip has one cell per image and is coloured the same way. The line
+  scans run at other omegas, so they are drawn beside the mesh and not over it
+  (`add_line_grid`).
+- **Centred point** - the point the collection uses.
+- All of it stays on the video until the unmount clears the shapes. A grid is hidden
+  while omega is more than `hide_grid_threshold` from its angle, so the overlay
+  disappears during the line scans and the collection, and comes back at the mesh angle.
+- Grids are drawn while the queue runs, but cannot be selected then (`SampleImage.jsx`).
+  The colours come through the standard RGB grid results (`SampleView.set_grid_data`
+  -> `grid_result_available`). The outline is the grid attribute `crystal_outline`
+  (`DrawGridPlugin.jsx`).
 
 ## Logs and timing
 

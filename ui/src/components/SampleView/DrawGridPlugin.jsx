@@ -610,6 +610,26 @@ export default class DrawGridPlugin {
       }),
     );
 
+    // The crystal murko saw, in image pixels from the grid's top-left corner
+    if (gridData.crystalOutline?.length > 2) {
+      const scale = gridData.id === null ? 1 : this.scale;
+      shapes.push(
+        new fabric.Polygon(
+          gridData.crystalOutline.map(([x, y]) => ({
+            x: left + x * scale,
+            y: top + y * scale,
+          })),
+          {
+            fill: 'rgba(0,0,0,0)',
+            stroke: 'rgba(0, 255, 255, 0.9)',
+            strokeWidth: 2,
+            selectable: false,
+            evented: false,
+          },
+        ),
+      );
+    }
+
     if (gridData.name) {
       shapes.push(
         new fabric.Text(gridData.name, {
