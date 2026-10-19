@@ -380,7 +380,13 @@ the grid scan and of the tasks after it.
   `first_image`: from the form, or the beamline defaults when empty.
 - `subdir`: the sample name unless given, so each sample writes into its own directory.
 - `shape = -1` (no shape), `helical = False`, `mesh = False`.
-- Snapshots: `num_snapshots` of the collect object.
+- Snapshots: `num_snapshots` of the collect object, 2 on PX1 (`mxcollect.xml`). Before
+  the collection, `AbstractCollect.take_crystal_snapshots` takes one, turns omega by 90°
+  and takes the next; `do_collect` then moves back to the centred position.
+  `PX1Collect._take_crystal_snapshot` brings the light in (VISU_SAMPLE phase and the
+  zoom's light level) and waits for a fresh camera frame. The files are
+  `<prefix>_<run>_<n>.snapshot.jpeg` in the archive directory. The report snapshots
+  of the X-ray centring are JPG too (`<prefix>_snapshot_0.jpg`, `_120.jpg`, `_240.jpg`).
 - It has `requires_centring = False`: the position comes from the context, not from a
   centring the queue would ask for.
 
@@ -491,6 +497,14 @@ The mockup beamline (`configuration/mockup/qt/beamline_config.yml`) loads
 - Look in the log for an error loading `PX1UnattendedCollect` or `px1-xray-centring`.
 - `GET /mxcube/api/v0.1/queue/available_tasks` must contain `unattendedcollect`. If it
   does and the menu still lacks it, the browser runs an old UI build.
+
+**No overlay at all on the video, not even the beam crosshair**
+- The sample view draws nothing on a camera that is not the OAV. With argussight, the
+  OAV is the stream flagged `oav: true` in `ARGUSSIGHT_CAMERAS` (`server.yaml`), or the
+  first stream when none is flagged. Flag the OAV stream and reload the page.
+- If the crosshair is there but not the grids, look for `[UC] overlay: N shapes` in the
+  log (written by the finalize centring). It lists the shapes still on the sample view
+  at the collection.
 
 **Every task after the grid scan is skipped**
 - The grid scan found no spots. Look at `No result from mesh analysis` in the log and at

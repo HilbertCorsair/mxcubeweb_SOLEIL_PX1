@@ -70,7 +70,11 @@ function selectCameraState(state, name) {
     videoFormat: cam.format,
     width: cam.width || state.width,
     height: cam.height || state.height,
-    centringEnabled: Boolean(cam.oav),
+    // The OAV is the camera flagged oav, else the first one (as in
+    // initialCameraState and the server)
+    centringEnabled: state.cameras.some((c) => c.oav)
+      ? Boolean(cam.oav)
+      : cam === state.cameras[0],
   };
 }
 
