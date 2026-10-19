@@ -115,28 +115,156 @@ centring timeout (`optical_centring_timeout`, 120 s) are class attributes of
 
 ## How it is built
 
+Left: what runs. Right: where it lives. Paths are relative to the repo named in each box
+header; `:N` is a line number at the time of writing. Arrows going up are signals that
+update the browser.
+
 ```
-UI (React)                       UnattendedCollect.jsx form, UnattendedCollectItem.jsx rows
-   │  POST queue (type "UnattendedCollect")
-   ▼
-mxcubeweb server                 core/components/queue.py
-   │  add_unattended_collect()   builds the models + queue entries
-   ▼
-mxcubecore queue                 model/queue_model_objects.py   UnattendedCollect, UnattendedTask,
-   │                                                            UnattendedDataCollection, UNATTENDED_TASKS
-   │                             queue_entry/unattended_*.py    the entries that run them
-   ▼
-HWR.beamline.unattended_collect  abstract/AbstractUnattendedCollect.py
-   │                             SOLEIL/PX1/PX1UnattendedCollect.py (PX1)
-   │                             mockup/UnattendedCollectMockup.py   (mockup)
-   ▼
-PX1 hardware                     PX1XrayCentring (grid/line scans, fit, report)
-                                 PX1MiniDiff (zoom, murko centring), PX1Cryotong (mount/unmount)
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║ 1. UI (React)                                                          mxcubeweb  ui/src/     ║
+╠═══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ Right-click a sample → Add → "Unattended collect"     containers/SampleGridTableContainer.jsx ║
+║   shown only if defaultParameters.unattendedcollect   containers/SampleListViewContainer.jsx  ║
+║                    │                                                                          ║
+║                    ▼                                                                          ║
+║ Form (redux-form 'unattendedcollect')                 components/Tasks/UnattendedCollect.jsx  ║
+║   osc start/range, exposure, n images, transmission, resolution                               ║
+║   Add to Queue / Run Now → addToQueue() → addTask({type:'UnattendedCollect', shape:-1, ...})  ║
+║                    │                                                                          ║
+║ Start queue → containers/ConfirmCollectDialog.jsx: "Automatic loop centring (unattended)"     ║
+║   (Run Now on one sample = that group only, NO mount)                                         ║
+╚════════════════════│══════════════════════════════════════════════════════════▲═══════════════╝
+                     │ POST queue/  (one task per sample)   routes/queue.py      │ socket.io:
+                     │ PUT  queue/start                                          │ queue status,
+                     ▼                                                           │ shapes, grid results
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║ 2. mxcubeweb server                                 mxcubeweb  core/components/queue.py       ║
+╠═══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ get_available_tasks()  :2661   offers 'unattendedcollect' iff HWR.beamline.unattended_collect ║
+║ _queue_add_item_rec    :1104   item_t == "UnattendedCollect" (groupIndex 0)                   ║
+║                                → add_unattended_collect()                                     ║
+║ add_unattended_collect :1705                                                                  ║
+║   ├─ qmo.UnattendedCollect()           + UnattendedCollectQueueEntry   → under the sample     ║
+║   ├─ for (label, method, kwargs, needs_spots) in qmo.UNATTENDED_TASKS:                        ║
+║   │     method != "collect" → qmo.UnattendedTask        + UnattendedTaskQueueEntry            ║
+║   │     method == "collect" → _create_unattended_dc :1748                                     ║
+║   │                            form params ∪ defaults, subdir = sample name,                  ║
+║   │                            take_snapshots = num_snapshots                                 ║
+║   │                            → qmo.UnattendedDataCollection + UnattendedDataCollectionQE    ║
+║   └─ on error: delete the group                                                               ║
+║ _handle_unattended_collect :574  → one row per task in the queue panel                        ║
+║                                    (ui UnattendedCollectItem.jsx)                             ║
+║ core/components/sampleview.py: shapesChanged → _emit_shapes_updated,                          ║
+║                                newGridResult → handle_grid_result (grid colours) ─────────────╫──▲
+╚════════════════════│══════════════════════════════════════════════════════════════════════════╝
+                     │ HWR.beamline.queue_manager.execute()
+                     ▼
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║ 3. mxcubecore queue                                                   mxcubecore  mxcubecore/ ║
+╠═══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ model/queue_model_objects.py  UNATTENDED_TASKS                                                ║
+║   label               method              kwargs      needs_spots                             ║
+║   Centring (zoom 1)   optical_centring    zoom=1      no                                      ║
+║   Centring (zoom 2)   optical_centring    zoom=2      no                                      ║
+║   Grid scan           grid_scan           –           no   ← sets context["found_spots"]      ║
+║   Line scan 1 / 2     line_scan           index=0/1   yes                                     ║
+║   Finalize centring   finalize_centring   –           yes  ← sets context["centred_position"] ║
+║   Data collection     collect             –           yes  (a real DataCollection)            ║
+║   Unmount             unmount             –           no   (always runs)                      ║
+║                                                                                               ║
+║ SampleQueueEntry.execute → mount_sample()        queue_entry/base_queue_entry.py              ║
+║   sample_view.clear_all → sample_changer.load(wait=True) → LIMS robot action                  ║
+║   not loaded → QueueSkipEntryException; _has_unattended_pipeline() → centring NONE            ║
+║                    │                                                                          ║
+║ UnattendedCollectQueueEntry.pre_execute          queue_entry/unattended_collect.py            ║
+║   context = {"found_spots": False}   (shared by all children)                                 ║
+║                    │                                                                          ║
+║ UnattendedTaskQueueEntry.execute                 queue_entry/unattended_task.py               ║
+║   needs_spots and not found_spots → SKIPPED                                                   ║
+║   unmount → kwargs["unload"] = _is_last_sample()                                              ║
+║   result = getattr(HWR.beamline.unattended_collect, method)(context, **kwargs)                ║
+║     False      → found_spots=False, SKIPPED                                                   ║
+║     exception  → found_spots=False, SKIPPED   (abort_queue, e.g. MurkoUnavailable → ABORT)    ║
+║                                                                                               ║
+║ UnattendedDataCollectionQueueEntry.pre_execute   queue_entry/unattended_data_collection.py    ║
+║   no spots → SKIPPED; else centred_position = CentredPosition(context["centred_position"])    ║
+║   → standard DataCollectionQueueEntry → HWR.beamline.collect.collect() ────────────┐          ║
+║                                                                                    │          ║
+║ QueueManager after each sample: [Timing] log + ~/MXCuBElogs/sample_timings.csv     │          ║
+╚════════════════════│═══════════════════════════════════════════════════════════════│══════════╝
+                     │ method(context, **kwargs)                                     │
+                     ▼                                                               │
+╔═════════════════════════════════════════════════════════════════════╗              │
+║ 4. HWR.beamline.unattended_collect   (role in beamline_config.yml)  ║              │
+║                                      mxcubecore HardwareObjects/    ║              │
+╠═════════════════════════════════════════════════════════════════════╣              │
+║ abstract/AbstractUnattendedCollect.py      the contract             ║              │
+║   optical_centring(ctx, zoom) → bool                                ║              │
+║   grid_scan(ctx) → bool       line_scan(ctx, index) → bool          ║              │
+║   finalize_centring(ctx) → bool        unmount(ctx, unload)         ║              │
+║   helpers: murko, detect_loop, add_grid, add_point (generic BLs)    ║              │
+║                                                                     ║              │
+║ mockup/UnattendedCollectMockup.py   fake results (tests, mockup BL) ║              │
+║                                                                     ║              │
+║ SOLEIL/PX1/PX1UnattendedCollect.py  thin adapter → xray_centring    ║              │
+║   optical_centring  → run_optical_centring(f"zoom{zoom}")           ║              │
+║   grid_scan         → begin_centring_session(prefix),               ║              │
+║                       then run_grid_scan()                          ║              │
+║   line_scan         → run_line_scan(index)                          ║              │
+║   finalize_centring → finalize_centring(), then                     ║              │
+║                       ctx["centred_position"] =                     ║              │
+║                       diffractometer.get_positions()                ║              │
+║   unmount           → finalize_session(unload)                      ║              │
+╚════════════════════│════════════════════════════════════════════════╝              │
+                     ▼                                                               ▼
+╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+║ 5. PX1 hardware objects                   mxcubecore HardwareObjects/SOLEIL/PX1/              ║
+╠═══════════════════════════════════════════════════════════════════════════════════════════════╣
+║ PX1XrayCentring.py                                                                            ║
+║   run_optical_centring   move_zoom → start_centring_method(AUTO) → minidiff murko → wait      ║
+║   begin_centring_session clear shapes, fresh frame, generateGridFromAnalysis (murko aoi_bbox) ║
+║        → Grid (pinned) on HWR.beamline.sample_view, show_crystal_on_grid                      ║
+║        → report snapshots (2 × 120° rotations)                                                ║
+║   run_grid_scan          run_mesh (COLLECT phase, Tango collect server raster)                ║
+║        → do_mesh_analysis (dozor/dials) → heatmap → show_spots_on_grid                        ║
+║        → move_best_position → add_line_grid × 2                                               ║
+║   run_line_scan          omega +120°/+240° → run_helical → do_helical_analysis                ║
+║        → show_spots_on_grid on the strip                                                      ║
+║   finalize_centring      calculate_center (sine fit) → move motors                            ║
+║        → register_center_position (Point shape) → report figure                               ║
+║   finalize_session       clear shapes, reset; unload ? sc.unload(wash=False) : keep the pin   ║
+║                                                                                               ║
+║ PX1MiniDiff.py    zoom, phases, murko centring (px1_center_murko, estimate_click_murko),      ║
+║                   crystal_mask                                                                ║
+║ PX1Collect.py     data_collection_hook inside smargon.procedure("data collection"):           ║
+║                   prepare_devices_for_collection → _wait_devices_settled → acquisition        ║
+║                   → omega back → thumbnails/LIMS; _take_crystal_snapshot (VISU_SAMPLE, light) ║
+║ PX1Cryotong.py    load (chained CATS Exchange) / unload                                       ║
+║ Smargon           every goniometer move goes through its gate/procedure                       ║
+║ SampleView.py     Grid / Point shapes → emits shapesChanged / newGridResult ──────────────────╫─▲ to 2
+║ (mxcubecore HardwareObjects/SampleView.py)                                                    ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
 ```
 
 The queue knows the steps; the hardware object knows how to do them. The queue layer is
 generic: it calls `HWR.beamline.unattended_collect.<method>(context, **kwargs)` and
 interprets the result. Everything beamline specific is in the hardware object.
+
+What the diagram shows:
+
+- **Two exits from the queue.** Seven of the eight tasks go through
+  `unattended_collect`. The data collection does not: it goes to the standard `collect`
+  object (`AbstractCollect.do_collect` → `PX1Collect`), like any data collection.
+- **`context` is the only state passed between tasks.** `grid_scan` writes
+  `found_spots`, `finalize_centring` writes `centred_position`, and the data collection
+  reads both.
+- **The overlay goes back up via signals, not the queue.** The shapes are added to
+  `HWR.beamline.sample_view`, whose `shapesChanged` / `newGridResult` signals mxcubeweb
+  forwards to the browser. The centring must therefore draw on that object, not on a
+  separate graphics manager.
+- **Only boxes 4 and 5 are beamline specific.** Another beamline writes its own
+  `AbstractUnattendedCollect` subclass and adds the `unattended_collect:` role; boxes 1–3
+  do not change.
 
 ## The tasks of one sample
 
@@ -290,9 +418,11 @@ scanned and analysed as before.
   scans run at other omegas, so they are drawn beside the mesh and not over it
   (`add_line_grid`).
 - **Centred point** - the point the collection uses.
-- All of it stays on the video until the unmount clears the shapes. A grid is hidden
-  while omega is more than `hide_grid_threshold` from its angle, so the overlay
-  disappears during the line scans and the collection, and comes back at the mesh angle.
+- All of it stays on the video until the unmount clears the shapes. An ordinary grid is
+  hidden while omega is more than `hide_grid_threshold` from its angle. The grids of the
+  unattended collect are **pinned** (`Grid.pinned`, set in `begin_centring_session` and
+  `add_line_grid`): they stay drawn at their last screen position during the line scans
+  and the collection.
 - Grids are drawn while the queue runs, but cannot be selected then (`SampleImage.jsx`).
   The colours come through the standard RGB grid results (`SampleView.set_grid_data`
   -> `grid_result_available`). The outline is the grid attribute `crystal_outline`
