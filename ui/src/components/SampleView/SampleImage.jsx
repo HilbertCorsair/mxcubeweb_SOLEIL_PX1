@@ -7,6 +7,7 @@ import {
   makePoints,
   makeTwoDPoints,
   makeLines,
+  makeScanLine,
   makeImageOverlay,
   makeCentringHorizontalLine,
   makeCentringVerticalLine,
@@ -1002,13 +1003,25 @@ export default class SampleImage extends React.Component {
       this.canvas.add(this.centringVerticalLine);
     }
 
-    const fabricSelectables = [...makeLines(lines, imageRatio)];
+    // The unattended collect line scans are drawn with its grids, below
+    const scanLines = Object.values(lines).filter((line) => line.pinned);
+    const otherLines = Object.fromEntries(
+      Object.entries(lines).filter(([, line]) => !line.pinned),
+    );
+    const fabricSelectables = [...makeLines(otherLines, imageRatio)];
 
-    // Grids already defined (drawn). The most faded first, so the grid at
-    // the current omega is drawn last, on top (unattended collect layers).
-    Object.values(grids)
+    // Grids already defined (drawn) and the unattended collect line scans,
+    // the most faded first: the shapes at the current omega are drawn last,
+    // on top (unattended collect layers).
+    [...Object.values(grids), ...scanLines]
       .sort((a, b) => (b.fade || 0) - (a.fade || 0))
       .forEach((gd) => {
+        if (gd.t === 'L') {
+          fabricSelectables.push(
+            makeScanLine(gd, imageRatio, beamSize.x * pixelsPerMm[0]),
+          );
+          return;
+        }
         let gridData = { ...gd };
 
         if (gridData.state !== 'HIDDEN') {

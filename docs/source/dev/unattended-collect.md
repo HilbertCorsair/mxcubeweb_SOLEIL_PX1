@@ -226,10 +226,10 @@ update the browser.
 ║        → Grid (pinned) on HWR.beamline.sample_view, show_crystal_on_grid                      ║
 ║        → report snapshots (2 × 120° rotations)                                                ║
 ║   run_grid_scan          run_mesh (COLLECT phase, Tango collect server raster)                ║
-║        → do_mesh_analysis (dozor/dials) → heatmap → show_spots_on_grid                        ║
+║        → do_mesh_analysis (dozor/dials) → heatmap → show_spots_on_shape                       ║
 ║        → move_best_position                                                                   ║
-║   run_line_scan          run_helical (+120°/+240°) → add_line_grid → scan → analysis          ║
-║        → show_spots_on_grid on the strip                                                      ║
+║   run_line_scan          run_helical (+120°/+240°) → add_line → scan → analysis               ║
+║        → show_spots_on_shape on the Line                                                      ║
 ║   finalize_centring      calculate_center (sine fit) → move motors                            ║
 ║        → register_center_position (Point shape) → report figure                               ║
 ║   finalize_session       clear shapes, reset; unload ? sc.unload(wash=False) : keep the pin   ║
@@ -238,7 +238,7 @@ update the browser.
 ║                   crystal_mask                                                                ║
 ║ PX1Collect.py     data_collection_hook inside smargon.procedure("data collection"):           ║
 ║                   prepare_devices_for_collection → _wait_devices_settled → acquisition        ║
-║                   → omega back → thumbnails/LIMS; _take_crystal_snapshot (VISU_SAMPLE, light) ║
+║                   → omega back → thumbnails/LIMS; _take_crystal_snapshot (CENTRING, light)    ║
 ║ PX1Cryotong.py    load (chained CATS Exchange) / unload                                       ║
 ║ Smargon           every goniometer move goes through its gate/procedure                       ║
 ║ SampleView.py     Grid / Point shapes → emits shapesChanged / newGridResult ──────────────────╫─▲ to 2
@@ -380,12 +380,18 @@ the grid scan and of the tasks after it.
   `first_image`: from the form, or the beamline defaults when empty.
 - `subdir`: the sample name unless given, so each sample writes into its own directory.
 - `shape = -1` (no shape), `helical = False`, `mesh = False`.
-- Snapshots: `num_snapshots` of the collect object, 2 on PX1 (`mxcollect.xml`). Before
-  the collection, `AbstractCollect.take_crystal_snapshots` takes one, turns omega by 90°
-  and takes the next; `do_collect` then moves back to the centred position.
-  `PX1Collect._take_crystal_snapshot` brings the light in (VISU_SAMPLE phase and the
-  zoom's light level) and waits for a fresh camera frame. The files are
-  `<prefix>_<run>_<n>.snapshot.jpeg` in the archive directory. The report snapshots
+- Snapshots: `num_snapshots` of the collect object, 2 on PX1 (`mxcollect.xml`). The web
+  puts it in the acquisition parameters (`take_snapshots`), which is what the collect
+  reads. Before the collection, `AbstractCollect.take_crystal_snapshots` logs
+  `Collection: N crystal snapshot(s)`, takes one, turns omega by 90° and takes the next;
+  `do_collect` then moves back to the centred position.
+  `PX1Collect._take_crystal_snapshot` lights the sample the way the 3-click centring
+  does: `PX1MiniDiff.prepare_centring` (CENTRING phase, then the zoom's light level,
+  waited for) and back to the centred position if the phase changed; then a fresh
+  camera frame, saved with `takePictureAnalysis` like the report snapshots. Each one
+  logs `[UC] snapshot <file>: phase …, N bytes`; a snapshot that cannot be lit is a
+  warning in the UI log. The files are `<prefix>_<run>_<n>.snapshot.jpeg` in the
+  archive directory. The report snapshots
   of the X-ray centring are JPG too (`<prefix>_snapshot_0.jpg`, `_120.jpg`, `_240.jpg`).
 - It has `requires_centring = False`: the position comes from the context, not from a
   centring the queue would ask for.
@@ -418,12 +424,12 @@ scanned and analysed as before.
   `scripts/murko/check_murko_crystal.py` from the mxcubecore checkout.
 - **Mesh heatmap** - after the spot finding, cells with spots get a colour by number
   of spots ('hot' colormap: dark red for few, yellow-white for most). Cells without
-  spots keep green/red (`show_spots_on_grid`).
-- **Line scans** - one narrow strip per line scan, labelled `+120` and `+240`, drawn
-  when its scan starts (`add_line_grid`). Its corners are the start and end programmed
-  for that scan (`run_helical`), half a beam width either side, at the scan's omega: at
-  that omega it lies on the beam column, over the scanned line. Each strip has one cell
-  per image and is coloured the same way.
+  spots keep green/red (`show_spots_on_shape`).
+- **Line scans** - one `Line` shape per line scan, labelled `+120` and `+240`, drawn when
+  its scan starts (`add_line`). Its ends are the start and end programmed for that scan
+  (`run_helical`) at the scan's omega: at that omega it lies on the beam column, over the
+  scanned line. The web draws it as wide as the beam, one segment per image, coloured
+  by spots the same way (`line.result`, `makeScanLine` in `shapes.js`).
 - **Centred point** - the point the collection uses.
 - **Style** - the Draw Grid style: solid green outline, dashed cell lines, square cells.
 - **Following the sample** - the shapes are kept in motor positions and redrawn on every
@@ -432,14 +438,20 @@ scanned and analysed as before.
   Smargon `x/y/z` axes, on top of `xOffset/yOffset/zOffset` (`zero_sgonaxis` puts them
   back to 0 afterwards), so the transform adds them: the grid moves with the sample cell
   by cell.
+- **Locked on the sample** - each shape is kept as motor positions in the camera plane
+  of its own omega (`PX1MiniDiff.get_centred_point_from_coord` puts a screen point in
+  that plane, as move-to-beam does) and drawn as its projection at the current omega.
+  The rotation axis is horizontal on the video, so a grid keeps its x range and its
+  height is the projection of its two corners: flat at 90°, mirrored past it (rows drawn
+  bottom-up, `DrawGridPlugin`). A line shortens the same way.
 - **Layers** - all of it stays on the video until the unmount clears the shapes. An
   ordinary grid is hidden while omega is more than `hide_grid_threshold` from its angle.
-  The grids of the unattended collect are **pinned** (`Grid.pinned`, set in
-  `begin_centring_session` and `add_line_grid`): they keep following the sample at every
-  omega, with a `fade` of 0 at their own omega and up to 1 facing away. The web draws a
-  faded grid in grey, more transparent and foreshortened (its height is the projection
-  of its two corners), without crystal outline or label, and draws the least faded last:
-  the shape at the current omega is on top and fully lit.
+  The shapes of the unattended collect are **pinned** (`Shape.pinned`, set in
+  `begin_centring_session` and `add_line`): they keep following the sample at every
+  omega, with a `fade` of 0 at their own omega and up to 1 facing away
+  (`Shape.update_position`). The web draws a faded shape in grey and more transparent,
+  without crystal outline or label, and draws the grids and lines least faded last: the
+  shapes at the current omega are on top and fully lit.
 - Grids are drawn while the queue runs, but cannot be selected then (`SampleImage.jsx`).
   The colours come through the standard RGB grid results (`SampleView.set_grid_data`
   -> `grid_result_available`). The outline is the grid attribute `crystal_outline`
@@ -523,10 +535,14 @@ The mockup beamline (`configuration/mockup/qt/beamline_config.yml`) loads
   the overlay follows. `xOffset + x` after the mesh should be the programmed `meshEnd`;
   if it is the opposite sign, the sign in `motor_positions_to_screen` must flip.
 
-**The snapshots before the collection are dark**
+**The snapshots before the collection are dark, or missing**
+- `Collection: N crystal snapshot(s)` gives the count; 0 or 1 instead of 2 means
+  `num_snapshots` did not reach the acquisition parameters.
+- Each snapshot logs `[UC] snapshot <file>: phase …, N bytes`. A UI-log warning "did
+  not reach the centring phase" means the supervisor refused the phase change.
 - Look for `PX1TangoLight: light a -> b (zoom)` just before them. The level is always
   sent and waited for (3 s at most). `b` far from the zoom's `lightLevel` (`zoom.xml`)
-  means the light did not get there: check the light device and the supervisor phase.
+  means the light did not get there: check the light device.
 
 **Every task after the grid scan is skipped**
 - The grid scan found no spots. Look at `No result from mesh analysis` in the log and at

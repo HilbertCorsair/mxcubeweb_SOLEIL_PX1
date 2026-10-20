@@ -440,6 +440,12 @@ export default class DrawGridPlugin {
         }
       }
     }
+    // A mirrored grid (seen from behind) has its first row at the bottom
+    if (gd.mirrored) {
+      fillingMatrix.forEach((column) => {
+        column.reverse();
+      });
+    }
     return fillingMatrix;
   }
 
@@ -512,13 +518,15 @@ export default class DrawGridPlugin {
   shapeFromGridData(gd) {
     const gridData = { ...gd };
     let [left, top] = gd.screenCoord;
-    // An unattended collect grid follows the sample at every omega: its
-    // height is the projection of its two corners, foreshortened away from
-    // its own omega (the width lies along the rotation axis)
+    // An unattended collect grid is locked on the sample: drawn as the
+    // projection of its two corners, foreshortened away from its own omega
+    // and mirrored (bottom corner above the top one) past 90 degrees. The
+    // width lies along the rotation axis.
     let projectedHeight = null;
     if (gridData.pinned && gd.screenCoord.length === 4) {
       projectedHeight = Math.abs(gd.screenCoord[3] - gd.screenCoord[1]);
       top = Math.min(gd.screenCoord[1], gd.screenCoord[3]);
+      gridData.mirrored = gd.screenCoord[3] < gd.screenCoord[1];
     }
 
     // Only apply scale to grids that have been "normalized"

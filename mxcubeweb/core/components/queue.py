@@ -1530,8 +1530,12 @@ class Queue(ComponentBase):
         dc_model = qmo.DataCollection()
         dc_model.set_origin(ORIGIN_MX3)
         dc_model.center_before_collect = True
-        dc_model.take_snapshots = HWR.beamline.collect.get_property(
-            "num_snapshots", self.app.DEFAULT_NUM_SNAPSHOTS
+        # What the collect reads (to_collect_dict); a dc_model attribute was
+        # never read, so the beamline default True gave one snapshot
+        dc_model.acquisitions[0].acquisition_parameters.take_snapshots = (
+            HWR.beamline.collect.get_property(
+                "num_snapshots", self.app.DEFAULT_NUM_SNAPSHOTS
+            )
         )
 
         dc_entry = qe.DataCollectionQueueEntry(Mock(), dc_model)
@@ -1765,8 +1769,11 @@ class Queue(ComponentBase):
         )
 
         dc_model = qmo.UnattendedDataCollection()
-        dc_model.take_snapshots = HWR.beamline.collect.get_property(
-            "num_snapshots", self.app.DEFAULT_NUM_SNAPSHOTS
+        # As in _create_dc: the acquisition parameters are what the collect reads
+        dc_model.acquisitions[0].acquisition_parameters.take_snapshots = (
+            HWR.beamline.collect.get_property(
+                "num_snapshots", self.app.DEFAULT_NUM_SNAPSHOTS
+            )
         )
         dc_entry = qe.UnattendedDataCollectionQueueEntry(Mock(), dc_model)
         # Enabled like the other tasks of the group
