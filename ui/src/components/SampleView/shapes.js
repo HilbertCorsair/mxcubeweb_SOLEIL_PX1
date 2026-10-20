@@ -391,56 +391,22 @@ export function pointLine(
 }
 
 // An unattended collect line scan (a pinned Line), locked on the sample and
-// drawn as its projection: one segment per image (numImages), coloured by
-// its spots (result, as a grid's RGB result), as wide as the beam. Away
-// from its own omega (fade > 0) it is grey and fainter, without label, as
-// the grids.
-export function makeScanLine(line, imageRatio, beamWidth) {
+// drawn as its projection: a thin line along the scan, under its 1D grid
+// (the heatmap). Away from its own omega (fade > 0) it is grey and fainter,
+// as the grids.
+export function makeScanLine(line, imageRatio) {
   const [x1, y1, x2, y2] = line.screenCoord.map((c) => c * imageRatio);
-  const num = line.numImages || 1;
   const fade = line.fade || 0;
-  const alpha = 0.8 * (1 - 0.7 * fade);
   const grey = Math.round(200 - 120 * fade);
-  const base =
-    fade > 0
-      ? `rgba(${grey}, ${grey}, ${grey}, ${alpha})`
-      : `rgba(136, 255, 91, ${alpha / 2})`;
-  const objects = [];
-
-  for (let i = 0; i < num; i++) {
-    const rgb = line.result?.[i + 1]?.[1];
-    objects.push(
-      new fabric.Line(
-        [
-          x1 + ((x2 - x1) * i) / num,
-          y1 + ((y2 - y1) * i) / num,
-          x1 + ((x2 - x1) * (i + 1)) / num,
-          y1 + ((y2 - y1) * (i + 1)) / num,
-        ],
-        {
-          stroke: rgb
-            ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
-            : base,
-          strokeWidth: beamWidth * imageRatio,
-          strokeLineCap: 'butt',
-        },
-      ),
-    );
-  }
-
-  if (fade === 0 && line.name) {
-    objects.push(
-      new fabric.Text(line.name, {
-        left: Math.max(x1, x2) + (beamWidth * imageRatio) / 2 + 4,
-        top: Math.min(y1, y2),
-        fill: 'rgba(136, 255, 91, 1)',
-        fontFamily: 'Helvetica',
-        fontSize: 18,
-      }),
-    );
-  }
-
-  return new fabric.Group(objects, { selectable: false, evented: false });
+  return new fabric.Line([x1, y1, x2, y2], {
+    stroke:
+      fade > 0
+        ? `rgba(${grey}, ${grey}, ${grey}, ${0.8 * (1 - 0.7 * fade)})`
+        : 'rgba(136, 255, 91, 1)',
+    strokeWidth: 2,
+    selectable: false,
+    evented: false,
+  });
 }
 
 export function makeLines(lines, imageRatio) {

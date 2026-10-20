@@ -1012,14 +1012,16 @@ export default class SampleImage extends React.Component {
 
     // Grids already defined (drawn) and the unattended collect line scans,
     // the most faded first: the shapes at the current omega are drawn last,
-    // on top (unattended collect layers).
+    // on top (unattended collect layers). At the same fade a line goes under
+    // its 1D grid, whose heatmap stays visible.
     [...Object.values(grids), ...scanLines]
-      .sort((a, b) => (b.fade || 0) - (a.fade || 0))
+      .sort(
+        (a, b) =>
+          (b.fade || 0) - (a.fade || 0) || (b.t === 'L') - (a.t === 'L'),
+      )
       .forEach((gd) => {
         if (gd.t === 'L') {
-          fabricSelectables.push(
-            makeScanLine(gd, imageRatio, beamSize.x * pixelsPerMm[0]),
-          );
+          fabricSelectables.push(makeScanLine(gd, imageRatio));
           return;
         }
         let gridData = { ...gd };

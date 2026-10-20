@@ -229,7 +229,7 @@ update the browser.
 ║        → do_mesh_analysis (dozor/dials) → heatmap → show_spots_on_shape                       ║
 ║        → move_best_position                                                                   ║
 ║   run_line_scan          run_helical (+120°/+240°) → add_line → scan → analysis               ║
-║        → show_spots_on_shape on the Line                                                      ║
+║        → show_spots_on_shape on the line's 1D grid                                            ║
 ║   finalize_centring      calculate_center (sine fit) → move motors                            ║
 ║        → register_center_position (Point shape) → report figure                               ║
 ║   finalize_session       clear shapes, reset; unload ? sc.unload(wash=False) : keep the pin   ║
@@ -425,11 +425,13 @@ scanned and analysed as before.
 - **Mesh heatmap** - after the spot finding, cells with spots get a colour by number
   of spots ('hot' colormap: dark red for few, yellow-white for most). Cells without
   spots keep green/red (`show_spots_on_shape`).
-- **Line scans** - one `Line` shape per line scan, labelled `+120` and `+240`, drawn when
-  its scan starts (`add_line`). Its ends are the start and end programmed for that scan
-  (`run_helical`) at the scan's omega: at that omega it lies on the beam column, over the
-  scanned line. The web draws it as wide as the beam, one segment per image, coloured
-  by spots the same way (`line.result`, `makeScanLine` in `shapes.js`).
+- **Line scans** - per line scan, a `Line` and over it a one-column `Grid` (the 1D
+  grid), labelled `+120` and `+240`, drawn when its scan starts (`add_line`). Both are
+  built from the start and end programmed for that scan (`run_helical`) at the scan's
+  omega: at that omega they lie on the beam column, over the scanned line. The 1D grid
+  is as wide as the beam, one cell per image, and gets the heatmap of the line's spots
+  like the mesh. The web draws the line thin (`makeScanLine` in `shapes.js`), under its
+  1D grid.
 - **Centred point** - the point the collection uses.
 - **Style** - the Draw Grid style: solid green outline, dashed cell lines, square cells.
 - **Following the sample** - the shapes are kept in motor positions and redrawn on every
@@ -438,12 +440,15 @@ scanned and analysed as before.
   Smargon `x/y/z` axes, on top of `xOffset/yOffset/zOffset` (`zero_sgonaxis` puts them
   back to 0 afterwards), so the transform adds them: the grid moves with the sample cell
   by cell.
-- **Locked on the sample** - each shape is kept as motor positions in the camera plane
-  of its own omega (`PX1MiniDiff.get_centred_point_from_coord` puts a screen point in
-  that plane, as move-to-beam does) and drawn as its projection at the current omega.
-  The rotation axis is horizontal on the video, so a grid keeps its x range and its
-  height is the projection of its two corners: flat at 90°, mirrored past it (rows drawn
-  bottom-up, `DrawGridPlugin`). A line shortens the same way.
+- **Locked on the sample** - each shape is kept as motor positions on the plane it
+  scans and drawn as its projection at the current omega. The mesh grid's corners are
+  re-anchored on the mesh program in `prepare` (`mesh_x_start/end`, `calc_y_z` of
+  `mesh_y_start/end` at the mesh omega), the convention the line scans use: the HWR log
+  says `[UC] grid corners: clicked ... -> scanned ...`, and after each line scan
+  `[UC] line n at omega w: grid y ..., line y ...`. The rotation axis is horizontal on
+  the video, so a grid keeps its x range and its height is the projection of its two
+  corners: flat at 90°, mirrored past it (rows drawn bottom-up, `DrawGridPlugin`). The
+  lines and 1D grids shorten the same way.
 - **Layers** - all of it stays on the video until the unmount clears the shapes. An
   ordinary grid is hidden while omega is more than `hide_grid_threshold` from its angle.
   The shapes of the unattended collect are **pinned** (`Shape.pinned`, set in
