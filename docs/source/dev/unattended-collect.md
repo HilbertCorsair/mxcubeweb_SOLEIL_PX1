@@ -433,6 +433,12 @@ scanned and analysed as before.
   like the mesh. The web draws the line thin (`makeScanLine` in `shapes.js`), under its
   1D grid.
 - **Centred point** - the point the collection uses.
+- **Axes** - once the sample is centred (a centred point, or the unattended collect's
+  grid), a small x/y/z triad bottom left shows the Smargon axes `xOffset` (x, red),
+  `yOffset` (y, green) and `zOffset` (z, blue) as they lie at the live omega, with the
+  signs of `motor_positions_to_screen`; the depth is drawn as a short oblique
+  (`makeAxesTriad` in `shapes.js`). It turns with omega in the browser, without a server
+  round trip.
 - **Style** - the Draw Grid style: solid green outline, dashed cell lines, square cells.
 - **Following the sample** - the shapes are kept in motor positions and redrawn on every
   Smargon move (`SampleView._update_shape_positions` ->

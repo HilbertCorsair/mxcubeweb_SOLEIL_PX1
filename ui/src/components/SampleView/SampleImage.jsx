@@ -8,6 +8,7 @@ import {
   makeTwoDPoints,
   makeLines,
   makeScanLine,
+  makeAxesTriad,
   makeImageOverlay,
   makeCentringHorizontalLine,
   makeCentringVerticalLine,
@@ -1052,6 +1053,21 @@ export default class SampleImage extends React.Component {
     fabricSelectables.push(
       ...makePoints(points, imageRatio),
       ...makeTwoDPoints(twoDPoints, imageRatio),
+    );
+
+    // The sample's axes at the live omega, bottom left, once the sample is
+    // centred: a centred point, or the unattended collect's grid
+    const omegaProps = this.props.uiproperties.sample_view.components.find(
+      (c) => c.role === 'omega',
+    );
+    this.canvas.add(
+      ...makeAxesTriad(
+        this.props.hardwareObjects[omegaProps?.attribute]?.value,
+        points,
+        grids,
+        60,
+        this.canvas.getHeight() - 60,
+      ),
     );
 
     this.canvas.add(...fabricSelectables);

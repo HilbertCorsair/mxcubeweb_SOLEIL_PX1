@@ -409,6 +409,45 @@ export function makeScanLine(line, imageRatio) {
   });
 }
 
+// The sample's Smargon axes, x (xOffset, phiy), y (yOffset, sampy) and z
+// (zOffset, sampx), as they lie at this omega: the projection
+// PX1MiniDiff.motor_positions_to_screen uses (+x to the left, y and z turning
+// with omega in the vertical plane), with the depth drawn as a short oblique
+// so the axis facing the camera still shows. A triad of `size` px with its
+// origin at (left, bottom), in a list: empty until the sample is centred
+// (a centred point, or the unattended collect's grid) or while omega is
+// unknown.
+export function makeAxesTriad(omega, points, grids, left, bottom, size = 40) {
+  const centred =
+    Object.keys(points).length > 0 ||
+    Object.values(grids).some((grid) => grid.pinned);
+  if (!centred || !Number.isFinite(omega)) {
+    return [];
+  }
+  const w = (omega * Math.PI) / 180;
+  const axes = [
+    ['x', 'rgba(255, 80, 80, 1)', -1, 0, 0],
+    ['y', 'rgba(136, 255, 91, 1)', 0, Math.cos(w), -Math.sin(w)],
+    ['z', 'rgba(90, 160, 255, 1)', 0, Math.sin(w), Math.cos(w)],
+  ];
+  const objects = [];
+  axes.forEach(([label, color, sx, sy, depth]) => {
+    const x = left + size * (sx + 0.45 * depth);
+    const y = bottom + size * (sy - 0.3 * depth);
+    objects.push(
+      new fabric.Line([left, bottom, x, y], { stroke: color, strokeWidth: 2 }),
+      new fabric.Text(label, {
+        left: x + (x < left ? -12 : 3),
+        top: y - 8,
+        fill: color,
+        fontFamily: 'Helvetica',
+        fontSize: 14,
+      }),
+    );
+  });
+  return [new fabric.Group(objects, { selectable: false, evented: false })];
+}
+
 export function makeLines(lines, imageRatio) {
   const fabricLines = [];
   Object.keys(lines).forEach((id) => {
