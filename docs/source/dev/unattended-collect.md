@@ -227,8 +227,8 @@ update the browser.
 ║        → report snapshots (2 × 120° rotations)                                                ║
 ║   run_grid_scan          run_mesh (COLLECT phase, Tango collect server raster)                ║
 ║        → do_mesh_analysis (dozor/dials) → heatmap → show_spots_on_grid                        ║
-║        → move_best_position → add_line_grid × 2                                               ║
-║   run_line_scan          omega +120°/+240° → run_helical → do_helical_analysis                ║
+║        → move_best_position                                                                   ║
+║   run_line_scan          run_helical (+120°/+240°) → add_line_grid → scan → analysis          ║
 ║        → show_spots_on_grid on the strip                                                      ║
 ║   finalize_centring      calculate_center (sine fit) → move motors                            ║
 ║        → register_center_position (Point shape) → report figure                               ║
@@ -419,16 +419,27 @@ scanned and analysed as before.
 - **Mesh heatmap** - after the spot finding, cells with spots get a colour by number
   of spots ('hot' colormap: dark red for few, yellow-white for most). Cells without
   spots keep green/red (`show_spots_on_grid`).
-- **Line scans** - one narrow strip per line scan, right of the mesh, labelled `+120`
-  and `+240`. Each strip has one cell per image and is coloured the same way. The line
-  scans run at other omegas, so they are drawn beside the mesh and not over it
-  (`add_line_grid`).
+- **Line scans** - one narrow strip per line scan, labelled `+120` and `+240`, drawn
+  when its scan starts (`add_line_grid`). Its corners are the start and end programmed
+  for that scan (`run_helical`), half a beam width either side, at the scan's omega: at
+  that omega it lies on the beam column, over the scanned line. Each strip has one cell
+  per image and is coloured the same way.
 - **Centred point** - the point the collection uses.
-- All of it stays on the video until the unmount clears the shapes. An ordinary grid is
-  hidden while omega is more than `hide_grid_threshold` from its angle. The grids of the
-  unattended collect are **pinned** (`Grid.pinned`, set in `begin_centring_session` and
-  `add_line_grid`): they stay drawn at their last screen position during the line scans
-  and the collection.
+- **Style** - the Draw Grid style: solid green outline, dashed cell lines, square cells.
+- **Following the sample** - the shapes are kept in motor positions and redrawn on every
+  Smargon move (`SampleView._update_shape_positions` ->
+  `PX1MiniDiff.motor_positions_to_screen`). The collect server rasters the mesh on the
+  Smargon `x/y/z` axes, on top of `xOffset/yOffset/zOffset` (`zero_sgonaxis` puts them
+  back to 0 afterwards), so the transform adds them: the grid moves with the sample cell
+  by cell.
+- **Layers** - all of it stays on the video until the unmount clears the shapes. An
+  ordinary grid is hidden while omega is more than `hide_grid_threshold` from its angle.
+  The grids of the unattended collect are **pinned** (`Grid.pinned`, set in
+  `begin_centring_session` and `add_line_grid`): they keep following the sample at every
+  omega, with a `fade` of 0 at their own omega and up to 1 facing away. The web draws a
+  faded grid in grey, more transparent and foreshortened (its height is the projection
+  of its two corners), without crystal outline or label, and draws the least faded last:
+  the shape at the current omega is on top and fully lit.
 - Grids are drawn while the queue runs, but cannot be selected then (`SampleImage.jsx`).
   The colours come through the standard RGB grid results (`SampleView.set_grid_data`
   -> `grid_result_available`). The outline is the grid attribute `crystal_outline`
@@ -505,6 +516,17 @@ The mockup beamline (`configuration/mockup/qt/beamline_config.yml`) loads
 - If the crosshair is there but not the grids, look for `[UC] overlay: N shapes` in the
   log (written by the finalize centring). It lists the shapes still on the sample view
   at the collection.
+
+**The grid does not move with the sample during the scans**
+- Look for `[UC] mesh axes before:` / `after:` in the log (`_run_collect_server`, one
+  pair per scan). Non-zero `x/y/z` after the mesh mean the server rasters on them, which
+  the overlay follows. `xOffset + x` after the mesh should be the programmed `meshEnd`;
+  if it is the opposite sign, the sign in `motor_positions_to_screen` must flip.
+
+**The snapshots before the collection are dark**
+- Look for `PX1TangoLight: light a -> b (zoom)` just before them. The level is always
+  sent and waited for (3 s at most). `b` far from the zoom's `lightLevel` (`zoom.xml`)
+  means the light did not get there: check the light device and the supervisor phase.
 
 **Every task after the grid scan is skipped**
 - The grid scan found no spots. Look at `No result from mesh analysis` in the log and at

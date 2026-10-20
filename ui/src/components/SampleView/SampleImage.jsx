@@ -1004,26 +1004,29 @@ export default class SampleImage extends React.Component {
 
     const fabricSelectables = [...makeLines(lines, imageRatio)];
 
-    // Grids already defined (drawn)
-    Object.values(grids).forEach((gd) => {
-      let gridData = { ...gd };
+    // Grids already defined (drawn). The most faded first, so the grid at
+    // the current omega is drawn last, on top (unattended collect layers).
+    Object.values(grids)
+      .sort((a, b) => (b.fade || 0) - (a.fade || 0))
+      .forEach((gd) => {
+        let gridData = { ...gd };
 
-      if (gridData.state !== 'HIDDEN') {
-        this.drawGridPlugin.setScale(imageRatio);
-        gridData = this.drawGridPlugin.setPixelsPerMM(pixelsPerMm, gridData);
-        const { shapeGroup } = this.drawGridPlugin.shapeFromGridData(
-          gridData,
-          this.canvas,
-        );
-        // While the queue runs (the unattended collect draws its grid and
-        // heatmap) grids are shown but cannot be selected
-        shapeGroup.set({
-          selectable: !this.props.busy,
-          evented: !this.props.busy,
-        });
-        fabricSelectables.push(shapeGroup);
-      }
-    });
+        if (gridData.state !== 'HIDDEN') {
+          this.drawGridPlugin.setScale(imageRatio);
+          gridData = this.drawGridPlugin.setPixelsPerMM(pixelsPerMm, gridData);
+          const { shapeGroup } = this.drawGridPlugin.shapeFromGridData(
+            gridData,
+            this.canvas,
+          );
+          // While the queue runs (the unattended collect draws its grid and
+          // heatmap) grids are shown but cannot be selected
+          shapeGroup.set({
+            selectable: !this.props.busy,
+            evented: !this.props.busy,
+          });
+          fabricSelectables.push(shapeGroup);
+        }
+      });
 
     // Grid beeing defined (being drawn)
     if (this.drawGridPlugin.shapeGroup) {

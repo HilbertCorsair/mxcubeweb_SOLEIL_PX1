@@ -48,9 +48,10 @@ const MeshGridResult = fabric.util.createClass(fabric.Object, {
   },
 
   _render(ctx) {
-    if (inSmallCellSizeMode(this.cellTW, this.cellTH)) {
+    if (this.square || inSmallCellSizeMode(this.cellTW, this.cellTH)) {
       //
-      // the cells are small, draw them as rectangles
+      // square cells (unattended collect grids), or small cells: draw them
+      // as rectangles
       //
 
       const xOffset = this.cellHSpace / 2;
@@ -381,17 +382,20 @@ export default class DrawGridPlugin {
     }
   }
 
+  // A faded grid (an unattended collect layer away from its omega, fade
+  // 0..1) is drawn more transparent
   heatMapColorForValue(gd, value) {
+    const level = this.overlayLevel * (1 - 0.7 * (gd.fade || 0));
     let dataFill = `rgba(${Number.parseInt(value[0], 10)}, ${Number.parseInt(
       value[1],
       10,
     )},`;
-    dataFill += `${Number.parseInt(value[2], 10)}, ${this.overlayLevel})`;
+    dataFill += `${Number.parseInt(value[2], 10)}, ${level})`;
     return dataFill;
   }
 
   initializeCellFilling(gd, col, row) {
-    const level = this.overlayLevel || 0.2;
+    const level = (this.overlayLevel || 0.2) * (1 - 0.7 * (gd.fade || 0));
     const fill = `rgba(0, 0, 200, ${level})`;
     return Array.from({ length: col }).map(() =>
       Array.from({ length: row }).fill(fill),
@@ -445,9 +449,20 @@ export default class DrawGridPlugin {
    * Does nothing if mesh is not selected,
    * or if we are drawing in small cell size' mode.
    */
-  addInnerLines(shapes, gridData, left, top, height, width, cellTH, cellTW) {
-    if (!gridData.selected) {
-      /* we only draw inner lines for selected meshes */
+  addInnerLines(
+    shapes,
+    gridData,
+    left,
+    top,
+    height,
+    width,
+    cellTH,
+    cellTW,
+    lineColor = 'rgba(136, 255, 91, 0.5)',
+  ) {
+    if (!gridData.selected && !gridData.pinned) {
+      /* we only draw inner lines for selected meshes, and the unattended
+         collect ones */
       return;
     }
 
@@ -456,7 +471,6 @@ export default class DrawGridPlugin {
       return;
     }
 
-    const lineColor = 'rgba(136, 255, 91, 0.5)';
     const strokeArray = [5, 5];
 
     for (let nw = 1; nw < gridData.numCols; nw++) {
@@ -498,17 +512,30 @@ export default class DrawGridPlugin {
   shapeFromGridData(gd) {
     const gridData = { ...gd };
     let [left, top] = gd.screenCoord;
+    // An unattended collect grid follows the sample at every omega: its
+    // height is the projection of its two corners, foreshortened away from
+    // its own omega (the width lies along the rotation axis)
+    let projectedHeight = null;
+    if (gridData.pinned && gd.screenCoord.length === 4) {
+      projectedHeight = Math.abs(gd.screenCoord[3] - gd.screenCoord[1]);
+      top = Math.min(gd.screenCoord[1], gd.screenCoord[3]);
+    }
 
     // Only apply scale to grids that have been "normalized"
     // (stored server side, id == null)
     if (gridData.id !== null) {
       left *= this.scale;
       top *= this.scale;
+      projectedHeight =
+        projectedHeight === null ? null : projectedHeight * this.scale;
     }
 
     const shapes = [];
     const cellWidth = this.getCellWidth(gridData);
-    const cellHeight = this.getCellHeight(gridData);
+    const cellHeight =
+      projectedHeight === null
+        ? this.getCellHeight(gridData)
+        : projectedHeight / gridData.numRows - this.getCellVSpace(gridData);
     const cellHSpace = this.getCellHSpace(gridData);
     const cellVSpace = this.getCellVSpace(gridData);
 
@@ -522,7 +549,23 @@ export default class DrawGridPlugin {
       ? 'rgba(136, 255, 91, 1)'
       : 'rgba(228, 255, 9, 0.5)';
     color = gridData.result?.length > 0 ? 'rgba(228, 255, 9, 1)' : color;
-    const outlineStrokeArray = gridData.selected ? [] : [5, 5];
+    let innerLineColor;
+    // Unattended collect grids: the Draw Grid style, square cells. Away from
+    // their omega they are greyer the further they face away.
+    const fade = gridData.pinned ? gridData.fade || 0 : 0;
+    if (gridData.pinned) {
+      const grey = Math.round(200 - 120 * fade);
+      color =
+        fade > 0
+          ? `rgba(${grey}, ${grey}, ${grey}, 1)`
+          : 'rgba(136, 255, 91, 1)';
+      innerLineColor =
+        fade > 0
+          ? `rgba(${grey}, ${grey}, ${grey}, 0.5)`
+          : 'rgba(136, 255, 91, 0.5)';
+    }
+    const outlineStrokeArray =
+      gridData.selected || gridData.pinned ? [] : [5, 5];
 
     if (cellTW > 0 && cellTH > 0) {
       this.addInnerLines(
@@ -534,6 +577,7 @@ export default class DrawGridPlugin {
         width,
         cellTH,
         cellTW,
+        innerLineColor,
       );
       if (!this.drawing) {
         if (this.gridResultFormat === 'RGB') {
@@ -554,6 +598,7 @@ export default class DrawGridPlugin {
               cellHSpace,
               cellVSpace,
               fillingMatrix,
+              square: Boolean(gridData.pinned),
             }),
           );
 
@@ -611,7 +656,8 @@ export default class DrawGridPlugin {
     );
 
     // The crystal murko saw, in image pixels from the grid's top-left corner
-    if (gridData.crystalOutline?.length > 2) {
+    // (only true at the grid's own omega)
+    if (gridData.crystalOutline?.length > 2 && fade === 0) {
       const scale = gridData.id === null ? 1 : this.scale;
       shapes.push(
         new fabric.Polygon(
@@ -630,7 +676,7 @@ export default class DrawGridPlugin {
       );
     }
 
-    if (gridData.name) {
+    if (gridData.name && fade === 0) {
       shapes.push(
         new fabric.Text(gridData.name, {
           left: left + width,
