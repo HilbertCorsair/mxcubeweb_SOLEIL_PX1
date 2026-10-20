@@ -83,6 +83,7 @@ export default class SampleImage extends React.Component {
     this.updateGridResults = this.updateGridResults.bind(this);
     this.selectedGrid = this.selectedGrid.bind(this);
     this.initJSMpeg = this.initJSMpeg.bind(this);
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
     this.centringMessage = this.centringMessage.bind(this);
     this.selectShape = this.selectShape.bind(this);
     this.deSelectShape = this.deSelectShape.bind(this);
@@ -139,6 +140,7 @@ export default class SampleImage extends React.Component {
 
     window.initJSMpeg = this.initJSMpeg;
     this.initJSMpeg();
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -187,6 +189,7 @@ export default class SampleImage extends React.Component {
     this.canvas.off('selection:updated', this.selectShapeEvent);
     this.canvas.off('selection:cleared', this.clearSelectionEvent);
 
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
     document.removeEventListener('keydown', this.keyDown);
     document.removeEventListener('keyup', this.keyUp);
     window.removeEventListener('resize', this.setImageRatio);
@@ -881,6 +884,21 @@ export default class SampleImage extends React.Component {
     return result;
   }
 
+  // A hidden tab closes the video rather than pausing it. jsmpeg's own
+  // pauseWhenHidden stops decoding but not the socket: the stream piled up
+  // and, back on the tab, was decoded one frame per animation frame, so the
+  // video lagged behind for good. A new player starts from the live edge.
+  // (jsmpeg's own listener was also never removed by destroy().)
+  onVisibilityChange() {
+    if (document.hidden) {
+      this.destroyPlayer();
+    } else {
+      this.initJSMpeg();
+      // The new video canvas gets its size from drawCanvas
+      this.renderSampleView();
+    }
+  }
+
   destroyPlayer() {
     if (this.player) {
       try {
@@ -934,6 +952,7 @@ export default class SampleImage extends React.Component {
         this.player = new JSMpeg.Player(source, {
           canvas,
           decodeFirstFrame: false,
+          pauseWhenHidden: false,
           preserveDrawingBuffer: false,
           protocols: [],
         });
