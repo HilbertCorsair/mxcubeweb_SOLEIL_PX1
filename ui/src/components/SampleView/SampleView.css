@@ -152,10 +152,16 @@
   float: left;
 }
 
+.gridform-title {
+  padding: 2px 12px 4px;
+  font-size: 0.9em;
+  cursor: move;
+}
+
 .gridform {
   position: absolute;
   z-index: 1001;
-  width: 65em;
+  width: 52em;
   float: left;
   padding: 5px 0;
   margin: 2px 0 0;

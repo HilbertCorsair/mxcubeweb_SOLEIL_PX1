@@ -197,6 +197,7 @@ class SampleViewContainer extends Component {
                 enable2DPoints={this.props.enable2DPoints}
                 enableNativeMesh={this.props.enableNativeMesh}
                 showErrorPanel={this.props.showErrorPanel}
+                hasShapes={Object.keys(this.props.shapes || {}).length > 0}
               />
               <SampleImage
                 sampleViewActions={this.props.sampleViewActions}

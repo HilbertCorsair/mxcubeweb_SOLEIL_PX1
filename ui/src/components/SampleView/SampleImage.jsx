@@ -106,7 +106,8 @@ export default class SampleImage extends React.Component {
   componentDidMount() {
     // Create fabric and set image background to sample
     this.canvas = new fabric.Canvas('canvas', {
-      defaultCursor: 'crosshair',
+      // crosshair only in a click mode, see componentDidUpdate
+      defaultCursor: 'default',
       altSelectionKey: 'altKey',
       selectionKey: 'ctrlKey',
       preserveObjectStacking: true,
@@ -137,6 +138,8 @@ export default class SampleImage extends React.Component {
     window.addEventListener('resize', this.setImageRatio);
     document.addEventListener('keydown', this.keyDown, false);
     document.addEventListener('keyup', this.keyUp, false);
+    // A key released outside the window never sends keyup
+    window.addEventListener('blur', this.keyUp, false);
 
     window.initJSMpeg = this.initJSMpeg;
     this.initJSMpeg();
@@ -172,6 +175,10 @@ export default class SampleImage extends React.Component {
       this.initJSMpeg();
     }
 
+    const { drawGrid, clickCentring, measureDistance } = this.props;
+    this.canvas.defaultCursor =
+      drawGrid || clickCentring || measureDistance ? 'crosshair' : 'default';
+
     this.renderSampleView();
   }
 
@@ -192,6 +199,7 @@ export default class SampleImage extends React.Component {
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     document.removeEventListener('keydown', this.keyDown);
     document.removeEventListener('keyup', this.keyUp);
+    window.removeEventListener('blur', this.keyUp);
     window.removeEventListener('resize', this.setImageRatio);
 
     const imageOverlay = document.querySelector('#insideWrapper');
@@ -817,6 +825,10 @@ export default class SampleImage extends React.Component {
     );
     this.props.sampleViewActions.addShape({ t: 'G', ...gd });
     this.drawGridPlugin.reset();
+    // Saved: leave grid drawing, as the context menu's Save Grid does
+    if (this.props.drawGrid) {
+      this.props.sampleViewActions.toggleDrawGrid();
+    }
   }
 
   toggleGridVisibility(id) {

@@ -7,6 +7,7 @@ import {
 import {
   sendAddOrUpdateShapes,
   sendDeleteShape,
+  sendDeleteAllShapes,
   sendRotateToShape,
   sendSetVideoSize,
   sendRecordCentringClick,
@@ -290,6 +291,13 @@ export function deleteShape(id) {
     } catch {
       throw new Error('Server refused to delete shape');
     }
+  };
+}
+
+export function deleteAllShapes() {
+  return async () => {
+    // The server pushes the empty shape list (update_shapes)
+    await sendDeleteAllShapes();
   };
 }
 

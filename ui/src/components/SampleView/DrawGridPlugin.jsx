@@ -1,8 +1,8 @@
 import 'fabric';
 
-const TAU = Math.PI * 2;
-
 const { fabric } = window;
+
+const INNER_LINE_GREEN = 'rgba(136, 255, 91, 0.5)';
 
 /**
  * Based on cell width and height in pixels,
@@ -34,11 +34,6 @@ const GridGroup = fabric.util.createClass(fabric.Group, {
  * cells. Using one single custom fabric object for drawing results for
  * all cells is faster, then having a per cell fabric object.
  *
- * Another optimization is to switch to drawing rectangles instead of ellipses,
- * when cells are small. When cell's are a handful of pixels large, there is no
- * noticeable visual difference between a rectangle and an ellipse. However, it
- * appears that drawing rectangles is much faster.
- *
  */
 const MeshGridResult = fabric.util.createClass(fabric.Object, {
   type: 'GridGroup',
@@ -48,54 +43,22 @@ const MeshGridResult = fabric.util.createClass(fabric.Object, {
   },
 
   _render(ctx) {
-    if (this.square || inSmallCellSizeMode(this.cellTW, this.cellTH)) {
-      //
-      // square cells (unattended collect grids), or small cells: draw them
-      // as rectangles
-      //
+    // Rectangular cells, coloured by their result (transparent without one)
+    const xOffset = this.cellHSpace / 2;
+    const yOffset = this.cellVSpace / 2;
+    const width = this.cellTW - this.cellHSpace;
+    const height = this.cellTH - this.cellVSpace;
 
-      const xOffset = this.cellHSpace / 2;
-      const yOffset = this.cellVSpace / 2;
-      const width = this.cellTW - this.cellHSpace;
-      const height = this.cellTH - this.cellVSpace;
-
-      for (let y = 0; y < this.cellRows; y += 1) {
-        for (let x = 0; x < this.cellColumns; x += 1) {
-          ctx.beginPath();
-          ctx.fillStyle = this.fillingMatrix[x][y];
-          ctx.fillRect(
-            xOffset + x * this.cellTW,
-            yOffset + y * this.cellTH,
-            width,
-            height,
-          );
-        }
-      }
-    } else {
-      //
-      // normal cells, draw them as ellipses
-      //
-
-      const xOffset = this.cellTW / 2;
-      const yOffset = this.cellTH / 2;
-      const width = (this.cellTW - this.cellHSpace) / 2;
-      const height = (this.cellTH - this.cellVSpace) / 2;
-
-      for (let y = 0; y < this.cellRows; y += 1) {
-        for (let x = 0; x < this.cellColumns; x += 1) {
-          ctx.beginPath();
-          ctx.fillStyle = this.fillingMatrix[x][y];
-          ctx.ellipse(
-            xOffset + x * this.cellTW,
-            yOffset + y * this.cellTH,
-            width,
-            height,
-            0,
-            0,
-            TAU,
-          );
-          ctx.fill();
-        }
+    for (let y = 0; y < this.cellRows; y += 1) {
+      for (let x = 0; x < this.cellColumns; x += 1) {
+        ctx.beginPath();
+        ctx.fillStyle = this.fillingMatrix[x][y];
+        ctx.fillRect(
+          xOffset + x * this.cellTW,
+          yOffset + y * this.cellTH,
+          width,
+          height,
+        );
       }
     }
   },
@@ -394,9 +357,9 @@ export default class DrawGridPlugin {
     return dataFill;
   }
 
+  // Cells without a result stay transparent: only the grid lines show
   initializeCellFilling(gd, col, row) {
-    const level = (this.overlayLevel || 0.2) * (1 - 0.7 * (gd.fade || 0));
-    const fill = `rgba(0, 0, 200, ${level})`;
+    const fill = 'rgba(0, 0, 0, 0)';
     return Array.from({ length: col }).map(() =>
       Array.from({ length: row }).fill(fill),
     );
@@ -452,8 +415,7 @@ export default class DrawGridPlugin {
   /**
    * Adds dashed inner lines to a mesh grid.
    *
-   * Does nothing if mesh is not selected,
-   * or if we are drawing in small cell size' mode.
+   * Does nothing if we are drawing in small cell size' mode.
    */
   addInnerLines(
     shapes,
@@ -464,14 +426,8 @@ export default class DrawGridPlugin {
     width,
     cellTH,
     cellTW,
-    lineColor = 'rgba(136, 255, 91, 0.5)',
+    lineColor = INNER_LINE_GREEN,
   ) {
-    if (!gridData.selected && !gridData.pinned) {
-      /* we only draw inner lines for selected meshes, and the unattended
-         collect ones */
-      return;
-    }
-
     if (inSmallCellSizeMode(cellTW, cellTH)) {
       /* we don't draw inner lines for small cells, to reduce visual clutter */
       return;
@@ -557,7 +513,10 @@ export default class DrawGridPlugin {
       ? 'rgba(136, 255, 91, 1)'
       : 'rgba(228, 255, 9, 0.5)';
     color = gridData.result?.length > 0 ? 'rgba(228, 255, 9, 1)' : color;
-    let innerLineColor;
+    // The cell lines in the outline's colour, fainter
+    let innerLineColor = gridData.selected
+      ? INNER_LINE_GREEN
+      : 'rgba(228, 255, 9, 0.35)';
     // Unattended collect grids: the Draw Grid style, square cells. Away from
     // their omega they are greyer the further they face away.
     const fade = gridData.pinned ? gridData.fade || 0 : 0;
@@ -568,9 +527,7 @@ export default class DrawGridPlugin {
           ? `rgba(${grey}, ${grey}, ${grey}, 1)`
           : 'rgba(136, 255, 91, 1)';
       innerLineColor =
-        fade > 0
-          ? `rgba(${grey}, ${grey}, ${grey}, 0.5)`
-          : 'rgba(136, 255, 91, 0.5)';
+        fade > 0 ? `rgba(${grey}, ${grey}, ${grey}, 0.5)` : INNER_LINE_GREEN;
     }
     const outlineStrokeArray =
       gridData.selected || gridData.pinned ? [] : [5, 5];
@@ -606,7 +563,6 @@ export default class DrawGridPlugin {
               cellHSpace,
               cellVSpace,
               fillingMatrix,
-              square: Boolean(gridData.pinned),
             }),
           );
 

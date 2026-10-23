@@ -30,6 +30,10 @@ class SampleChanger(ComponentBase):
         HWR.beamline.sample_changer.connect(
             "contentsUpdated", signals.sc_contents_update
         )
+        # PX1Cryotong: pin seen on the goniometer, the UI switches to the OAV
+        HWR.beamline.sample_changer.connect(
+            "sampleIsDetected", signals.sample_detected
+        )
 
         if HWR.beamline.sample_changer_maintenance is not None:
             HWR.beamline.sample_changer_maintenance.connect(
@@ -189,6 +193,9 @@ class SampleChanger(ComponentBase):
         sc = HWR.beamline.sample_changer
 
         try:
+            # The shapes belong to the sample leaving: off the screen before
+            # the transfer, whatever its outcome
+            HWR.beamline.sample_view.clear_all()
             signals.sc_load(sample["location"])
 
             sid = self.get_current_sample().get("sampleID", False)
@@ -224,9 +231,6 @@ class SampleChanger(ComponentBase):
 
             raise RuntimeError(str(ex)) from ex
         else:
-            # Only runs if try completed without exception (mount succeeded).
-            HWR.beamline.sample_view.clear_all()
-
             # Push the freshly-loaded sample to the clients so the Samples-tab
             # "mounted" marker updates immediately. For SC samples the marker
             # otherwise depends on the sample changer's asynchronous
@@ -248,6 +252,7 @@ class SampleChanger(ComponentBase):
         from mxcubeweb.routes import signals
 
         try:
+            HWR.beamline.sample_view.clear_all()
             signals.sc_unload(sample["location"])
 
             if sample["location"] != "Manual":
@@ -264,7 +269,6 @@ class SampleChanger(ComponentBase):
             raise
         else:
             HWR.beamline.queue_model.mounted_sample = ""
-            HWR.beamline.sample_view.clear_all()
 
             # Clear the "mounted" marker in the UI right away. The physical
             # unload above is asynchronous (wait=False), so we optimistically

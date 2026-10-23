@@ -205,6 +205,7 @@ function sampleViewReducer(state = INITIAL_STATE, action = {}) {
         gridList: [],
         gridCount: 0,
         selectedShapes: [],
+        drawGrid: false,
       };
     }
     case 'CLEAR_QUEUE': {
@@ -214,6 +215,7 @@ function sampleViewReducer(state = INITIAL_STATE, action = {}) {
         clickCentringPoints: [],
         gridList: [],
         gridCount: 0,
+        drawGrid: false,
       };
     }
     case 'SELECT_CAMERA': {

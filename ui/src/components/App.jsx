@@ -18,6 +18,7 @@ import LoadingScreen from './LoadingScreen/LoadingScreen';
 import { serverIO } from '../serverIO';
 import { getLoginInfo } from '../actions/login';
 import PrivateOutlet from './PrivateOutlet';
+import { setNavigate } from '../navigation';
 import { sendRefreshSession } from '../api/login';
 import { useErrorBoundary } from 'react-error-boundary';
 
@@ -66,6 +67,8 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
+setNavigate(router.navigate);
 
 function App() {
   const dispatch = useDispatch();

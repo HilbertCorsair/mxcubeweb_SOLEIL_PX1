@@ -37,14 +37,21 @@ function ZoomControl() {
     dispatch(setAttribute(ZOOM_HWO_ID, commands[sliderPosition]));
   };
 
+  // Only a moving zoom refuses a new position: an UNKNOWN or FAULT state
+  // read from the device must not freeze the control
+  const busy = state === HW_STATE.BUSY;
+
   // Handle direct click on a tick mark
   const handleTickClick = (position) => {
+    if (busy) {
+      return;
+    }
     setSliderPosition(position);
     dispatch(setAttribute(ZOOM_HWO_ID, commands[position]));
   };
 
-  // Create an array of indices for the 7 zoom positions
-  const zoomPositions = Array.from({ length: 7 }, (_, i) => i);
+  // One tick per zoom position of the beamline
+  const zoomPositions = commands.map((_, i) => i);
 
   return (
     <OverlayTrigger
@@ -58,10 +65,10 @@ function ZoomControl() {
               type="range"
               className={styles.zoomSlider}
               min={0}
-              max={6}
+              max={commands.length - 1}
               step={1}
               value={sliderPosition}
-              disabled={state !== HW_STATE.READY}
+              disabled={busy}
               onChange={handleSliderMove}
               onMouseUp={handleSliderRelease}
               onTouchEnd={handleSliderRelease}
@@ -78,7 +85,7 @@ function ZoomControl() {
                   onClick={() => handleTickClick(pos)}
                 >
                   <span className={styles.tickLabel}>
-                    {commands[pos].slice(-1)}
+                    {commands[pos].replaceAll(/\D/gu, '')}
                   </span>
                 </div>
               ))}

@@ -329,6 +329,11 @@ export default class ContextMenu extends React.Component {
               },
             ]
           : []),
+        this.props.hasShapes && {
+          text: 'Delete all shapes',
+          action: () => this.props.sampleViewActions.deleteAllShapes(),
+          key: 'delete_all_shapes',
+        },
         { text: 'divider', key: 8 },
         ...genericTasks.none,
       ],

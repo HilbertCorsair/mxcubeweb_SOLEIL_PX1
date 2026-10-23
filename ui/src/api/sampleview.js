@@ -22,6 +22,10 @@ export function sendDeleteShape(id) {
   return endpoint.delete(`/shapes/${id}`).res();
 }
 
+export function sendDeleteAllShapes() {
+  return endpoint.delete('/shapes').res();
+}
+
 export function sendRotateToShape(sid) {
   return endpoint.post({ sid }, '/shapes/rotate_to').res();
 }

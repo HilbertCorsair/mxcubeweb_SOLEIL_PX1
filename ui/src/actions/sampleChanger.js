@@ -1,4 +1,6 @@
 import { showErrorPanel } from './general';
+import { selectCamera } from './sampleview';
+import { navigateTo } from '../navigation';
 import { clearCurrentSample } from './queue'; // eslint-disable-line import/no-cycle
 import {
   fetchLoadedSample,
@@ -83,6 +85,74 @@ export function scan(address) {
   };
 }
 
+// Mount/Unmount from the UI show the transfer on the hutch cameras (names of
+// server.yaml ARGUSSIGHT_CAMERAS; selectCamera ignores a missing one)
+const MOUNT_CAMERAS = {
+  dewar: 'hutch_1',
+  robot: 'hutch_2',
+  head: 'hutch_3',
+  oav: 'oav',
+};
+const MOUNT_CAMERAS_TIMEOUT = 180_000; // ms, then the OAV anyway
+
+// The UI mount in progress: the location mounted, the camera timers, and
+// whether the goniometer was seen empty (an exchange starts with the old pin
+// still detected on it)
+let pendingMount = null;
+
+function endMountCameras(dispatch, camera) {
+  if (pendingMount) {
+    pendingMount.timers.forEach(clearTimeout);
+    pendingMount = null;
+    if (camera) {
+      dispatch(selectCamera(camera));
+    }
+  }
+}
+
+function startMountCameras(dispatch, location, gonioEmpty) {
+  endMountCameras(dispatch);
+  const show = (camera, delay) =>
+    setTimeout(() => dispatch(selectCamera(camera)), delay);
+
+  dispatch(selectCamera(MOUNT_CAMERAS.dewar));
+  pendingMount = {
+    location,
+    sawEmpty: gonioEmpty,
+    timers: [
+      show(MOUNT_CAMERAS.robot, 2500),
+      show(MOUNT_CAMERAS.head, 4500),
+      setTimeout(
+        () => endMountCameras(dispatch, MOUNT_CAMERAS.oav),
+        MOUNT_CAMERAS_TIMEOUT,
+      ),
+    ],
+  };
+}
+
+// sample_detected: the goniometer sees a pin (or no pin)
+export function mountSampleDetected(detected) {
+  return (dispatch) => {
+    if (!pendingMount) {
+      return;
+    }
+    if (!detected) {
+      pendingMount.sawEmpty = true;
+    } else if (pendingMount.sawEmpty) {
+      endMountCameras(dispatch, MOUNT_CAMERAS.oav);
+    }
+  };
+}
+
+// loaded_sample_changed: the end of the mount, if no detection came first
+export function mountSampleLoaded(address) {
+  return (dispatch) => {
+    if (pendingMount && address === pendingMount.location) {
+      endMountCameras(dispatch, MOUNT_CAMERAS.oav);
+    }
+  };
+}
+
 export function mountSample(sampleData) {
   return async (dispatch, getState) => {
     const state = getState();
@@ -90,9 +160,20 @@ export function mountSample(sampleData) {
       return;
     }
 
+    navigateTo('/datacollection');
+    // A manual mount has no robot transfer to show
+    if (sampleData.location !== 'Manual') {
+      startMountCameras(
+        dispatch,
+        sampleData.location,
+        !state.sampleChanger.loadedSample.address,
+      );
+    }
+
     try {
       await sendMountSample(sampleData);
     } catch (error) {
+      endMountCameras(dispatch);
       dispatch(showErrorPanel(true, error.response.headers.get('message')));
       throw error;
     }
@@ -101,6 +182,9 @@ export function mountSample(sampleData) {
 
 export function unmountSample() {
   return async (dispatch) => {
+    navigateTo('/datacollection');
+    endMountCameras(dispatch);
+    dispatch(selectCamera(MOUNT_CAMERAS.robot));
     try {
       await sendUnmountCurrentSample();
       dispatch(clearCurrentSample());

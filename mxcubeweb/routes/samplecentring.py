@@ -206,6 +206,18 @@ def init_route(app, server, url_prefix):  # noqa: C901
         HWR.beamline.sample_view.delete_shape(sid)
         return Response(status=200)
 
+    @bp.route("/shapes", methods=["DELETE"])
+    @server.require_control
+    @server.restrict
+    def delete_all_shapes():
+        """
+        Delete all the shapes (points, lines, grids) of the sample view.
+            :statuscode: 200: no error
+        """
+        # Emits shapesChanged: every client gets the empty shape list
+        HWR.beamline.sample_view.clear_all()
+        return Response(status=200)
+
     @bp.route("/shapes/rotate_to", methods=["POST"])
     @server.require_control
     @server.restrict

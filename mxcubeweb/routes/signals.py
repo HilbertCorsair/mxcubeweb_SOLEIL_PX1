@@ -96,10 +96,10 @@ def handle_auto_mount_next(entry):
             logging.getLogger("user_level_log").info(msg)
 
 
-def diffractometer_phase_changed(*args):
-    data = {"msg": "Diffractometer phase changed", "phase": args}
+def diffractometer_phase_changed(phase):
+    data = {"msg": "Diffractometer phase changed", "phase": phase}
     logging.getLogger("user_level_log").info(
-        "Diffractometer phase changed to %s" % args
+        "Diffractometer phase changed to %s" % phase
     )
     server.emit("diff_phase_changed", data, namespace="/hwr")
 
@@ -160,6 +160,10 @@ def is_collision_safe(*args):
             "message": "Sample moved to safe area",
         }
         server.emit("sc", msg, namespace="/hwr")
+
+
+def sample_detected(detected):
+    server.emit("sample_detected", {"detected": bool(detected)}, namespace="/hwr")
 
 
 def loaded_sample_changed(sample):

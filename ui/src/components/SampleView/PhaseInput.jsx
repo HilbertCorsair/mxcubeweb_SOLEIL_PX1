@@ -21,13 +21,22 @@ function PhaseInput() {
       value={value ?? ''}
       data-busy={state === 'BUSY' || undefined}
       onChange={(evt) => {
-        if (evt.target.value !== 'Unknown') {
+        if (evt.target.value.toUpperCase() !== 'UNKNOWN') {
           dispatch(changeCurrentPhase(evt.target.value));
         }
       }}
     >
+      {/* An unknown phase must not show as the first option */}
+      {!options.includes(value) && (
+        <option value={value ?? ''} disabled>
+          {value}
+        </option>
+      )}
       {options.map((option) => (
-        <option key={option}>{option}</option>
+        // value: an option's text is trimmed ("CENTRING " has a trailing space)
+        <option key={option} value={option}>
+          {option}
+        </option>
       ))}
     </Form.Select>
   );

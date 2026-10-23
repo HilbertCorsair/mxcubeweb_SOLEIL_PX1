@@ -53,6 +53,8 @@ import {
   setSCState,
   setLoadedSample,
   setSCGlobalState,
+  mountSampleDetected,
+  mountSampleLoaded,
 } from './actions/sampleChanger';
 
 import {
@@ -422,6 +424,11 @@ class ServerIO {
 
     this.hwrSocket.on('loaded_sample_changed', (data) => {
       dispatch(setLoadedSample(data));
+      dispatch(mountSampleLoaded(data.address));
+    });
+
+    this.hwrSocket.on('sample_detected', (data) => {
+      dispatch(mountSampleDetected(data.detected));
     });
 
     this.hwrSocket.on('set_current_sample', (sample) => {

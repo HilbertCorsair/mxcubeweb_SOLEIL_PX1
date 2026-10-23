@@ -92,7 +92,7 @@ export default function GridForm(props) {
           {show_hspace ? <td>{grid.cellHSpace.toFixed(2)}</td> : null}
           {show_vspace ? <td>{grid.cellVSpace.toFixed(2)}</td> : null}
           <td>
-            {vdim} x {hdim}
+            {hdim.toFixed(0)} x {vdim.toFixed(0)}
           </td>
           <td>{grid.numRows * grid.numCols}</td>
           <td>
@@ -103,6 +103,7 @@ export default function GridForm(props) {
             <Button
               size="sm"
               variant="outline-secondary"
+              title="Turn omega to the angle the grid was drawn at"
               onClick={(e) => {
                 e.stopPropagation();
                 rotateTo(grid.id);
@@ -133,6 +134,7 @@ export default function GridForm(props) {
               // we want these buttons to have the same size. Additionally we want to assign them more space when there are additional controls shown.
               style={{ width: addOrRemoveButtonSize }}
               variant="outline-secondary"
+              title="Delete this grid"
               onClick={(e) => {
                 e.stopPropagation();
                 removeGrid(grid.id);
@@ -186,6 +188,7 @@ export default function GridForm(props) {
             // we want these buttons to have the same size. Additionally we want to assign them more space when there are additional controls shown.
             style={{ width: addOrRemoveButtonSize }}
             variant="outline-secondary"
+            title="Save the grid drawn on the image"
             onClick={() => saveGrid()}
           >
             +
@@ -208,6 +211,10 @@ export default function GridForm(props) {
       cancel="form"
     >
       <Row className="gridform" ref={draggableRef}>
+        <Col xs={12} className="gridform-title">
+          <b>Grids</b>: drag on the image to draw a grid, + to save it, Esc to
+          stop drawing
+        </Col>
         <Col xs={8}>
           <Table striped hover responsive>
             <thead>
@@ -215,7 +222,7 @@ export default function GridForm(props) {
                 <th>Name</th>
                 {show_hspace && <th>H-Space (µm)</th>}
                 {show_vspace && <th>V-Space (µm)</th>}
-                <th>Dim (µm)</th>
+                <th>W x H (µm)</th>
                 <th>#Cells</th>
                 <th>R x C</th>
                 <th>&Omega;</th>
@@ -232,7 +239,9 @@ export default function GridForm(props) {
             <Form.Group className="mb-2" as={Row}>
               <Col sm="4">
                 {' '}
-                <Form.Label>Opacity</Form.Label>{' '}
+                <Form.Label title="Opacity of the grid cells">
+                  Opacity
+                </Form.Label>{' '}
               </Col>
               <Col sm="1"> : </Col>
               <Col sm="7">
