@@ -13,6 +13,7 @@ const BESPOKE_TASK_NAMES = new Set([
   'helical',
   'workflow',
   'interleaved',
+  'xray_centring',
 ]);
 
 export default class ContextMenu extends React.Component {
@@ -254,6 +255,15 @@ export default class ContextMenu extends React.Component {
               },
             ]
           : []),
+        ...('xray_centring' in this.props.taskForm.defaultParameters
+          ? [
+              {
+                text: 'X-ray Centring',
+                action: () => this.addXrayCentring(),
+                key: 'xray_centring',
+              },
+            ]
+          : []),
         {
           text: 'Centring Point on Cell',
           action: () => {
@@ -425,6 +435,31 @@ export default class ContextMenu extends React.Component {
         type,
       },
       sid,
+    );
+  }
+
+  // Queued and run at once, with the beamline's X-ray centring defaults
+  addXrayCentring() {
+    const { sampleID, shape, sampleData } = this.props;
+
+    if (!sampleData) {
+      this.props.showErrorPanel(
+        true,
+        'There is no sample mounted, cannot run the X-ray centring.',
+      );
+      return;
+    }
+
+    this.props.addTask(
+      [sampleID],
+      {
+        type: 'XrayCentring',
+        label: 'X-ray centring',
+        shape: shape.id,
+        prefix: sampleData.defaultPrefix,
+        subdir: `${this.props.groupFolder}${sampleData.defaultSubDir}`,
+      },
+      true,
     );
   }
 

@@ -571,6 +571,29 @@ class Queue(ComponentBase):
             "state": state,
         }
 
+    def _handle_xray_centring(self, sample_node, node):
+        queueID = node._node_id
+        _, state = self.get_node_state(queueID)
+        parameters = {"shape": node.shape}
+        parameters.update(node.path_template.as_dict())
+        parameters["path"] = parameters["directory"]
+
+        parameters["subdir"] = os.path.join(
+            *parameters["path"].split(HWR.beamline.session.raw_data_folder_name)[1:]
+        ).lstrip("/")
+
+        return {
+            "label": "X-ray centring",
+            "type": "XrayCentring",
+            "parameters": parameters,
+            "sampleID": sample_node.loc_str,
+            "sampleQueueID": sample_node._node_id,
+            "taskIndex": self.node_index(node)["idx"],
+            "queueID": queueID,
+            "checked": node.is_enabled(),
+            "state": state,
+        }
+
     def _handle_unattended_collect(self, sample_node, group):
         """One row per task, tied together by the node id of their task group.
 
@@ -769,6 +792,8 @@ class Queue(ComponentBase):
                 result.append(self._handle_xrf(sample_node, node))
             elif isinstance(node, qmo.EnergyScan):
                 result.append(self._handle_energy_scan(sample_node, node))
+            elif isinstance(node, qmo.XrayCentring2):
+                result.append(self._handle_xray_centring(sample_node, node))
             elif isinstance(node, qmo.UnattendedCollect):
                 result.extend(self._handle_unattended_collect(sample_node, node))
             elif isinstance(node.get_parent(), qmo.UnattendedCollect):
@@ -1101,6 +1126,8 @@ class Queue(ComponentBase):
                 self.add_energy_scan(sample_node_id, item)
             elif item_t == "TestTask":
                 self.add_test_task(sample_node_id, item)
+            elif item_t == "XrayCentring":
+                self.add_xray_centring(sample_node_id, item)
             elif item_t == "UnattendedCollect":
                 # A queued unattended collect is one row per task, the first
                 # one rebuilds it
@@ -1983,6 +2010,44 @@ class Queue(ComponentBase):
 
         return escan_model._node_id
     
+    def add_xray_centring(self, node_id, task):
+        """
+        Adds an X-ray centring on the grid task["parameters"]["shape"] to the
+        sample with id: <node_id>
+
+        :returns: The queue id of the X-ray centring
+        :rtype: int
+        """
+        sample_model, sample_entry = self.get_entry(node_id)
+        params = task["parameters"]
+        grid = HWR.beamline.sample_view.get_shape(params["shape"])
+
+        # Only omega back to where the grid was drawn: the grid's centred
+        # position is its top-left corner
+        xc_model = qmo.XrayCentring2(
+            motor_positions={"phi": grid.get_centred_position().as_dict().get("phi")}
+        )
+        xc_model.init_from_task_data(sample_model, params)
+        xc_model.set_name("X-ray centring")
+        xc_model.shape = params["shape"]
+        xc_model.set_origin(ORIGIN_MX3)
+        xc_model.set_enabled(True)
+        xc_entry = qe.XrayCentring2QueueEntry(Mock(), xc_model)
+        xc_entry.set_enabled(True)
+
+        group_model = qmo.TaskGroup()
+        group_model.set_origin(ORIGIN_MX3)
+        group_model.set_enabled(True)
+        HWR.beamline.queue_model.add_child(sample_model, group_model)
+        HWR.beamline.queue_model.add_child(group_model, xc_model)
+
+        group_entry = qe.TaskGroupQueueEntry(Mock(), group_model)
+        group_entry.set_enabled(True)
+        sample_entry.enqueue(group_entry)
+        group_entry.enqueue(xc_entry)
+
+        return xc_model._node_id
+
     def add_test_task(self, node_id, task):
         """
         Adds a test task to the sample with id: <id>
@@ -2679,6 +2744,14 @@ class Queue(ComponentBase):
                 **self.get_default_task_parameters("default"),
                 "name": "Unattended collect",
                 "queue_entry": "unattendedcollect",
+            }
+
+        # Offered on grids when the beamline has an xray_centring object
+        if HWR.beamline.xray_centring is not None:
+            task_info["xray_centring"] = {
+                **self.get_default_task_parameters("default"),
+                "name": "X-ray centring",
+                "queue_entry": "xray_centring",
             }
 
         # No kappa (None) is sent as 0, the task forms expect numbers
