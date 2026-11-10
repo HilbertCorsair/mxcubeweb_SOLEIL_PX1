@@ -102,7 +102,7 @@ class Queue(ComponentBase):
 
         if status == QUEUE_ENTRY_STATUS.FAILED:
             state = FAILED
-        elif status == QUEUE_ENTRY_STATUS.WARNING:
+        elif status in (QUEUE_ENTRY_STATUS.WARNING, QUEUE_ENTRY_STATUS.SKIPPED):
             # Same as QueueSerializer.get_node_state in mxcubecore.queuelib -
             # checked before is_executed()/SUCCESS below, since e.g. a
             # completed-without-diffraction-plan Characterisation is also

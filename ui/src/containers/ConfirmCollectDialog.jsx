@@ -55,7 +55,12 @@ export default function ConfirmCollectDialog() {
       .map((sampleID) => sampleList[sampleID] || {})
       .flatMap((sample) => sample.tasks || {});
 
-    return tasks.filter((task) => task.state === TASK_UNCOLLECTED);
+    // An unattended collect, one row per task, is listed once
+    return tasks.filter(
+      (task) =>
+        task.state === TASK_UNCOLLECTED &&
+        !(task.type === 'UnattendedCollect' && task.parameters.groupIndex),
+    );
   }
 
   function collectText(numTasks) {
@@ -75,6 +80,8 @@ export default function ConfirmCollectDialog() {
   }
 
   const tasks = tasksToCollect();
+  // An unattended collect centres the sample itself
+  const unattended = tasks.some((task) => task.type === 'UnattendedCollect');
 
   return (
     <Modal show={show}>
@@ -87,9 +94,11 @@ export default function ConfirmCollectDialog() {
         </p>
         <div>
           <span>
-            <div className="mb-2">
-              <CentringMethodDropDown align="start" />
-            </div>
+            {!unattended && (
+              <div className="mb-2">
+                <CentringMethodDropDown align="start" />
+              </div>
+            )}
             {queue.length > 1 && (
               <Form.Check
                 className="mb-2"

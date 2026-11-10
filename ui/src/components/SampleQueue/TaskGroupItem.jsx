@@ -31,11 +31,13 @@ const STATE_ICONS = {
  * @param {Object} props
  * @param {Array} props.tasks - The tasks of the group, in order
  * @param {string} [props.title] - Shown in the header
+ * @param {React.ReactNode} [props.actions] - At the end of the header
  * @param {React.ReactNode} props.children - The task items
  */
 export default function TaskGroupItem({
   tasks,
   title = 'Task group',
+  actions = null,
   children,
 }) {
   const summary = groupSummary(tasks);
@@ -57,6 +59,7 @@ export default function TaskGroupItem({
           startedAt={summary.startedAt}
           endedAt={summary.endedAt}
         />
+        {actions}
       </div>
       <div className={styles.taskGroupBody}>{children}</div>
     </div>

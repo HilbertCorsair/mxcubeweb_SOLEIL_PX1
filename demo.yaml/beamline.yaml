@@ -58,6 +58,7 @@ objects:
   - gphl_connection: gphl/gphl-setup.yaml
   - gphl_workflow: gphl/gphl-workflow.yaml
   - xray_centring: xray_centring2.yaml
+  - unattended_collect: unattended_collect.yaml
   - xml_rpc_server: xml_rpc_server.yaml
 
   # Analysis:
@@ -150,6 +151,7 @@ configuration:
     ssx_chip_collection: true
     gphlworkflow: true
     test_collection: true
+    unattendedcollect: true
 
   undulators:
     - type: PPU35C_GAP

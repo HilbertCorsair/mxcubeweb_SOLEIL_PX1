@@ -9,6 +9,7 @@ import EnergyScanTaskItem from './EnergyScanTaskItem';
 import TaskGroupItem from './TaskGroupItem';
 import TaskItem from './TaskItem';
 import styles from './Tree.module.css';
+import UnattendedCollectItem from './UnattendedCollectItem';
 import WorkflowTaskItem from './WorkflowTaskItem';
 import XRFTaskItem from './XRFTaskItem';
 
@@ -111,8 +112,18 @@ function CurrentTree(props) {
   return (
     <>
       <div className={styles.listBody}>
-        {taskGroups(tasks).map(({ start, rows }) =>
-          rows.length > 1 ? (
+        {taskGroups(tasks).map(({ start, rows }) => {
+          if (rows[0].type === 'UnattendedCollect') {
+            return (
+              <UnattendedCollectItem
+                key={`group-${rows[0].groupID}`}
+                index={start}
+                tasks={rows}
+              />
+            );
+          }
+
+          return rows.length > 1 ? (
             <TaskGroupItem key={`group-${rows[0].groupID}`} tasks={rows}>
               {rows.map((taskData, j) =>
                 renderTask(taskData, start + j, sampleId),
@@ -120,8 +131,8 @@ function CurrentTree(props) {
             </TaskGroupItem>
           ) : (
             renderTask(rows[0], start, sampleId)
-          ),
-        )}
+          );
+        })}
       </div>
 
       <Menu id={`queueContextMenu-${sampleId}`}>

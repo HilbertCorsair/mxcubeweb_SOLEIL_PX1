@@ -25,7 +25,13 @@ import SampleCircleView from '../components/SampleGrid/SampleCircleView';
 import SampleGridTableItem from '../components/SampleGrid/SampleGridTableItem';
 import { TaskItem } from '../components/SampleGrid/TaskItem';
 import TooltipTrigger from '../components/TooltipTrigger';
-import { isCollected, QUEUE_RUNNING, QUEUE_STOPPED } from '../constants';
+import {
+  groupSummary,
+  isCollected,
+  QUEUE_RUNNING,
+  QUEUE_STOPPED,
+  taskGroups,
+} from '../constants';
 import { hideMenu, showGenericMenu } from '../reducers/contextMenu';
 import { selectSamples } from '../reducers/sampleGrid';
 import { useAppSelector } from '../ts-store';
@@ -36,6 +42,15 @@ const CELL_MENU_ID = 'samples-grid-table-context-menu-cell';
 const PUCK_MENU_ID = 'samples-grid-table-context-menu-puck';
 const MENU_ID = 'samples-grid-table-context-menu';
 const MOUNTED_MENU_ID = 'samples-grid-table-context-menu-mounted';
+
+// One item per task, an unattended collect (one row per task) counting as one
+function groupedTasks(tasks) {
+  return taskGroups(tasks).flatMap(({ start, rows }) =>
+    rows[0].type === 'UnattendedCollect'
+      ? [[{ ...rows[0], state: groupSummary(rows).state }, start]]
+      : rows.map((task, j) => [task, start + j]),
+  );
+}
 
 function getWorkflowMenuOptions(workflows, showWorkflowForm) {
   const workflowTasks = {
@@ -145,6 +160,7 @@ export default function SampleGridTableContainer(props) {
     addSamplesToQueue,
     showCharacterisationForm,
     showDataCollectionForm,
+    showUnattendedCollectForm,
     showWorkflowForm,
     inQueue,
     inQueueDeleteElseAddSamples,
@@ -566,7 +582,7 @@ export default function SampleGridTableContainer(props) {
                   picked={picked}
                 >
                   <div className={styles.samplesGridTableItemTasks}>
-                    {sample.tasks.map((taskData, i) => (
+                    {groupedTasks(sample.tasks).map(([taskData, i]) => (
                       <TaskItem
                         key={`task-${taskData.queueID}`}
                         taskItemOnClick={taskItemOnClickHandler}
@@ -828,6 +844,11 @@ export default function SampleGridTableContainer(props) {
         {availableMethods.has('characterisation') ? (
           <Dropdown.Item onClick={showCharacterisationForm}>
             Characterisation
+          </Dropdown.Item>
+        ) : null}
+        {availableMethods.has('unattendedcollect') ? (
+          <Dropdown.Item onClick={showUnattendedCollectForm}>
+            Unattended collect
           </Dropdown.Item>
         ) : null}
         {getWorkflowMenuOptions(workflows, showWorkflowForm).samplegrid.map(
