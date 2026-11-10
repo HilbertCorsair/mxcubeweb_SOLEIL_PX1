@@ -116,3 +116,23 @@
   color: #555;
   white-space: nowrap;
 }
+
+.stateIcon {
+  width: 1.1em;
+  margin-right: 0.45rem;
+  text-align: center;
+}
+
+/* The tasks of a task group, under the header of the group */
+.taskGroup:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.taskGroupBody {
+  padding-left: 1rem;
+  border-left: 4px solid #ddd;
+}
+
+.taskGroupBody .nodeSample:not(:last-child) {
+  margin-bottom: 0;
+}

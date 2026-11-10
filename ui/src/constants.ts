@@ -53,6 +53,77 @@ export function isUnCollected(task: TaskState): boolean {
   return task.state === TASK_UNCOLLECTED;
 }
 
+const TASK_END_STATES = new Set([
+  TASK_COLLECTED,
+  TASK_COLLECT_FAILED,
+  TASK_COLLECT_WARNING,
+]);
+
+interface GroupedTask extends TaskState {
+  groupID?: number | null;
+  label: string;
+  startedAt?: number | null;
+  endedAt?: number | null;
+}
+
+/**
+ * The tasks of a sample, in order, as runs of consecutive tasks of the same
+ * task group (groupID). `start` is the index of the first one in tasks.
+ */
+export function taskGroups<T extends GroupedTask>(
+  tasks: T[],
+): { start: number; rows: T[] }[] {
+  const groups: { start: number; rows: T[] }[] = [];
+
+  tasks.forEach((task, i) => {
+    const last = groups.at(-1);
+
+    if (
+      last &&
+      typeof task.groupID === 'number' &&
+      last.rows[0].groupID === task.groupID
+    ) {
+      last.rows.push(task);
+    } else {
+      groups.push({ start: i, rows: [task] });
+    }
+  });
+
+  return groups;
+}
+
+/** State, progress and timing of a task group, from its tasks. */
+export function groupSummary(rows: GroupedTask[]): {
+  state: number;
+  done: number;
+  running?: string;
+  startedAt?: number | null;
+  endedAt?: number | null;
+} {
+  const ended = rows.filter((row) => TASK_END_STATES.has(row.state));
+  const running = rows.find((row) => row.state === TASK_RUNNING);
+  const done = ended.length === rows.length;
+  let state: number = TASK_UNCOLLECTED;
+
+  if (running) {
+    state = TASK_RUNNING;
+  } else if (rows.some((row) => row.state === TASK_COLLECT_FAILED)) {
+    state = TASK_COLLECT_FAILED;
+  } else if (done) {
+    state = rows.every((row) => row.state === TASK_COLLECTED)
+      ? TASK_COLLECTED
+      : TASK_COLLECT_WARNING;
+  }
+
+  return {
+    state,
+    done: ended.length,
+    running: running?.label,
+    startedAt: rows[0]?.startedAt,
+    endedAt: done ? rows.at(-1)?.endedAt : undefined,
+  };
+}
+
 export function twoStateActuatorIsActive(state: string | undefined): boolean {
   if (!state) {
     return false;
