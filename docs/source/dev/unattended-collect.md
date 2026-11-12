@@ -540,6 +540,12 @@ The mockup beamline (`configuration/mockup/qt/beamline_config.yml`) loads
   log (written by the finalize centring). It lists the shapes still on the sample view
   at the collection.
 
+**The video does not switch to the robot during a mount / wash / unmount**
+- The sample view shows the stream flagged `robot: true` in `ARGUSSIGHT_CAMERAS` for as
+  long as the sample changer state is `LOADING` or `UNLOADING`, then the OAV. With no
+  stream flagged `robot`, the view does not switch. On proxima1, flag the Robot stream
+  (`hutch_2`).
+
 **The grid does not move with the sample during the scans**
 - Look for `[UC] mesh axes before:` / `after:` in the log (`_run_collect_server`, one
   pair per scan). Non-zero `x/y/z` after the mesh mean the server rasters on them, which

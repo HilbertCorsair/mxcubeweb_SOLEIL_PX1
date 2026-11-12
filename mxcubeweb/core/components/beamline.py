@@ -156,6 +156,7 @@ class Beamline(ComponentBase):
                 "height": cam.height,
                 "format": cam.format,
                 "oav": cam.oav,
+                "robot": cam.robot,
             }
             for cam in cfg.ARGUSSIGHT_CAMERAS
         }

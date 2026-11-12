@@ -162,10 +162,6 @@ def is_collision_safe(*args):
         server.emit("sc", msg, namespace="/hwr")
 
 
-def sample_detected(detected):
-    server.emit("sample_detected", {"detected": bool(detected)}, namespace="/hwr")
-
-
 def loaded_sample_changed(sample):
     if hasattr(sample, "get_address"):
         address = sample.get_address()

@@ -174,6 +174,7 @@ def _components(proxy_url, names, cameras_meta):
                 "width": meta.get("width"),
                 "height": meta.get("height"),
                 "oav": bool(meta.get("oav")),
+                "robot": bool(meta.get("robot")),
             }
         )
     return components

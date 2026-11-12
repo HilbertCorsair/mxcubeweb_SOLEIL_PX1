@@ -89,6 +89,9 @@ class _ArgussightCameraModel(BaseModel):
     # True for the centring (OAV) camera. The main sample view enables the
     # centring overlay only for this stream.
     oav: bool = False
+    # True for the robot camera. The sample view switches to it for the whole
+    # of every sample transfer (mount, exchange, wash, unmount).
+    robot: bool = False
 
 
 class _UISampleViewVideoControlsModel(BaseModel):

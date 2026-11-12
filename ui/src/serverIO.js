@@ -50,11 +50,9 @@ import { getRaState, incChatMessageCount } from './actions/remoteAccess';
 import { signOut, getLoginInfo } from './actions/login';
 
 import {
-  setSCState,
+  scStateChanged,
   setLoadedSample,
   setSCGlobalState,
-  mountSampleDetected,
-  mountSampleLoaded,
 } from './actions/sampleChanger';
 
 import {
@@ -419,16 +417,11 @@ class ServerIO {
     });
 
     this.hwrSocket.on('sc_state', (state) => {
-      dispatch(setSCState(state));
+      dispatch(scStateChanged(state));
     });
 
     this.hwrSocket.on('loaded_sample_changed', (data) => {
       dispatch(setLoadedSample(data));
-      dispatch(mountSampleLoaded(data.address));
-    });
-
-    this.hwrSocket.on('sample_detected', (data) => {
-      dispatch(mountSampleDetected(data.detected));
     });
 
     this.hwrSocket.on('set_current_sample', (sample) => {

@@ -30,10 +30,6 @@ class SampleChanger(ComponentBase):
         HWR.beamline.sample_changer.connect(
             "contentsUpdated", signals.sc_contents_update
         )
-        # PX1Cryotong: pin seen on the goniometer, the UI switches to the OAV
-        HWR.beamline.sample_changer.connect(
-            "sampleIsDetected", signals.sample_detected
-        )
 
         if HWR.beamline.sample_changer_maintenance is not None:
             HWR.beamline.sample_changer_maintenance.connect(
