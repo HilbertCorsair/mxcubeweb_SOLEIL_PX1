@@ -46,6 +46,7 @@ import {
 } from './actions/workflow';
 
 import { getRaState, incChatMessageCount } from './actions/remoteAccess';
+import { showChatMessage } from './components/ChatWidget';
 
 import { signOut, getLoginInfo } from './actions/login';
 
@@ -142,10 +143,8 @@ class ServerIO {
 
     this.hwrSocket.on('ra_chat_message', (record) => {
       const { username } = store.getState().login.user;
-      if (record.username !== username && !record.read) {
-        addResponseMessage(
-          `${record.date} **${record.nickname}:** \n\n ${record.message}`,
-        );
+      if (record.username !== username) {
+        showChatMessage(record, username);
         dispatch(incChatMessageCount());
       }
     });
@@ -343,23 +342,16 @@ class ServerIO {
     });
 
     this.hwrSocket.on('userChanged', async (message) => {
-      const { inControl: wasInControl, requestsControl: wasRequestingControl } =
-        store.getState().login.user;
+      const { inControl: wasInControl } = store.getState().login.user;
 
       await dispatch(getLoginInfo());
 
-      const newState = store.getState();
-      const { inControl, requestsControl } = newState.login.user;
-      const hasIncomingRequest = newState.remoteAccess.observers.some(
-        (o) => o.requestsControl,
-      );
+      const { inControl } = store.getState().login.user;
 
-      if (!wasInControl && inControl && !hasIncomingRequest) {
+      if (!wasInControl && inControl) {
         dispatch(showWaitDialog('You were given control', message));
       } else if (wasInControl && !inControl) {
         dispatch(showWaitDialog('You lost control'));
-      } else if (wasRequestingControl && !requestsControl && !inControl) {
-        dispatch(showWaitDialog('You were denied control', message));
       }
     });
 

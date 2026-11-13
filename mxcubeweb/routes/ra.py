@@ -1,8 +1,6 @@
-import gevent
 from flask import (
     Blueprint,
     Response,
-    copy_current_request_context,
     jsonify,
     make_response,
     request,
@@ -16,74 +14,117 @@ DISCONNECT_HANDLED = True
 def init_route(app, server, url_prefix):  # noqa: C901
     bp = Blueprint("remote_access", __name__, url_prefix=url_prefix)
 
+    um = app.usermanager
+
+    def require_staff():
+        if not current_user.has_role("staff"):
+            return make_response("Reserved to beamline staff", 403)
+        return None
+
+    def open_handover(kind, to_user):
+        """Register a pending handover and ask ``to_user`` in the chat."""
+        if um.pending_handover:
+            return make_response("Another control request is pending", 409)
+
+        um.pending_handover = {
+            "kind": kind,
+            "from": current_user.username,
+            "to": to_user.username,
+        }
+        verb = "offers control to" if kind == "offer" else "asks for control to"
+        um.notify(
+            "%s %s %s"
+            % (um.display_name(current_user), verb, um.display_name(to_user)),
+            action=um.pending_handover,
+        )
+        server.emit("observersChanged", namespace="/hwr")
+        return make_response("", 200)
+
     @bp.route("/request_control", methods=["POST"])
     @server.restrict
     def request_control():
-        """ """
+        """A guest asks the session user for control."""
+        session_user = um.get_session_user()
+        if not current_user.has_role("guest") or session_user is None:
+            return make_response("Only guests can request control", 403)
+        if not session_user.in_control:
+            return make_response("Staff are in charge of the session", 409)
+        return open_handover("request", session_user)
 
-        @copy_current_request_context
-        def handle_timeout_gives_control(sid, timeout=30):
-            gevent.sleep(timeout)
-
-            if app.TIMEOUT_GIVES_CONTROL and current_user.requests_control:
-                # Pass control to user if still waiting
-                toggle_operator(
-                    current_user.username,
-                    "Timeout expired, you have control",
-                )
-
-        # Is someone already asking for control
-        for observer in app.usermanager.get_observers():
-            if observer.requests_control and observer.username != current_user.username:
-                msg = "Another user is already asking for control"
-                return make_response(msg, 409)
-
-        data = request.get_json()
-        current_user.requests_control = True
-        current_user.requests_control_msg = data["message"]
-        app.usermanager.update_user(current_user)
-
-        server.emit("observersChanged", namespace="/hwr")
-
-        gevent.spawn(
-            handle_timeout_gives_control,
-            current_user.username,
-            timeout=10,
-        )
-
-        return make_response("", 200)
+    @bp.route("/offer_control", methods=["POST"])
+    @server.restrict
+    def offer_control():
+        """The session user in control offers it to another member."""
+        target = um.get_user(request.get_json().get("username"))
+        if not (current_user.has_role("user") and current_user.in_control):
+            return make_response("Only the user in control can offer it", 403)
+        if target is None or target.username == current_user.username:
+            return make_response("Unknown user", 404)
+        return open_handover("offer", target)
 
     @bp.route("/cancel_request", methods=["POST"])
     @server.restrict
     def cancel_request():
-        """Cancel request for control"""
-        current_user.requests_control = False
-        current_user.requests_control_msg = None
-        app.usermanager.update_user(current_user)
+        """Cancel the pending handover opened by the current user."""
+        pending = um.pending_handover
+        if pending and pending["from"] == current_user.username:
+            um.pending_handover = None
+            um.notify("%s cancelled the request" % um.display_name(current_user))
+            server.emit("observersChanged", namespace="/hwr")
+        return make_response("", 200)
 
-        server.emit("observersChanged", namespace="/hwr")
+    @bp.route("/handover_response", methods=["POST"])
+    @server.restrict
+    def handover_response():
+        """Accept or decline the pending handover addressed to the current user."""
+        pending = um.pending_handover
+        if not pending or pending["to"] != current_user.username:
+            return make_response("No request addressed to you", 409)
 
+        if not request.get_json().get("accept"):
+            um.pending_handover = None
+            um.notify("%s declined the request" % um.display_name(current_user))
+            server.emit("observersChanged", namespace="/hwr")
+            return make_response("", 200)
+
+        # Control passes from the user in control to the requester or offer target
+        giver, new_op = (
+            (pending["to"], pending["from"])
+            if pending["kind"] == "request"
+            else (pending["from"], pending["to"])
+        )
+        operator = um.get_operator()
+        if operator is None or operator.username != giver:
+            um.pending_handover = None
+            server.emit("observersChanged", namespace="/hwr")
+            return make_response("Control changed hands meanwhile", 409)
+
+        um.transfer_control(
+            new_op, swap_roles=not um.get_user(new_op).has_role("staff")
+        )
         return make_response("", 200)
 
     @bp.route("/take_control", methods=["POST"])
     @server.restrict
     def take_control():
-        """ """
-        # Already master do nothing
-        if app.usermanager.is_operator():
-            return make_response("", 200)
-
-        toggle_operator(current_user.username, "You were given control")
-
+        """Staff take charge of the session."""
+        denied = require_staff()
+        if denied:
+            return denied
+        if not um.is_operator():
+            um.transfer_control(current_user.username)
         return make_response("", 200)
 
-    @bp.route("/give_control", methods=["POST"])
+    @bp.route("/release_control", methods=["POST"])
     @server.restrict
-    def give_control():
-        """ """
-        username = request.get_json().get("username")
-        toggle_operator(username, "You were given control")
-
+    def release_control():
+        """Staff hand control back to the session user."""
+        denied = require_staff()
+        if denied:
+            return denied
+        if um.is_operator():
+            session_user = um.get_session_user()
+            um.transfer_control(session_user.username if session_user else None)
         return make_response("", 200)
 
     @bp.route("/update_user_nickname", methods=["POST"])
@@ -92,7 +133,7 @@ def init_route(app, server, url_prefix):  # noqa: C901
         """ """
         name = request.get_json().get("name")
         current_user.nickname = name
-        app.usermanager.update_user(current_user)
+        um.update_user(current_user)
 
         server.emit(
             "userChanged", room=current_user.socketio_session_id, namespace="/hwr"
@@ -104,37 +145,48 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/logout_user", methods=["POST"])
     @server.restrict
     def logout_user():
-        """ """
-        username = request.get_json().get("username")
-        app.usermanager.force_signout_user(username)
+        """Staff disconnect a member from the session."""
+        denied = require_staff()
+        if denied:
+            return denied
+        um.force_signout_user(request.get_json().get("username"))
         return make_response("", 200)
 
-    def toggle_operator(username, message):
-        oldop = app.usermanager.get_operator()
-        newop = app.usermanager.set_operator(username)
+    @bp.route("/mute", methods=["POST"])
+    @server.restrict
+    def mute():
+        """Staff silence or unsilence a member in the chat."""
+        denied = require_staff()
+        if denied:
+            return denied
+        data = request.get_json()
+        user = um.get_user(data.get("username"))
+        if user is None:
+            return make_response("Unknown user", 404)
 
-        oldop.requests_control = False
-        oldop.requests_control_msg = None
-        app.usermanager.update_user(oldop)
-
-        newop.requests_control = False
-        newop.requests_control_msg = None
-        app.usermanager.update_user(newop)
-
-        server.emit("userChanged", room=oldop.socketio_session_id, namespace="/hwr")
-        server.emit(
-            "userChanged", message, room=newop.socketio_session_id, namespace="/hwr"
-        )
+        muted = bool(data.get("muted"))
+        um.set_muted(user, muted)
+        server.emit("userChanged", room=user.socketio_session_id, namespace="/hwr")
         server.emit("observersChanged", namespace="/hwr")
+        um.notify(
+            "%s was %s by %s"
+            % (
+                um.display_name(user),
+                "muted" if muted else "unmuted",
+                current_user.username,
+            )
+        )
+        return make_response("", 200)
 
     @bp.route("/", methods=["GET"])
     @server.restrict
     def rasettings():
         """ """
         data = {
-            "observers": [_u.todict() for _u in app.usermanager.get_observers()],
+            "members": [_u.todict() for _u in um.get_members()],
+            "observers": [_u.todict() for _u in um.get_observers()],
+            "pending": um.pending_handover,
             "allowRemote": app.ALLOW_REMOTE,
-            "timeoutGivesControl": app.TIMEOUT_GIVES_CONTROL,
         }
 
         return jsonify(data=data)
@@ -152,55 +204,14 @@ def init_route(app, server, url_prefix):  # noqa: C901
 
         return Response(status=200)
 
-    @bp.route("/timeout_gives_control", methods=["POST"])
-    @server.restrict
-    def timeout_gives_control():
-        """ """
-        control = request.get_json().get("timeoutGivesControl")
-        app.TIMEOUT_GIVES_CONTROL = control
-
-        return Response(status=200)
-
-    def observer_requesting_control():
-        observer = None
-
-        for o in app.usermanager.get_observers():
-            if o.requests_control:
-                observer = o
-
-        return observer
-
-    @bp.route("/request_control_response", methods=["POST"])
-    @server.restrict
-    def request_control_response():
-        """ """
-        data = request.get_json()
-        new_op = observer_requesting_control()
-
-        if data["giveControl"]:
-            # Request approved
-            toggle_operator(new_op.username, data["message"])
-        else:
-            # Request denied
-            new_op.requests_control = False
-            new_op.requests_control_msg = None
-            app.usermanager.update_user(new_op)
-            server.emit(
-                "userChanged",
-                data["message"],
-                room=new_op.socketio_session_id,
-                namespace="/hwr",
-            )
-            server.emit("observersChanged", namespace="/hwr")
-
-        return make_response("", 200)
-
     @bp.route("/chat", methods=["POST"])
+    @server.restrict
     def append_message():
-        message = request.get_json().get("message", "")
-        username = request.get_json().get("username", "")
+        if current_user.has_role("muted"):
+            return make_response("You have been muted", 403)
 
-        if message and username:
+        message = request.get_json().get("message", "")
+        if message:
             app.chat.append_message(message, current_user)
 
         return Response(status=200)

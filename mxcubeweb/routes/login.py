@@ -39,9 +39,10 @@ def init_route(app, server, url_prefix):
         params = request.get_json()
         login_id = params.get("proposal", "")
         password = params.get("password", "")
+        role = params.get("role", "user")
 
         try:
-            app.usermanager.login(login_id, password)
+            app.usermanager.login(login_id, password, role)
         except Exception as e:
             msg = "[LOGIN] User %s could not login" % login_id
             logging.getLogger("MX3.HWR").exception(msg)

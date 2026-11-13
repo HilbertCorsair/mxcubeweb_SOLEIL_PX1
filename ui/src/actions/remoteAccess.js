@@ -1,19 +1,19 @@
 import {
   fetchRemoteAccessState,
   sendCancelControlRequest,
-  sendGiveControl,
+  sendHandoverResponse,
   sendLogoutUser,
+  sendMuteUser,
+  sendOfferControl,
+  sendReleaseControl,
   sendRequestControl,
-  sendRespondToControlRequest,
   sendTakeControl,
   sendUpdateAllowRemote,
   sendUpdateNickname,
-  sendUpdateTimeoutGivesControl,
   sendSetAllMessagesRead,
 } from '../api/remoteAccess';
 import { showErrorPanel } from './general';
 import { getLoginInfo } from './login';
-import { showWaitDialog } from './waitDialog';
 
 export function getRaState() {
   return async (dispatch) => {
@@ -22,89 +22,64 @@ export function getRaState() {
   };
 }
 
-export function updateNickname(name) {
-  return async (dispatch) => {
-    await sendUpdateNickname(name);
-    dispatch(getLoginInfo());
-    dispatch(getRaState());
-  };
-}
-
-export function requestControl(message) {
+/* Run a remote-access request, then refresh login and session state.
+   Refusals from the server (403/404/409) are shown in the error panel. */
+function raRequest(send) {
   return async (dispatch) => {
     try {
-      await sendRequestControl(message);
-
-      dispatch(getLoginInfo());
-      dispatch(
-        showWaitDialog(
-          'Asking for control',
-          'Please wait while asking for control',
-          true,
-          () => dispatch(cancelControlRequest()),
-        ),
-      );
+      await send();
     } catch (error) {
-      if (error.status === 409) {
+      if ([403, 404, 409].includes(error.status)) {
         dispatch(showErrorPanel(true, error.text));
         return;
       }
-
       throw error;
     }
+    dispatch(getLoginInfo());
+    dispatch(getRaState());
   };
+}
+
+export function updateNickname(name) {
+  return raRequest(() => sendUpdateNickname(name));
+}
+
+export function requestControl() {
+  return raRequest(sendRequestControl);
+}
+
+export function offerControl(username) {
+  return raRequest(() => sendOfferControl(username));
 }
 
 export function cancelControlRequest() {
-  return async (dispatch) => {
-    await sendCancelControlRequest();
-    dispatch(getLoginInfo());
-  };
+  return raRequest(sendCancelControlRequest);
+}
+
+export function respondHandover(accept) {
+  return raRequest(() => sendHandoverResponse(accept));
 }
 
 export function takeControl() {
-  return async (dispatch) => {
-    await sendTakeControl();
-    dispatch(getLoginInfo());
-    dispatch(getRaState());
-  };
+  return raRequest(sendTakeControl);
 }
 
-export function giveControl(username) {
-  return async (dispatch) => {
-    await sendGiveControl(username);
-    dispatch(getLoginInfo());
-    dispatch(getRaState());
-  };
+export function releaseControl() {
+  return raRequest(sendReleaseControl);
 }
 
 export function logoutUser(username) {
-  return async (dispatch) => {
-    await sendLogoutUser(username);
-    dispatch(getLoginInfo());
-    dispatch(getRaState());
-  };
+  return raRequest(() => sendLogoutUser(username));
 }
 
-export function respondToControlRequest(giveControl = true, message = '') {
-  return async (dispatch) => {
-    await sendRespondToControlRequest(giveControl, message);
-    dispatch(getLoginInfo());
-    dispatch(getRaState());
-  };
+export function muteUser(username, muted) {
+  return raRequest(() => sendMuteUser(username, muted));
 }
 
 export function updateAllowRemote(allow) {
   return async (dispatch) => {
     await sendUpdateAllowRemote(allow);
     dispatch({ type: 'SET_ALLOW_REMOTE', allow });
-  };
-}
-
-export function updateTimeoutGivesControl(timeoutGivesControl) {
-  return async (dispatch) => {
-    await sendUpdateTimeoutGivesControl(timeoutGivesControl);
-    dispatch({ type: 'SET_TIMEOUT_GIVES_CONTROL', timeoutGivesControl });
   };
 }
 

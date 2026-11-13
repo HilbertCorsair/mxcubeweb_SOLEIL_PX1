@@ -9,7 +9,6 @@ import ErrorNotificationPanel from '../containers/ErrorNotificationPanel';
 import ResumeQueueDialog from '../containers/ResumeQueueDialog';
 import ConnectionLostDialog from '../containers/ConnectionLostDialog';
 import ObserverDialog from './RemoteAccess/ObserverDialog';
-import PassControlDialog from './RemoteAccess/PassControlDialog';
 import ConfirmCollectDialog from '../containers/ConfirmCollectDialog';
 import WorkflowParametersDialog from '../containers/WorkflowParametersDialog';
 import GphlWorkflowParametersDialog from '../containers/GphlWorkflowParametersDialog';
@@ -62,7 +61,6 @@ function Main() {
       <ResumeQueueDialog />
       <ConnectionLostDialog />
       <ObserverDialog />
-      <PassControlDialog />
       <ConfirmCollectDialog />
       <WorkflowParametersDialog />
       <GphlWorkflowParametersDialog />

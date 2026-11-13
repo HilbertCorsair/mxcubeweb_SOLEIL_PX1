@@ -4,6 +4,7 @@ import { BsList } from 'react-icons/bs';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { showProposalsForm, signOut } from '../../actions/login';
+import { releaseControl, takeControl } from '../../actions/remoteAccess';
 import styles from './MXNavbar.module.css';
 
 function MXNavbar() {
@@ -11,6 +12,7 @@ function MXNavbar() {
   const selectedProposal = useSelector((state) => state.login.selectedProposal);
   const { nickname, fullname } = useSelector((state) => state.login.user);
   const inControl = useSelector((state) => state.login.user.inControl);
+  const isStaff = useSelector((state) => state.login.user.role === 'staff');
 
   const mode = useSelector((state) => state.general.mode);
   const numObservers = useSelector(
@@ -85,6 +87,20 @@ function MXNavbar() {
               </span>
               Remote
             </Nav.Link>
+            {isStaff && (
+              <button
+                className={styles.navBtn}
+                type="button"
+                onClick={() =>
+                  dispatch(inControl ? releaseControl() : takeControl())
+                }
+              >
+                <span
+                  className={`me-2 fas fa-lg ${inControl ? 'fa-hand-point-left' : 'fa-hand-paper'}`}
+                />
+                {inControl ? 'Hand back' : 'Take charge'}
+              </button>
+            )}
             {isUserLogin && (
               <button
                 className={styles.navBtn}

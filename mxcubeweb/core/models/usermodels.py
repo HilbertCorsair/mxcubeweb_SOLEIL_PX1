@@ -99,7 +99,14 @@ class User(Base, UserMixin):
 
     @property
     def isstaff(self):
-        return "staff" in self.roles
+        return self.has_role("staff")
+
+    @property
+    def role(self):
+        """Session role: staff, user or guest."""
+        return next(
+            (r for r in ("staff", "user", "guest") if self.has_role(r)), "guest"
+        )
 
     def todict(self):
         # Database stores dates in UTC
@@ -114,7 +121,9 @@ class User(Base, UserMixin):
         return {
             "username": self.username,
             "email": self.email,
-            "isstaff": "staff" in self.roles,
+            "isstaff": self.isstaff,
+            "role": self.role,
+            "muted": self.has_role("muted"),
             "nickname": self.nickname,
             "inControl": self.in_control,
             "ip": self.current_login_ip,

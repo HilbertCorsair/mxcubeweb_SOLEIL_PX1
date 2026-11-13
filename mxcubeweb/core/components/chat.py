@@ -9,33 +9,40 @@ class Chat(ComponentBase):
     def __init__(self, app, config):
         super().__init__(app, config)
 
-    def db_add_message(self, user, message, from_user):
+    def db_add_message(self, message, from_username, from_nickname, from_host):
         _m = self.app.server.user_datastore.create_message(
             message=message,
-            from_username=from_user.username,
-            from_nickname=from_user.nickname,
-            from_host=from_user.current_login_ip,
+            from_username=from_username,
+            from_nickname=from_nickname,
+            from_host=from_host,
         )
 
-        active_users = self.app.usermanager.active_logged_in_users()
+        for _user in self.app.usermanager.get_members():
+            self.app.server.user_datastore.add_message_to_user(_user, _m)
 
-        for _username in active_users:
-            _user = self.app.usermanager.get_user(_username)
-            self.app.server.user_datastore.add_message_to_user(
-                _user,
-                _m,
-            )
+    def append_message(self, message, user=None, action=None):
+        """Store and broadcast a chat message.
 
-    def append_message(self, message, user):
+        Without ``user`` the message is a system notice. ``action`` describes a
+        pending control handover the recipient can accept or decline.
+        """
+        if user is None:
+            username, nickname, host, role = "system", "MXCuBE", "", "system"
+        else:
+            username, nickname = user.username, user.nickname or user.username
+            host, role = user.current_login_ip, user.role
+
         data = {
             "message": message,
-            "username": user.username,
-            "nickname": user.nickname,
-            "host": user.current_login_ip,
+            "username": username,
+            "nickname": nickname,
+            "host": host,
+            "role": role,
+            "action": action,
             "date": datetime.datetime.now().strftime("%H:%M"),
         }
 
-        self.db_add_message(user, message, user)
+        self.db_add_message(message, username, nickname, host)
         self.app.server.emit("ra_chat_message", data, namespace="/hwr")
 
     def get_all_messages(self):
@@ -48,6 +55,7 @@ class Chat(ComponentBase):
                     "username": _m.from_username,
                     "nickname": _m.from_nickname,
                     "host": _m.from_host,
+                    "role": "system" if _m.from_username == "system" else None,
                     "date": _m.at.strftime("%H:%M"),
                     "read": _m.read,
                 }

@@ -36,7 +36,9 @@ function LoginForm() {
     control,
     handleSubmit: makeOnSubmit,
     formState: { errors },
-  } = useForm({ defaultValues: { username: '', password: '' } });
+  } = useForm({
+    defaultValues: { username: '', password: '', role: 'user' },
+  });
 
   const useSSO = useSelector((state) => state.login.useSSO);
   const loginType = useSelector((state) => state.login.loginType);
@@ -50,7 +52,9 @@ function LoginForm() {
 
     setLoading(true);
     try {
-      await dispatch(logIn(data.username.toLowerCase(), data.password));
+      await dispatch(
+        logIn(data.username.toLowerCase(), data.password, data.role),
+      );
     } finally {
       setLoading(false);
     }
@@ -122,6 +126,24 @@ function LoginForm() {
                     {errors.password.message}
                   </Form.Control.Feedback>
                 )}
+              </InputGroup>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="fas fa-id-badge" />
+                </InputGroup.Text>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Form.Select aria-label="Role" {...field}>
+                      <option value="user">User</option>
+                      <option value="guest">Guest</option>
+                      <option value="staff">Staff</option>
+                    </Form.Select>
+                  )}
+                />
               </InputGroup>
             </Form.Group>
           </>

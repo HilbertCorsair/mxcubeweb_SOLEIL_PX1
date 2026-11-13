@@ -58,9 +58,9 @@ export function getLoginInfo() {
   };
 }
 
-export function logIn(proposal, password) {
+export function logIn(proposal, password, role) {
   return async (dispatch) => {
-    const res = await sendLogIn(proposal, password);
+    const res = await sendLogIn(proposal, password, role);
 
     if (res.msg !== '') {
       dispatch(showErrorPanel(true, res.msg));

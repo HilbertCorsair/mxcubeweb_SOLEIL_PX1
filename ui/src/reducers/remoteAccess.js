@@ -2,8 +2,11 @@ const INITIAL_STATE = {
   // the null value is used to distinguish between signed out (null) or logged in (true/false)
   sid: null,
   observers: [],
+  // everyone connected to the session (staff, user, guests)
+  members: [],
+  // pending control handover {kind: 'offer'|'request', from, to}
+  pending: null,
   allowRemote: false,
-  timeoutGivesControl: false,
   chatMessageCount: 0,
 };
 
@@ -13,8 +16,9 @@ function remoteAccessReducer(state = INITIAL_STATE, action = {}) {
       return {
         ...state,
         observers: action.data.observers,
+        members: action.data.members,
+        pending: action.data.pending,
         allowRemote: action.data.allowRemote,
-        timeoutGivesControl: action.data.timeoutGivesControl,
       };
     }
     case 'SET_MASTER': {
@@ -25,9 +29,6 @@ function remoteAccessReducer(state = INITIAL_STATE, action = {}) {
     }
     case 'SET_ALLOW_REMOTE': {
       return { ...state, allowRemote: action.allow };
-    }
-    case 'SET_TIMEOUT_GIVES_CONTROL': {
-      return { ...state, timeoutGivesControl: action.timeoutGivesControl };
     }
     case 'RESET_CHAT_MESSAGE_COUNT': {
       return { ...state, chatMessageCount: 0 };
@@ -44,7 +45,8 @@ function remoteAccessReducer(state = INITIAL_STATE, action = {}) {
         observers: action.data.remoteAccess.observers,
         sid: action.data.remoteAccess.sid,
         allowRemote: action.data.remoteAccess.allowRemote,
-        timeoutGivesControl: action.data.remoteAccess.timeoutGivesControl,
+        members: action.data.remoteAccess.members,
+        pending: action.data.remoteAccess.pending,
       };
     }
     default: {
