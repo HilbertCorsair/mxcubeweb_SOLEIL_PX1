@@ -43,13 +43,17 @@ def init_route(app, server, url_prefix):  # noqa: C901
     @bp.route("/request_control", methods=["POST"])
     @server.restrict
     def request_control():
-        """A guest asks the session user for control."""
-        session_user = um.get_session_user()
-        if not current_user.has_role("guest") or session_user is None:
-            return make_response("Only guests can request control", 403)
-        if not session_user.in_control:
-            return make_response("Staff are in charge of the session", 409)
-        return open_handover("request", session_user)
+        """A user or guest asks the member in control (usually staff) for control."""
+        if current_user.has_role("staff") or current_user.in_control:
+            return make_response("Only a user or guest not in control can ask", 403)
+
+        operator = um.get_operator()
+        if operator is None:
+            um.transfer_control(
+                current_user.username, swap_roles=current_user.has_role("guest")
+            )
+            return make_response("", 200)
+        return open_handover("request", operator)
 
     @bp.route("/offer_control", methods=["POST"])
     @server.restrict

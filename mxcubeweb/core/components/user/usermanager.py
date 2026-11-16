@@ -289,7 +289,8 @@ class BaseUserManager(ComponentBase):
                 pass  # Ignore rollback errors
             
     def update_operator(self, new_login: bool = False) -> None:
-        """Give control to the session user when nobody else holds it.
+        """Give control to staff (or to the user if no staff is present) when
+        nobody holds it; the session user opens the LIMS session.
 
         Args:
             new_login: True if method was invoked with new user login.
@@ -303,16 +304,18 @@ class BaseUserManager(ComponentBase):
             # Staff keep their login name, others are asked for a nickname
             current_user.nickname = current_user.username if role == "staff" else ""
 
-        if role == "user" and self.get_operator() is None:
+        if role == "user":
             current_user.fullname = HWR.beamline.lims.get_full_user_name()
             current_user.nickname = HWR.beamline.lims.get_user_name()
-            self.db_set_in_control(current_user, True)
             try:
                 self.app.lims.select_session(
                     HWR.beamline.lims.session_manager.active_session.session_id
                 )
             except Exception as e:
                 logging.getLogger("MX3.HWR").error("Error selecting session: %s", e)
+
+        if role in ("staff", "user") and self.get_operator() is None:
+            self.db_set_in_control(current_user, True)
         else:
             self.update_user(current_user)
 
@@ -432,6 +435,7 @@ class BaseUserManager(ComponentBase):
         if user.has_role("user") and hasattr(HWR.beamline.session, "clear_session"):
             HWR.beamline.session.clear_session()
 
+        was_staff_in_control = self.is_operator() and user.has_role("staff")
         if self.is_operator():
             self.db_set_in_control(current_user, False)
 
@@ -441,6 +445,11 @@ class BaseUserManager(ComponentBase):
 
         self.app.server.emit("observersChanged", namespace="/hwr")
         self.notify("%s signed out" % name)
+
+        # Staff leaving while in charge hand control to the session user
+        session_user = self.get_session_user()
+        if was_staff_in_control and session_user:
+            self.transfer_control(session_user.username)
 
     def _drop_pending_handover(self, username: str) -> None:
         pending = self.pending_handover

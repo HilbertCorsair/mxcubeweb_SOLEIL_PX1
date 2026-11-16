@@ -4,7 +4,12 @@ import { BsList } from 'react-icons/bs';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { showProposalsForm, signOut } from '../../actions/login';
-import { releaseControl, takeControl } from '../../actions/remoteAccess';
+import {
+  cancelControlRequest,
+  releaseControl,
+  requestControl,
+  takeControl,
+} from '../../actions/remoteAccess';
 import styles from './MXNavbar.module.css';
 
 function MXNavbar() {
@@ -12,7 +17,11 @@ function MXNavbar() {
   const selectedProposal = useSelector((state) => state.login.selectedProposal);
   const { nickname, fullname } = useSelector((state) => state.login.user);
   const inControl = useSelector((state) => state.login.user.inControl);
-  const isStaff = useSelector((state) => state.login.user.role === 'staff');
+  const { username, role } = useSelector((state) => state.login.user);
+  const isStaff = role === 'staff';
+  const isRequesting = useSelector(
+    (state) => state.remoteAccess.pending?.from === username,
+  );
 
   const mode = useSelector((state) => state.general.mode);
   const numObservers = useSelector(
@@ -99,6 +108,20 @@ function MXNavbar() {
                   className={`me-2 fas fa-lg ${inControl ? 'fa-hand-point-left' : 'fa-hand-paper'}`}
                 />
                 {inControl ? 'Hand back' : 'Take charge'}
+              </button>
+            )}
+            {!isStaff && !inControl && (
+              <button
+                className={styles.navBtn}
+                type="button"
+                onClick={() =>
+                  dispatch(
+                    isRequesting ? cancelControlRequest() : requestControl(),
+                  )
+                }
+              >
+                <span className="me-2 fas fa-lg fa-hand-paper" />
+                {isRequesting ? 'Cancel request' : 'Request control'}
               </button>
             )}
             {isUserLogin && (

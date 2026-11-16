@@ -96,7 +96,8 @@ function UserList() {
           </Row>
         ))}
       </Card.Body>
-      {(me.role === 'guest' || pending?.from === me.username) && (
+      {((me.role !== 'staff' && !me.inControl) ||
+        pending?.from === me.username) && (
         <Card.Footer>
           {pending?.from === me.username ? (
             <Button
