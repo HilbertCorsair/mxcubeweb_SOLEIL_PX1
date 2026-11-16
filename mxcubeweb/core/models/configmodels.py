@@ -132,6 +132,9 @@ class UIPropertiesListModel(BaseModel):
 class UserManagerUserConfigModel(BaseModel):
     username: str = Field("", description="username")
     role: str = Field("staff", description="Role to give user")
+    inhouse_proposal: str = Field(
+        "", description="In-house proposal number opened by this staff member"
+    )
 
 
 class UserManagerConfigModel(BaseModel):

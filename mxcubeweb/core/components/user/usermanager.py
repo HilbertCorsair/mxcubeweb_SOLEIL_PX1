@@ -307,6 +307,8 @@ class BaseUserManager(ComponentBase):
         if role == "user":
             current_user.fullname = HWR.beamline.lims.get_full_user_name()
             current_user.nickname = HWR.beamline.lims.get_user_name()
+
+        if role in ("staff", "user") and HWR.beamline.lims.session_manager:
             try:
                 self.app.lims.select_session(
                     HWR.beamline.lims.session_manager.active_session.session_id
@@ -431,8 +433,10 @@ class BaseUserManager(ComponentBase):
         name = self.display_name(user)
         self._drop_pending_handover(user.username)
 
+        user_left = user.has_role("user")
+
         # If the session user logs out clear queue and sample list
-        if user.has_role("user") and hasattr(HWR.beamline.session, "clear_session"):
+        if user_left and hasattr(HWR.beamline.session, "clear_session"):
             HWR.beamline.session.clear_session()
 
         was_staff_in_control = self.is_operator() and user.has_role("staff")
@@ -450,6 +454,18 @@ class BaseUserManager(ComponentBase):
         session_user = self.get_session_user()
         if was_staff_in_control and session_user:
             self.transfer_control(session_user.username)
+
+        # The session user leaving gives the session back to the staff in-house proposal
+        staff = [_u for _u in self.get_members() if _u.has_role("staff")]
+        if user_left and staff:
+            staff.sort(key=lambda _u: not _u.in_control)
+            entry = self._get_staff_entry(staff[0].username)
+            try:
+                self._open_staff_session(entry.inhouse_proposal)
+            except Exception as e:
+                logging.getLogger("MX3.HWR").error(
+                    "[SESSION] Could not reopen the staff session: %s" % e
+                )
 
     def _drop_pending_handover(self, username: str) -> None:
         pending = self.pending_handover
@@ -568,6 +584,26 @@ class BaseUserManager(ComponentBase):
 
         return list(roles)
 
+    def _get_staff_entry(self, login_id: str):
+        """Return the server.yaml staff entry matching ``login_id``, given either
+        as the staff username or as their in-house proposal number."""
+        inhouse = [n for _, n in HWR.beamline.session.in_house_users]
+        for _u in self.config.users:
+            if _u.role == "staff" and (
+                login_id == _u.username
+                or (login_id == _u.inhouse_proposal and login_id in inhouse)
+            ):
+                return _u
+        return None
+
+    def _open_staff_session(self, proposal: str) -> None:
+        """Open today's LIMS session of the staff in-house ``proposal``."""
+        HWR.beamline.session.set_user_info(username=proposal, projuser=proposal)
+        HWR.beamline.lims.login(proposal)
+        logging.getLogger("MX3.HWR").info(
+            "[SESSION] Staff session opened on in-house proposal %s" % proposal
+        )
+
     def db_create_user(self, login_id: str, role: str, sso_data: dict) -> User:
         """Create the datastore user for a new login.
 
@@ -672,12 +708,18 @@ class UserManager(BaseUserManager):
             raise ValueError(msg)
 
         if role == "staff":
-            if "staff" not in self._get_configured_roles(login_id):
+            entry = self._get_staff_entry(login_id)
+            if entry is None:
                 msg = "%s is not registered as beamline staff" % login_id
+                raise PermissionError(msg)
+            if entry.inhouse_proposal not in [n for _, n in session.in_house_users]:
+                msg = "No valid in-house proposal configured for %s" % login_id
                 raise PermissionError(msg)
             if not session.px1_authorisation(login_id, password, check_proposal=False)[1]:
                 msg = "Bad Credentials"
                 raise PermissionError(msg)
+            if self.get_session_user() is None:
+                self._open_staff_session(entry.inhouse_proposal)
             return role
 
         proposal_enabled, ldap_access = session.px1_authorisation(login_id, password)
