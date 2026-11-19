@@ -218,13 +218,38 @@ function sampleViewReducer(state = INITIAL_STATE, action = {}) {
         drawGrid: false,
       };
     }
+    case 'SET_CAMERA_FRAME_SIZE': {
+      // Never the OAV: its size is the centring geometry from the server
+      if (state.centringEnabled) {
+        return state;
+      }
+      return {
+        ...state,
+        width: action.width,
+        height: action.height,
+        cameras: state.cameras.map((c) =>
+          c.name === state.selectedCamera
+            ? { ...c, width: action.width, height: action.height }
+            : c,
+        ),
+      };
+    }
     case 'SELECT_CAMERA': {
       return selectCameraState(state, action.name);
     }
     case 'SET_INITIAL_STATE': {
+      const cameraState = initialCameraState(action.data.Camera);
+      const { imageWidth, imageHeight } = action.data.Camera;
+      // The OAV keeps the server's image size when switched back to, even
+      // without a size in server.yaml (another camera may have changed it)
+      cameraState.cameras = cameraState.cameras.map((c) =>
+        c.name === cameraState.selectedCamera && !c.width
+          ? { ...c, width: imageWidth, height: imageHeight }
+          : c,
+      );
       return {
         ...state,
-        ...initialCameraState(action.data.Camera),
+        ...cameraState,
         width: action.data.Camera.imageWidth,
         height: action.data.Camera.imageHeight,
         videoFormat: action.data.Camera.format,

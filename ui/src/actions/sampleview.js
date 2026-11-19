@@ -122,6 +122,12 @@ export function saveImageSize(width, height, pixelsPerMm) {
   return { type: 'SAVE_IMAGE_SIZE', width, height, pixelsPerMm };
 }
 
+// The decoded frame size of a camera other than the OAV (its size need not be
+// in server.yaml): the view is fitted to that frame's aspect
+export function setCameraFrameSize(width, height) {
+  return { type: 'SET_CAMERA_FRAME_SIZE', width, height };
+}
+
 export function toggleAutoScale(width = 1) {
   return { type: 'TOGGLE_AUTO_SCALE', width };
 }

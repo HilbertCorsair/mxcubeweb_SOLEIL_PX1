@@ -1,4 +1,5 @@
 import { showErrorPanel } from './general';
+import { navigateTo } from '../navigation';
 import { mountSample } from './sampleChanger'; // eslint-disable-line import/no-cycle
 import { abortCentring, updateShapes } from './sampleview';
 import { selectSamplesAction, clearSampleGrid } from './sampleGrid'; // eslint-disable-line import/no-cycle
@@ -168,8 +169,13 @@ export function toggleChecked(sampleID, index) {
   return { type: 'TOGGLE_CHECKED', sampleID, index };
 }
 
+// The run is followed on the data collection page (the camera follows the
+// sample changer, see scStateChanged), wherever it was started from
 export function startQueue(autoMountNext = true, sid = -1) {
-  return () => sendStartQueue(autoMountNext, sid);
+  return () => {
+    navigateTo('/datacollection');
+    return sendStartQueue(autoMountNext, sid);
+  };
 }
 
 export function pauseQueue() {

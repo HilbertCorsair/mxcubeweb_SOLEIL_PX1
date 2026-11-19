@@ -73,6 +73,12 @@ const NOT_DRAWN_PROPS = new Set([
   'hardwareObjects',
 ]);
 
+// Kept free under the video for the chat and log row (its 14rem minimum plus
+// the grid gap and padding, see SampleViewContainer.module.css), and the
+// smallest video worth fitting to the window height at all
+const BELOW_VIDEO_PX = 16 * 16;
+const MIN_VIDEO_HEIGHT_PX = 200;
+
 function omegaValue(props) {
   const omegaProps = props.uiproperties.sample_view.components.find(
     (c) => c.role === 'omega',
@@ -125,6 +131,9 @@ export default class SampleImage extends React.Component {
     // only moved (a mesh being rastered) is translated, not rebuilt
     this.gridGroups = new Map();
     this.renderFrame = null;
+    // Resize callbacks pass an event / entries: always fit to the current props
+    this.onResize = () => this.setImageRatio();
+    this.onVideoDecode = this.onVideoDecode.bind(this);
   }
 
   componentDidMount() {
@@ -158,9 +167,10 @@ export default class SampleImage extends React.Component {
 
     this.setImageRatio();
 
-    // Resize the canvas with its column, not only with the window
-    this.resizeObserver = new ResizeObserver(this.setImageRatio);
+    // Resize the video with its column, and with the window height
+    this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(document.querySelector('#outsideWrapper'));
+    window.addEventListener('resize', this.onResize);
     document.addEventListener('keydown', this.keyDown, false);
     document.addEventListener('keyup', this.keyUp, false);
     // A key released outside the window never sends keyup
@@ -168,6 +178,9 @@ export default class SampleImage extends React.Component {
 
     window.initJSMpeg = this.initJSMpeg;
     this.initJSMpeg();
+    // Back on the page nothing drawn has changed, but the new video canvas and
+    // the wrapper still need their size (drawCanvas)
+    this.scheduleRender();
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
@@ -178,7 +191,8 @@ export default class SampleImage extends React.Component {
       nextProps.cinema !== cinema ||
       (nextProps.autoScale && this.props.imageRatio !== nextProps.imageRatio)
     ) {
-      this.setImageRatio();
+      // The new camera's frame size, not the one being left
+      this.setImageRatio(nextProps);
     }
 
     this.drawGridPlugin.setScale(nextProps.imageRatio);
@@ -215,6 +229,7 @@ export default class SampleImage extends React.Component {
       this.renderFrame = null;
     }
     this.resizeObserver?.disconnect();
+    window.removeEventListener('resize', this.onResize);
 
     if (this.canvas) {
       this.canvas.dispose();
@@ -307,10 +322,23 @@ export default class SampleImage extends React.Component {
     this.drawGridPlugin.endDrawing();
   }
 
-  setImageRatio() {
-    if (this.props.autoScale) {
-      const { clientWidth } = document.querySelector('#outsideWrapper');
-      this.props.sampleViewActions.setImageRatio(clientWidth);
+  // Fit the frame in its column and in the window height left above the chat
+  // and log row, whatever the camera's aspect (the OAV is wider than the robot
+  // camera): a tall frame is narrowed and centred rather than pushing the
+  // panels below it out of the window.
+  setImageRatio(props = this.props) {
+    if (props.autoScale) {
+      const wrapper = document.querySelector('#outsideWrapper');
+      const { clientWidth } = wrapper;
+      const maxHeight =
+        window.innerHeight -
+        wrapper.getBoundingClientRect().top -
+        BELOW_VIDEO_PX;
+      const fitWidth =
+        props.height > 0 && maxHeight > MIN_VIDEO_HEIGHT_PX
+          ? Math.min(clientWidth, (maxHeight * props.width) / props.height)
+          : clientWidth;
+      props.sampleViewActions.setImageRatio(Math.floor(fitWidth));
     }
   }
 
@@ -483,6 +511,7 @@ export default class SampleImage extends React.Component {
     document.querySelector('#sample-img').style.height = `${h}px`;
     document.querySelector('#sample-img').style.width = `${w}px`;
     document.querySelector('#insideWrapper').style.height = `${h}px`;
+    document.querySelector('#insideWrapper').style.width = `${w}px`;
   }
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -1022,10 +1051,27 @@ export default class SampleImage extends React.Component {
           pauseWhenHidden: false,
           preserveDrawingBuffer: false,
           protocols: [],
+          onVideoDecode: this.onVideoDecode,
         });
         this.player.play();
         canvas.src = source;
       }
+    }
+  }
+
+  // A camera other than the OAV is fitted to its real frame aspect (its size
+  // need not be in server.yaml)
+  onVideoDecode(decoder) {
+    const { width, height, centringEnabled } = this.props;
+    if (
+      !centringEnabled &&
+      decoder.width > 0 &&
+      (decoder.width !== width || decoder.height !== height)
+    ) {
+      this.props.sampleViewActions.setCameraFrameSize(
+        decoder.width,
+        decoder.height,
+      );
     }
   }
 
