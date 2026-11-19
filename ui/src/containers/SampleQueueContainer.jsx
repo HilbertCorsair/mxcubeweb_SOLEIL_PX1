@@ -29,7 +29,6 @@ import { Nav } from 'react-bootstrap';
 import { showDialog } from '../actions/general';
 import { showWorkflowParametersDialog } from '../actions/workflow';
 
-import UserMessage from '../components/Notify/UserMessage';
 import loader from '../img/loader.gif';
 import { prepareBeamlineForNewSample } from '../actions/beamline';
 import { mountSample, unmountSample } from '../actions/sampleChanger';
@@ -122,7 +121,7 @@ class SampleQueueContainer extends React.Component {
     const sampleLabel = `${proteinAcronym} ${sampleName}`.trim();
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+      <div className={styles.column}>
         <QueueControl
           historyLength={history.length}
           queueLength={queue.length}
@@ -226,18 +225,6 @@ class SampleQueueContainer extends React.Component {
             showList={this.props.showList}
             prepareBeamlineForNewSample={this.props.prepareBeamlineForNewSample}
           />
-          <div className="queue-messages">
-            <div className="queue-messages-title">
-              <span
-                style={{ marginRight: '7px' }}
-                className="fas fa-lg fa-info-circle"
-              />
-              Log messages:
-            </div>
-            <div className="queue-messages-body">
-              <UserMessage messages={this.props.logRecords} />
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -260,7 +247,6 @@ function mapStateToProps(state) {
     rootPath: state.login.rootPath,
     displayData: state.queueGUI.displayData,
     loading: state.queueGUI.loading,
-    logRecords: state.logger.logRecords,
     plotsData: state.beamline.plotsData,
     plotsInfo: state.beamline.plotsInfo,
     selectedShapes: state.sampleview.selectedShapes,

@@ -144,11 +144,11 @@ export default class CurrentTree extends React.Component {
     }
 
     if (!this.props.show) {
-      return <div />;
+      return null;
     }
     return (
-      <div>
-        <div style={{ top: '6%', height: '69%' }} className="list-body">
+      <div className="queue-list">
+        <div className="list-body">
           {sampleTasks.map((taskData, i) => {
             let task = null;
             const displayData = this.props.displayData[taskData.queueID] || {};

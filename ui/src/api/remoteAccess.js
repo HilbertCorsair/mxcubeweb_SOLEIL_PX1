@@ -54,6 +54,15 @@ export function sendChatMessage(message) {
   return endpoint.post({ message }, '/chat').res();
 }
 
+// A file shared in the chat, with an optional text (multipart: the browser
+// sets the Content-Type boundary itself)
+export function sendChatFile(file, message = '') {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('message', message);
+  return endpoint.url('/chat/upload').body(body).post().res();
+}
+
 export function sendSetAllMessagesRead() {
   return endpoint.post(undefined, '/chat/set_all_read').res();
 }

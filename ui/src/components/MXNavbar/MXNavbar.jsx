@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Navbar, Nav } from 'react-bootstrap';
+import { Badge, Container, Navbar, Nav } from 'react-bootstrap';
 import { BsList } from 'react-icons/bs';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,6 +21,11 @@ function MXNavbar() {
   const isStaff = role === 'staff';
   const isRequesting = useSelector(
     (state) => state.remoteAccess.pending?.from === username,
+  );
+
+  // The chat lives on the data collection page: unread messages show there
+  const unreadChat = useSelector(
+    (state) => state.remoteAccess.chatMessageCount,
   );
 
   const mode = useSelector((state) => state.general.mode);
@@ -70,6 +75,16 @@ function MXNavbar() {
               to="/datacollection"
             >
               Data collection
+              {unreadChat > 0 && (
+                <Badge
+                  pill
+                  bg="danger"
+                  className="ms-1"
+                  title={`${unreadChat} unread chat message(s)`}
+                >
+                  {unreadChat}
+                </Badge>
+              )}
             </Nav.Link>
             <Nav.Link as={NavLink} className={styles.navLink} to="/equipment">
               Equipment
@@ -105,7 +120,9 @@ function MXNavbar() {
                 }
               >
                 <span
-                  className={`me-2 fas fa-lg ${inControl ? 'fa-hand-point-left' : 'fa-hand-paper'}`}
+                  className={`me-2 fas fa-lg ${
+                    inControl ? 'fa-hand-point-left' : 'fa-hand-paper'
+                  }`}
                 />
                 {inControl ? 'Hand back' : 'Take charge'}
               </button>

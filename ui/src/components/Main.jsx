@@ -15,16 +15,12 @@ import GphlWorkflowParametersDialog from '../containers/GphlWorkflowParametersDi
 import { LimsResultDialog } from './Lims/LimsResultDialog';
 import LoadingScreen from './LoadingScreen/LoadingScreen';
 import MXNavbar from './MXNavbar/MXNavbar';
-import ChatWidget from './ChatWidget';
 import ClearQueueDialog from './SampleGrid/ClearQueueDialog';
 import SelectProposal from './LoginForm/SelectProposal';
 import { getInitialState } from '../actions/login';
 import { showDialog } from '../actions/general';
 import diagonalNoise from '../img/diagonal-noise.png';
 import styles from './Main.module.css';
-
-import 'react-chat-widget/lib/styles.css';
-import './rachat.css';
 
 function Main() {
   const dispatch = useDispatch();
@@ -72,11 +68,9 @@ function Main() {
 
       <MXNavbar />
 
-      <Stack className="mb-4" gap={2}>
+      <Stack className={`${styles.content} mb-4`} gap={2}>
         <Outlet />
       </Stack>
-
-      <ChatWidget />
     </div>
   );
 }

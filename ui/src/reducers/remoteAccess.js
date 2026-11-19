@@ -8,7 +8,12 @@ const INITIAL_STATE = {
   pending: null,
   allowRemote: false,
   chatMessageCount: 0,
+  // chat messages shown in the chat panel, oldest first, each with a local key
+  chatMessages: [],
+  chatKey: 0,
 };
+
+const CHAT_HISTORY = 200;
 
 function remoteAccessReducer(state = INITIAL_STATE, action = {}) {
   switch (action.type) {
@@ -32,6 +37,26 @@ function remoteAccessReducer(state = INITIAL_STATE, action = {}) {
     }
     case 'RESET_CHAT_MESSAGE_COUNT': {
       return { ...state, chatMessageCount: 0 };
+    }
+    case 'SET_CHAT_MESSAGES': {
+      const chatMessages = action.messages
+        .slice(-CHAT_HISTORY)
+        .map((m, i) => ({ ...m, key: state.chatKey + i }));
+      return {
+        ...state,
+        chatMessages,
+        chatKey: state.chatKey + chatMessages.length,
+      };
+    }
+    case 'ADD_CHAT_MESSAGE': {
+      return {
+        ...state,
+        chatMessages: [
+          ...state.chatMessages.slice(1 - CHAT_HISTORY),
+          { ...action.message, key: state.chatKey },
+        ],
+        chatKey: state.chatKey + 1,
+      };
     }
     case 'INC_CHAT_MESSAGE_COUNT': {
       return {

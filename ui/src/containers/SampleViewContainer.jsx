@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { Row, Col, Container } from 'react-bootstrap';
 import SampleImage from '../components/SampleView/SampleImage';
 import MotorControls from '../components/SampleView/MotorControls';
 import PhaseInput from '../components/SampleView/PhaseInput';
@@ -15,6 +14,8 @@ import { addTask, updateTask } from '../actions/queue';
 import { showTaskForm } from '../actions/taskForm';
 import BeamlineSetupContainer from './BeamlineSetupContainer';
 import SampleQueueContainer from './SampleQueueContainer';
+import ChatPanel from '../components/Chat/ChatPanel';
+import UserMessage from '../components/Notify/UserMessage';
 import { QUEUE_RUNNING } from '../constants';
 import DefaultErrorBoundary from './DefaultErrorBoundary';
 import { syncWithCrims } from '../actions/sampleGrid';
@@ -98,22 +99,16 @@ class SampleViewContainer extends Component {
     }
 
     return (
-      <Container fluid>
-        <Row
-          style={{
-            background: '#fafafa',
-            borderBottom: '1px solid lightgray',
-            paddingBottom: '0em',
-          }}
-        >
-          <Col sm={12}>
-            <DefaultErrorBoundary>
-              <BeamlineSetupContainer />
-            </DefaultErrorBoundary>
-          </Col>
-        </Row>
-        <Row className="gx-3 mt-2 pt-1">
-          <Col sm={2} xxl={1} className={styles.controllers}>
+      <div className={`fill-viewport ${styles.page}`}>
+        <div className={styles.setupBar}>
+          <DefaultErrorBoundary>
+            <BeamlineSetupContainer />
+          </DefaultErrorBoundary>
+        </div>
+        {/* side | video | queue, then side | chat | log: the queue ends with
+            the video, chat and log fill down to the window bottom */}
+        <div className={styles.layout}>
+          <aside className={styles.side}>
             <DefaultErrorBoundary>
               <div className={motorInputStyles.container}>
                 <label className={motorInputStyles.label} htmlFor="PhaseInput">
@@ -175,8 +170,8 @@ class SampleViewContainer extends Component {
 
               <MotorControls />
             </DefaultErrorBoundary>
-          </Col>
-          <Col sm={6}>
+          </aside>
+          <section className={styles.video}>
             <DefaultErrorBoundary>
               <ContextMenu
                 {...this.props.contextMenu}
@@ -220,19 +215,31 @@ class SampleViewContainer extends Component {
                 meshResultFormat={this.props.meshResultFormat}
               />
             </DefaultErrorBoundary>
-          </Col>
-          <Col
-            sm={4}
-            xxl={5}
-            className={styles.queue}
-            style={{ display: 'flex' }}
-          >
+          </section>
+          <section className={styles.queue}>
+            <div className={styles.fill}>
+              <DefaultErrorBoundary>
+                <SampleQueueContainer />
+              </DefaultErrorBoundary>
+            </div>
+          </section>
+          <section className={styles.chat}>
             <DefaultErrorBoundary>
-              <SampleQueueContainer />
+              <ChatPanel />
             </DefaultErrorBoundary>
-          </Col>
-        </Row>
-      </Container>
+          </section>
+          <section className={`${styles.panel} ${styles.log}`}>
+            <div className={styles.panelTitle}>
+              <span className="fas fa-info-circle me-2" />
+              Log messages
+            </div>
+            {/* column-reverse keeps the newest line in view */}
+            <div className={styles.logScroller}>
+              <UserMessage messages={this.props.logRecords} />
+            </div>
+          </section>
+        </div>
+      </div>
     );
   }
 }
@@ -270,6 +277,7 @@ function mapStateToProps(state) {
     selectedCol: state.sampleChanger.selectedCol,
     selectedDrop: state.sampleChanger.selectedDrop,
     crystalList: state.sampleGrid.crystalList,
+    logRecords: state.logger.logRecords,
   };
 }
 

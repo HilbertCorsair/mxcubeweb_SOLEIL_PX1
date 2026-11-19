@@ -97,3 +97,13 @@ export function resetChatMessageCount() {
 export function incChatMessageCount(count = 1) {
   return { type: 'INC_CHAT_MESSAGE_COUNT', count };
 }
+
+// The chat history from the server, replacing what is shown
+export function setChatMessages(messages) {
+  return { type: 'SET_CHAT_MESSAGES', messages };
+}
+
+// A live chat message (from anyone, ourselves included)
+export function addChatMessage(message) {
+  return { type: 'ADD_CHAT_MESSAGE', message };
+}

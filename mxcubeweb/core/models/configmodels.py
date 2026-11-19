@@ -20,6 +20,14 @@ class FlaskConfigModel(BaseModel):
     SECURITY_PASSWORD_SALT: str = Field("ASALT", description="")
     SECURITY_TRACKABLE: bool = Field(True, description="")
     USER_DB_PATH: str = Field("/tmp/mxcube-user.db", description="")
+    CHAT_UPLOAD_DIR: str = Field(
+        "",
+        description="Folder for files shared in the session chat;"
+        " empty: chat_files next to USER_DB_PATH",
+    )
+    CHAT_UPLOAD_MAX_MB: int = Field(
+        20, description="Largest file accepted by the session chat, in MB"
+    )
     PERMANENT_SESSION_LIFETIME: datetime.timedelta
     CERT_KEY: str = Field("", description="Full path to signed certificate key file")
     CERT_PEM: str = Field("", description="Full path to signed certificate pem file")
@@ -211,4 +219,3 @@ class AppConfigModel(BaseModel):
     server: FlaskConfigModel
     mxcube: MXCUBEAppConfigModel
     sso: SSOConfigModel | None
-

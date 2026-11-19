@@ -13,3 +13,17 @@
   margin: 0;
   padding: 0;
 }
+
+/* The data collection page fills the window exactly (its panels scroll
+   inside); every other page grows and scrolls the window as before */
+.main:has(:global(.fill-viewport)) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.main:has(:global(.fill-viewport)) > .content {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0 !important;
+}

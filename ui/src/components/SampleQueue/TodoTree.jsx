@@ -93,13 +93,13 @@ export default class TodoTree extends React.Component {
 
   render() {
     if (!this.props.show) {
-      return <div />;
+      return null;
     }
 
     const list = this.filter(this.props.list, this.state.searchWord); // eslint-disable-line unicorn/no-array-method-this-argument
 
     return (
-      <ListGroup variant="flush">
+      <ListGroup variant="flush" className="queue-list">
         <ListGroup.Item
           className="d-flex list-head"
           style={{ borderBottom: 'none' }}

@@ -1,8 +1,112 @@
-@media screen and (min-width: 1300px) and (max-width: 1920px) {
-  .controllers {
-    width: 12%;
+/* The data collection page: fills the window under the navbar (see
+   Main.module.css, .fill-viewport) */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.setupBar {
+  flex: none;
+  padding: 0 0.75rem;
+  background: #fafafa;
+  border-bottom: 1px solid lightgray;
+}
+
+.layout {
+  --gap: 0.5rem;
+
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(10rem, 12%) minmax(0, 50%) minmax(0, 1fr);
+  grid-template-rows: auto minmax(14rem, 1fr);
+  grid-template-areas:
+    'side video queue'
+    'side chat log';
+  gap: var(--gap);
+  padding: var(--gap) 0.75rem;
+}
+
+.side {
+  grid-area: side;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.video {
+  grid-area: video;
+  min-width: 0;
+}
+
+/* The row is as tall as the video: the queue fills it and scrolls inside,
+   it never makes the row taller */
+.queue {
+  grid-area: queue;
+  position: relative;
+  min-height: 20rem;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.chat {
+  grid-area: chat;
+  min-height: 0;
+}
+
+.log {
+  grid-area: log;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 4px;
+}
+
+.panelTitle {
+  flex: none;
+  padding: 0.35rem 0.75rem;
+  background-color: #eef;
+  border-bottom: 1px solid var(--bs-border-color);
+  border-radius: 4px 4px 0 0;
+  font-weight: bold;
+}
+
+.logScroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+}
+
+/* Narrow windows: one column, the page scrolls */
+@media (max-width: 1199px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: 'side' 'video' 'chat' 'queue' 'log';
   }
+
+  .side {
+    overflow: visible;
+  }
+
   .queue {
-    width: 38%;
+    height: 32rem;
+  }
+
+  .chat,
+  .log {
+    height: 20rem;
   }
 }

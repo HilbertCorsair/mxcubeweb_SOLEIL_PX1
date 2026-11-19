@@ -32,3 +32,13 @@
     transform: rotate(360deg);
   }
 }
+
+/* QueueControl and the tabs keep their height, the task list takes the rest
+   and scrolls (the cell is as tall as the video) */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 0;
+}

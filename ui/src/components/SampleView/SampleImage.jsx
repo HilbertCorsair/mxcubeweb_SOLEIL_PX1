@@ -61,6 +61,25 @@ fabric.Text.prototype._setTextStyles = function setTextStyles(
   ctx.font = this._getFontDeclaration(charStyle, forMeasuring);
 };
 
+// Props the container derives anew on every render (from `shapes`), and the
+// whole hardware object map (any value anywhere changes it): not compared when
+// deciding to redraw the overlay. The omega value (the axes triad) is.
+const NOT_DRAWN_PROPS = new Set([
+  'points',
+  'twoDPoints',
+  'lines',
+  'grids',
+  'selectedGrids',
+  'hardwareObjects',
+]);
+
+function omegaValue(props) {
+  const omegaProps = props.uiproperties.sample_view.components.find(
+    (c) => c.role === 'omega',
+  );
+  return props.hardwareObjects[omegaProps?.attribute]?.value;
+}
+
 // eslint-disable-next-line react/no-unsafe
 export default class SampleImage extends React.Component {
   constructor(props) {
@@ -101,6 +120,11 @@ export default class SampleImage extends React.Component {
     this.player = null;
     this.centringCross = [];
     this.removeShapes = this.removeShapes.bind(this);
+    this.renderSampleView = this.renderSampleView.bind(this);
+    // The fabric group of each grid with what it was built from: a grid that
+    // only moved (a mesh being rastered) is translated, not rebuilt
+    this.gridGroups = new Map();
+    this.renderFrame = null;
   }
 
   componentDidMount() {
@@ -134,8 +158,9 @@ export default class SampleImage extends React.Component {
 
     this.setImageRatio();
 
-    // Add so that the canvas will resize if the window changes size
-    window.addEventListener('resize', this.setImageRatio);
+    // Resize the canvas with its column, not only with the window
+    this.resizeObserver = new ResizeObserver(this.setImageRatio);
+    this.resizeObserver.observe(document.querySelector('#outsideWrapper'));
     document.addEventListener('keydown', this.keyDown, false);
     document.addEventListener('keyup', this.keyUp, false);
     // A key released outside the window never sends keyup
@@ -179,10 +204,18 @@ export default class SampleImage extends React.Component {
     this.canvas.defaultCursor =
       drawGrid || clickCentring || measureDistance ? 'crosshair' : 'default';
 
-    this.renderSampleView();
+    if (this.drawInputsChanged(prevProps)) {
+      this.scheduleRender();
+    }
   }
 
   componentWillUnmount() {
+    if (this.renderFrame !== null) {
+      cancelAnimationFrame(this.renderFrame);
+      this.renderFrame = null;
+    }
+    this.resizeObserver?.disconnect();
+
     if (this.canvas) {
       this.canvas.dispose();
     }
@@ -200,7 +233,6 @@ export default class SampleImage extends React.Component {
     document.removeEventListener('keydown', this.keyDown);
     document.removeEventListener('keyup', this.keyUp);
     window.removeEventListener('blur', this.keyUp);
-    window.removeEventListener('resize', this.setImageRatio);
 
     const imageOverlay = document.querySelector('#insideWrapper');
     imageOverlay.removeEventListener('contextmenu', this.rightClick);
@@ -208,6 +240,28 @@ export default class SampleImage extends React.Component {
     imageOverlay.removeEventListener('dblclick', this.goToBeam);
 
     window.initJSMpeg = null;
+  }
+
+  // Shape updates come several times a frame while a mesh is rastered (and
+  // any hardware object change re-renders the container): redraw the overlay
+  // only when something it draws changed, at most once per frame.
+  drawInputsChanged(prevProps) {
+    return (
+      omegaValue(prevProps) !== omegaValue(this.props) ||
+      Object.keys(this.props).some(
+        (key) =>
+          !NOT_DRAWN_PROPS.has(key) && prevProps[key] !== this.props[key],
+      )
+    );
+  }
+
+  scheduleRender() {
+    if (this.renderFrame === null) {
+      this.renderFrame = requestAnimationFrame(() => {
+        this.renderFrame = null;
+        this.renderSampleView();
+      });
+    }
   }
 
   onMouseMove(options) {
@@ -416,12 +470,13 @@ export default class SampleImage extends React.Component {
     const w = (width * imageRatio) / sourceScale;
     const h = (height * imageRatio) / sourceScale;
     // Set the size of the original html Canvas
-    const canvasWindow = document.querySelector('#canvas');
-    canvasWindow.width = w;
-    canvasWindow.height = h;
-    // Set the size of the created FabricJS Canvas
-    this.canvas.setDimensions({ width: w, height: h });
-    this.canvas.requestRenderAll();
+    // Resizing a canvas reallocates and blanks it: only when the size changed
+    if (this.canvas.getWidth() !== w || this.canvas.getHeight() !== h) {
+      const canvasWindow = document.querySelector('#canvas');
+      canvasWindow.width = w;
+      canvasWindow.height = h;
+      this.canvas.setDimensions({ width: w, height: h });
+    }
     this.canvas.clear();
 
     // Set size of the Image from
@@ -980,6 +1035,49 @@ export default class SampleImage extends React.Component {
     e.nativeEvent.stopImmediatePropagation();
   }
 
+  /* The fabric group of a grid. Rebuilt when anything but its position
+     changed; moved by the difference otherwise. A selected grid is always
+     rebuilt: the active selection takes its objects over. */
+  gridGroup(gridData) {
+    const plugin = this.drawGridPlugin;
+    const [x, y1, , y2] = gridData.screenCoord;
+    const projected = gridData.pinned && gridData.screenCoord.length === 4;
+    const scale = gridData.id === null ? 1 : plugin.scale;
+    const left = x * scale;
+    const top = (projected ? Math.min(y1, y2) : y1) * scale;
+
+    const { screenCoord, ...rest } = gridData;
+    const sig = JSON.stringify([
+      rest,
+      projected ? Math.round((y2 - y1) * scale) : null,
+      plugin.scale,
+      plugin.overlayLevel,
+      plugin.gridResultFormat,
+      plugin.drawing,
+    ]);
+
+    const cached = this.gridGroups.get(gridData.id);
+    if (
+      cached &&
+      cached.sig === sig &&
+      !this.props.selectedShapes.includes(gridData.id)
+    ) {
+      cached.group.set({
+        left: cached.group.left + left - cached.left,
+        top: cached.group.top + top - cached.top,
+      });
+      cached.group.setCoords();
+      Object.assign(cached, { left, top });
+      return cached.group;
+    }
+
+    const { shapeGroup } = plugin.shapeFromGridData(gridData, this.canvas);
+    if (gridData.id !== null) {
+      this.gridGroups.set(gridData.id, { sig, group: shapeGroup, left, top });
+    }
+    return shapeGroup;
+  }
+
   renderSampleView() {
     const {
       imageRatio,
@@ -1061,10 +1159,7 @@ export default class SampleImage extends React.Component {
         if (gridData.state !== 'HIDDEN') {
           this.drawGridPlugin.setScale(imageRatio);
           gridData = this.drawGridPlugin.setPixelsPerMM(pixelsPerMm, gridData);
-          const { shapeGroup } = this.drawGridPlugin.shapeFromGridData(
-            gridData,
-            this.canvas,
-          );
+          const shapeGroup = this.gridGroup(gridData);
           // While the queue runs (the unattended collect draws its grid and
           // heatmap) grids are shown but cannot be selected
           shapeGroup.set({
@@ -1073,6 +1168,13 @@ export default class SampleImage extends React.Component {
           });
           fabricSelectables.push(shapeGroup);
         }
+      });
+
+    // Forget the groups of grids that are gone
+    [...this.gridGroups.keys()]
+      .filter((id) => !(id in grids))
+      .forEach((id) => {
+        this.gridGroups.delete(id);
       });
 
     // Grid beeing defined (being drawn)

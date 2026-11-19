@@ -1,6 +1,5 @@
 /* eslint-disable promise/prefer-await-to-callbacks */
 import io from 'socket.io-client';
-import { addResponseMessage } from 'react-chat-widget';
 import { addLogRecord } from './actions/logger';
 import {
   setShapes,
@@ -45,8 +44,11 @@ import {
   updateGphlWorkflowParametersDialog,
 } from './actions/workflow';
 
-import { getRaState, incChatMessageCount } from './actions/remoteAccess';
-import { showChatMessage } from './components/ChatWidget';
+import {
+  addChatMessage,
+  getRaState,
+  incChatMessageCount,
+} from './actions/remoteAccess';
 
 import { signOut, getLoginInfo } from './actions/login';
 
@@ -68,6 +70,15 @@ import { store } from './store';
 import { hideWaitDialog, showWaitDialog } from './actions/waitDialog';
 
 const { dispatch } = store;
+
+// A notice shown in this browser's chat only
+function chatNotice(message) {
+  return addChatMessage({
+    role: 'system',
+    message,
+    date: new Date().toTimeString().slice(0, 5),
+  });
+}
 
 class ServerIO {
   constructor() {
@@ -143,8 +154,8 @@ class ServerIO {
 
     this.hwrSocket.on('ra_chat_message', (record) => {
       const { username } = store.getState().login.user;
+      dispatch(addChatMessage(record));
       if (record.username !== username) {
-        showChatMessage(record, username);
         dispatch(incChatMessageCount());
       }
     });
@@ -360,18 +371,18 @@ class ServerIO {
     });
 
     this.hwrSocket.on('observerLogout', (observer) => {
-      addResponseMessage(
-        `**${observer.nickname}** (${observer.ip}) disconnected.`,
+      dispatch(
+        chatNotice(`**${observer.nickname}** (${observer.ip}) disconnected.`),
       );
     });
 
     this.hwrSocket.on('observerLogin', (observer) => {
       if (observer.nickname && observer.ip) {
-        addResponseMessage(
-          `**${observer.nickname}** (${observer.ip}) connected.`,
+        dispatch(
+          chatNotice(`**${observer.nickname}** (${observer.ip}) connected.`),
         );
       } else {
-        addResponseMessage(`${observer.nickname} connecting ...`);
+        dispatch(chatNotice(`${observer.nickname} connecting ...`));
       }
     });
 

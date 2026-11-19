@@ -1,13 +1,23 @@
+import mimetypes
+import os
+
 from flask import (
     Blueprint,
     Response,
+    abort,
     jsonify,
     make_response,
     request,
+    send_from_directory,
+    url_for,
 )
+from werkzeug.utils import secure_filename
 from flask_login import current_user
 
 DISCONNECT_HANDLED = True
+
+# Chat files shown inline in a message; every other type is a download link
+CHAT_INLINE_IMAGES = ("image/png", "image/jpeg", "image/gif", "image/webp")
 
 
 # Disabling C901 function is too complex (19)
@@ -219,6 +229,60 @@ def init_route(app, server, url_prefix):  # noqa: C901
             app.chat.append_message(message, current_user)
 
         return Response(status=200)
+
+    @bp.route("/chat/upload", methods=["POST"])
+    @server.restrict
+    def upload_chat_file():
+        """Share a file in the chat: stored, then posted as a markdown link
+        (an image is shown in the message)."""
+        if current_user.has_role("muted"):
+            return make_response("You have been muted", 403)
+
+        # Before request.files, which reads the whole body
+        max_mb = app.CONFIG.flask.CHAT_UPLOAD_MAX_MB
+        if (request.content_length or 0) > max_mb * 1024 * 1024:
+            return make_response(f"Files are limited to {max_mb} MB", 413)
+
+        upload = request.files.get("file")
+        if upload is None or not upload.filename:
+            return make_response("No file", 400)
+
+        name = app.chat.save_file(upload)
+        url = url_for("remote_access.chat_file", name=name)
+        label = secure_filename(upload.filename) or "file"
+        size = os.path.getsize(os.path.join(app.chat.upload_dir(), name))
+        mime = mimetypes.guess_type(label)[0] or ""
+
+        if mime in CHAT_INLINE_IMAGES:
+            message = f"![{label}]({url})"
+        else:
+            shown = f"{size} B" if size < 1024 else f"{size / 1024:.0f} kB"
+            message = f"[📎 {label} ({shown})]({url})"
+
+        text = request.form.get("message", "").strip()
+        app.chat.append_message(
+            f"{text}\n\n{message}" if text else message, current_user
+        )
+
+        return Response(status=200)
+
+    @bp.route("/chat/files/<name>", methods=["GET"])
+    @server.restrict
+    def chat_file(name):
+        if secure_filename(name) != name:
+            abort(404)
+
+        # Only plain bitmaps are shown in the page: anything else (an SVG or
+        # HTML file can carry script) is downloaded
+        mime = mimetypes.guess_type(name)[0] or ""
+        response = send_from_directory(
+            app.chat.upload_dir(),
+            name,
+            as_attachment=mime not in CHAT_INLINE_IMAGES,
+            download_name=name.split("_", 1)[-1],
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
 
     @bp.route("/chat", methods=["GET"])
     @server.restrict

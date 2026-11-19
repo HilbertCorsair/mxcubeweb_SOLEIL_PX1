@@ -49,10 +49,12 @@
   margin-top: 15px;
 }
 .queue-body {
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   padding-top: 0;
-  overflow-x: hidden;
-  flex-grow: 1;
+  overflow: hidden;
 }
 .m-tree.queue-body > ul > li.active {
   background-color: rgba(0, 0, 0, 0) !important;
@@ -132,11 +134,17 @@
   margin-bottom: 10px;
 }
 .queue-nav {
-  height: 6%;
+  flex: none;
 }
 .queue-nav-link {
-  height: 100%;
-  padding: 0.4em 0 0;
+  padding: 0.4em 0;
+}
+/* The task list of the visible tab: takes what is left and scrolls */
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .list-head {
   padding: 1rem 1rem;
@@ -146,31 +154,10 @@
   padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
-  position: absolute;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  top: 15%;
-  height: 60%;
-  width: 100%;
-}
-.queue-messages {
-  height: 25%;
-  width: 100%;
-  bottom: 0;
-  position: absolute;
-  overflow-y: hidden;
-  overflow-x: hidden;
-}
-.queue-messages-title {
-  background-color: #eef;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  padding: 0.5rem 1rem;
-}
-.queue-messages-body {
-  height: 75%;
-  width: 100%;
-  overflow-y: auto;
 }
 .centring-method {
   margin-right: 10px;
