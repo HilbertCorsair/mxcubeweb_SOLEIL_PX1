@@ -165,6 +165,11 @@ export function updateMotorState(name, value) {
   return { type: 'UPDATE_MOTOR_STATE', name, value };
 }
 
+// Only the positions of shapes already known (see update_shape_positions)
+export function updateShapePositions(positions) {
+  return { type: 'UPDATE_SHAPE_POSITIONS', positions };
+}
+
 export function setShapes(shapes) {
   return { type: 'SET_SHAPES', shapes };
 }

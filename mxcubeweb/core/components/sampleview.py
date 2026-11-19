@@ -1,4 +1,5 @@
 import logging
+import time
 from io import StringIO
 
 import gevent.event
@@ -94,6 +95,12 @@ class HttpStreamer:
         return response
 
 
+# Shape fields that change when a shape only moves (Grid.as_dict derives x1/y1
+# from the screen position)
+POSITION_KEYS = ("screenCoord", "fade", "state", "x1", "y1")
+POSITIONS_KEYFRAME_S = 2.0
+
+
 class SampleView(ComponentBase):
     def __init__(self, app, config):
         super().__init__(app, config)
@@ -101,6 +108,8 @@ class SampleView(ComponentBase):
         self._click_limit = 3
         self._centring_point_id = None
         self.http_streamer = HttpStreamer()
+        self._sent_static_shapes = None
+        self._last_full_shapes_emit = 0.0
 
         HWR.beamline.sample_view.connect("shapesChanged", self._emit_shapes_updated)
 
@@ -118,13 +127,45 @@ class SampleView(ComponentBase):
         )
 
     def _emit_shapes_updated(self):
+        """Send the shapes to the browsers, stamped with the server time (the
+        overlay interpolates between these samples, see overlayMotion.js).
+
+        While shapes only move (a mesh being rastered, a rotation) only their
+        positions are sent, about ten times a second; a full update goes out
+        when anything else changed, and every POSITIONS_KEYFRAME_S anyway so a
+        browser that cleared or missed its shapes gets them back.
+        """
+        now = time.time()
         shape_dict = {}
 
         for shape in HWR.beamline.sample_view.get_shapes():
             _s = to_camel(shape.as_dict())
             shape_dict.update({shape.id: _s})
 
-        self.app.server.emit("update_shapes", {"shapes": shape_dict}, namespace="/hwr")
+        static = {
+            sid: {k: v for k, v in s.items() if k not in POSITION_KEYS}
+            for sid, s in shape_dict.items()
+        }
+        if (
+            static == self._sent_static_shapes
+            and now - self._last_full_shapes_emit < POSITIONS_KEYFRAME_S
+        ):
+            positions = {
+                sid: {k: s[k] for k in POSITION_KEYS if k in s}
+                for sid, s in shape_dict.items()
+            }
+            self.app.server.emit(
+                "update_shape_positions",
+                {"t": now, "positions": positions},
+                namespace="/hwr",
+            )
+            return
+
+        self._sent_static_shapes = static
+        self._last_full_shapes_emit = now
+        self.app.server.emit(
+            "update_shapes", {"t": now, "shapes": shape_dict}, namespace="/hwr"
+        )
 
     def centring_clicks_left(self):
         return self._click_limit - self._click_count
@@ -365,7 +406,7 @@ class SampleView(ComponentBase):
         """
         if not HWR.beamline.diffractometer.is_murko_available():
             raise RuntimeError("Murko is not available")
-        
+
         if not HWR.beamline.diffractometer.current_centring_procedure:
             msg = "Starting automatic centring"
             logging.getLogger("user_level_log").info(msg)

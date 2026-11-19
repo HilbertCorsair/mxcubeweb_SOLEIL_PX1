@@ -14,6 +14,12 @@ import {
   makeCentringVerticalLine,
 } from './shapes';
 import DrawGridPlugin from './DrawGridPlugin';
+import {
+  currentDelay,
+  moving,
+  positionAt,
+  takeReceivedCount,
+} from './overlayMotion';
 import SampleControls from '../SampleControls/SampleControls';
 import GridForm from './GridForm';
 import 'fabric';
@@ -78,6 +84,27 @@ const NOT_DRAWN_PROPS = new Set([
 // smallest video worth fitting to the window height at all
 const BELOW_VIDEO_PX = 16 * 16;
 const MIN_VIDEO_HEIGHT_PX = 200;
+
+// The shapes as drawn now: positions interpolated between the server samples
+// (see overlayMotion.js), everything else from the props
+function shapesAt(shapes, now) {
+  return Object.fromEntries(
+    Object.entries(shapes).map(([id, shape]) => {
+      const p = positionAt(id, now);
+      return [
+        id,
+        p
+          ? {
+              ...shape,
+              screenCoord: p.screenCoord,
+              fade: p.fade ?? shape.fade,
+              state: p.state ?? shape.state,
+            }
+          : shape,
+      ];
+    }),
+  );
+}
 
 function omegaValue(props) {
   const omegaProps = props.uiproperties.sample_view.components.find(
@@ -275,6 +302,10 @@ export default class SampleImage extends React.Component {
       this.renderFrame = requestAnimationFrame(() => {
         this.renderFrame = null;
         this.renderSampleView();
+        // Still sliding between position samples: draw the next frame too
+        if (moving()) {
+          this.scheduleRender();
+        }
       });
     }
   }
@@ -1125,6 +1156,7 @@ export default class SampleImage extends React.Component {
   }
 
   renderSampleView() {
+    const started = performance.now();
     const {
       imageRatio,
       beamPosition,
@@ -1132,13 +1164,13 @@ export default class SampleImage extends React.Component {
       beamSize,
       clickCentring,
       distancePoints,
-      points,
-      twoDPoints,
-      lines,
-      grids,
       pixelsPerMm,
       sourceScale,
     } = this.props;
+    const points = shapesAt(this.props.points, started);
+    const twoDPoints = shapesAt(this.props.twoDPoints, started);
+    const lines = shapesAt(this.props.lines, started);
+    const grids = shapesAt(this.props.grids, started);
 
     this.drawCanvas(imageRatio, sourceScale);
 
@@ -1277,6 +1309,31 @@ export default class SampleImage extends React.Component {
 
     this.canvas.setActiveObject(sel);
     this.canvas.requestRenderAll();
+
+    this.reportFrame(started);
+  }
+
+  // localStorage.overlayDebug = 1: once a second, the samples received, the
+  // frames drawn, their cost and the interpolation delay
+  reportFrame(started) {
+    if (!window.localStorage?.getItem('overlayDebug')) {
+      return;
+    }
+    const now = performance.now();
+    const stats = this.frameStats || { since: now, frames: 0, ms: 0 };
+    stats.frames += 1;
+    stats.ms += now - started;
+    if (now - stats.since >= 1000) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[overlay] ${takeReceivedCount()} samples/s, ${stats.frames} frames, ` +
+          `${(stats.ms / stats.frames).toFixed(1)} ms/frame, ` +
+          `delay ${currentDelay().toFixed(0)} ms`,
+      );
+      this.frameStats = { since: now, frames: 0, ms: 0 };
+    } else {
+      this.frameStats = stats;
+    }
   }
 
   render() {

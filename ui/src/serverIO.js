@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 import { addLogRecord } from './actions/logger';
 import {
   setShapes,
+  updateShapePositions,
   saveMotorPosition,
   updateMotorState,
   setBeamInfo,
@@ -51,6 +52,7 @@ import {
 } from './actions/remoteAccess';
 
 import { signOut, getLoginInfo } from './actions/login';
+import { addSample } from './components/SampleView/overlayMotion';
 
 import {
   scStateChanged,
@@ -168,8 +170,16 @@ class ServerIO {
       dispatch(updateMotorState(record.name, record.state));
     });
 
+    // Shape positions are also kept as timed samples, between which the
+    // overlay slides (components/SampleView/overlayMotion.js)
     this.hwrSocket.on('update_shapes', (record) => {
+      addSample(record.t, record.shapes);
       dispatch(setShapes(record.shapes));
+    });
+
+    this.hwrSocket.on('update_shape_positions', (record) => {
+      addSample(record.t, record.positions);
+      dispatch(updateShapePositions(record.positions));
     });
 
     this.hwrSocket.on('update_pixels_per_mm', (record) => {

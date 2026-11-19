@@ -24,6 +24,15 @@ function shapesReducer(state = INITIAL_STATE, action = {}) {
 
       return { ...state, shapes };
     }
+    case 'UPDATE_SHAPE_POSITIONS': {
+      const shapes = { ...state.shapes };
+      for (const [id, position] of Object.entries(action.positions)) {
+        if (shapes[id]) {
+          shapes[id] = { ...shapes[id], ...position };
+        }
+      }
+      return { ...state, shapes };
+    }
     case 'DELETE_SHAPE': {
       return { ...state, shapes: omit(state.shapes, action.id) };
     }
