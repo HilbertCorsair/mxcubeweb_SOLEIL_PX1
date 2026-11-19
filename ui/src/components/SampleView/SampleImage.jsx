@@ -84,6 +84,8 @@ const NOT_DRAWN_PROPS = new Set([
 // smallest video worth fitting to the window height at all
 const BELOW_VIDEO_PX = 16 * 16;
 const MIN_VIDEO_HEIGHT_PX = 200;
+// While shapes slide (overlayMotion.js), about 30 frames a second
+const MOTION_FRAME_MS = 33;
 
 // The shapes as drawn now: positions interpolated between the server samples
 // (see overlayMotion.js), everything else from the props
@@ -158,6 +160,7 @@ export default class SampleImage extends React.Component {
     // only moved (a mesh being rastered) is translated, not rebuilt
     this.gridGroups = new Map();
     this.renderFrame = null;
+    this.lastDrawn = -Infinity;
     // Resize callbacks pass an event / entries: always fit to the current props
     this.onResize = () => this.setImageRatio();
     this.onVideoDecode = this.onVideoDecode.bind(this);
@@ -297,14 +300,21 @@ export default class SampleImage extends React.Component {
     );
   }
 
-  scheduleRender() {
+  scheduleRender(motion = false) {
     if (this.renderFrame === null) {
-      this.renderFrame = requestAnimationFrame(() => {
+      this.renderFrame = requestAnimationFrame((frameTime) => {
         this.renderFrame = null;
+        // A motion frame is drawn at about the video rate, not the display's:
+        // each one rebuilds the overlay on the thread that decodes the video
+        if (motion && frameTime - this.lastDrawn < MOTION_FRAME_MS) {
+          this.scheduleRender(true);
+          return;
+        }
+        this.lastDrawn = frameTime;
         this.renderSampleView();
         // Still sliding between position samples: draw the next frame too
         if (moving()) {
-          this.scheduleRender();
+          this.scheduleRender(true);
         }
       });
     }
@@ -1123,7 +1133,8 @@ export default class SampleImage extends React.Component {
     const left = x * scale;
     const top = (projected ? Math.min(y1, y2) : y1) * scale;
 
-    const { screenCoord, ...rest } = gridData;
+    // x1/y1 are the position in mm from the beam: they change with screenCoord
+    const { screenCoord, x1: mmX, y1: mmY, ...rest } = gridData;
     const sig = JSON.stringify([
       rest,
       projected ? Math.round((y2 - y1) * scale) : null,
@@ -1172,12 +1183,18 @@ export default class SampleImage extends React.Component {
     const lines = shapesAt(this.props.lines, started);
     const grids = shapesAt(this.props.grids, started);
 
+    // Cleared, rebuilt and painted in this one task: fabric clears the pixels
+    // at once but would only paint the added objects on the next animation
+    // frame, so a frame in between (every frame while shapes slide) would be
+    // shown without overlay
+    this.canvas.renderOnAddRemove = false;
     this.drawCanvas(imageRatio, sourceScale);
 
     // Non-OAV cameras have no centring geometry: show the raw video only, with
     // an empty overlay canvas (already cleared/sized by drawCanvas).
     if (!this.props.centringEnabled) {
-      this.canvas.requestRenderAll();
+      this.canvas.renderOnAddRemove = true;
+      this.canvas.renderAll();
       return;
     }
 
@@ -1308,7 +1325,8 @@ export default class SampleImage extends React.Component {
     });
 
     this.canvas.setActiveObject(sel);
-    this.canvas.requestRenderAll();
+    this.canvas.renderOnAddRemove = true;
+    this.canvas.renderAll();
 
     this.reportFrame(started);
   }

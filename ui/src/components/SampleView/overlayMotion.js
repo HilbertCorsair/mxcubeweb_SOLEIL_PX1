@@ -14,7 +14,7 @@
 
 const KEEP_MS = 2000;
 const MIN_DELAY_MS = 120;
-const MAX_DELAY_MS = 500;
+const MAX_DELAY_MS = 300;
 const LATENESS_WINDOW = 30;
 
 const samples = new Map(); // shape id -> [{t, screenCoord, fade, state}]
